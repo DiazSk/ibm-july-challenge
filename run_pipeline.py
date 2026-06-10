@@ -45,7 +45,7 @@ def main() -> None:
         return
 
     print("=" * 60)
-    print("STAGE 3 — Granite Brand Profile Extraction (watsonx.ai)")
+    print("STAGE 3 — Granite Brand Profile Extraction (local Ollama)")
     print("=" * 60)
 
     from src.embeddings.profile_extractor import BrandProfileExtractor
