@@ -1,0 +1,5 @@
+# Environment variables
+.env
+
+# Scraped dataset
+scraped_dataset/

@@ -1,0 +1,24 @@
+# Scraping
+instaloader
+
+# Text cleaning
+ftfy
+
+# LangChain core + Ollama integration
+langchain>=0.2.0
+langchain-core>=0.2.0
+langchain-ollama>=0.2.0
+
+# Local embeddings + clustering
+sentence-transformers>=3.0.0
+scikit-learn>=1.4.0
+
+# Vector store (Week 2)
+chromadb>=0.5.0
+
+# Data wrangling
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Config
+python-dotenv>=1.0.0
