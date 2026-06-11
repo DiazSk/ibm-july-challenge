@@ -3,3 +3,12 @@
 
 # Scraped dataset
 scraped_dataset/
+
+# Data
+data/cleaned/
+
+# __pycache__
+__pycache__/
+
+# streamlit cache
+.streamlit/

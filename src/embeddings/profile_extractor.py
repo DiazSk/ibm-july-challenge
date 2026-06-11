@@ -200,7 +200,7 @@ class BrandProfileExtractor:
         }
 
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(json.dumps(brand_profile, indent=2, ensure_ascii=False))
+        output_path.write_text(json.dumps(brand_profile, indent=2, ensure_ascii=False), encoding="utf-8")
 
         print("\n" + "─" * 60)
         print(f"Brand profile saved → {output_path}")

@@ -29,15 +29,15 @@ IG_HANDLE     = "@hot_cakesbakes"
 _LOGISTICS_PATTERNS = [
     r"📍|📩|📞|☎️|📱|🚚|🛵",
     r"\b\d{10}\b",                                   # 10-digit phone number
-    r"(?i)\bwhatsapp\b",
-    r"(?i)\b(dm\s+(?:us\s+)?for|order\s+(?:now|here|via)|pre.?order)\b",
-    r"(?i)\b(free\s+(?:home\s+)?delivery|pickup\s+available|home\s+delivery)\b",
-    r"(?i)\b(taloja|navi\s*mumbai|mumbai)\b",
-    r"(?i)\border\s+\d+\s*day",                      # "order 1 day prior"
-    r"(?i)\bfollow\s+@\w+",                          # "Follow @hot_cakesbakes"
-    r"(?i)\bfor\s+more\s+(delicious\s+)?updates\b",
+    r"\bwhatsapp\b",
+    r"\b(dm\s+(?:us\s+)?for|order\s+(?:now|here|via)|pre.?order)\b",
+    r"\b(free\s+(?:home\s+)?delivery|pickup\s+available|home\s+delivery)\b",
+    r"\b(taloja|navi\s*mumbai|mumbai)\b",
+    r"\border\s+\d+\s*day",                          # "order 1 day prior"
+    r"\bfollow\s+@\w+",                              # "Follow @hot_cakesbakes"
+    r"\bfor\s+more\s+(delicious\s+)?updates\b",
 ]
-_LOGISTICS_RE = re.compile("|".join(_LOGISTICS_PATTERNS))
+_LOGISTICS_RE = re.compile("|".join(_LOGISTICS_PATTERNS), re.IGNORECASE)
 
 # A paragraph containing only hashtags
 _HASHTAG_ONLY_RE = re.compile(r"^(\s*#\w+\s*)+$")
@@ -141,7 +141,7 @@ def run_pipeline(
             skipped += 1
             continue
         out = output_dir / f.name
-        out.write_text(json.dumps(record, indent=2, ensure_ascii=False))
+        out.write_text(json.dumps(record, indent=2, ensure_ascii=False), encoding="utf-8")
         records.append(record)
 
     print(f"Pipeline complete: {len(records)} posts cleaned, {skipped} skipped (no copy)")

@@ -1,7 +1,7 @@
 """
 Content clustering engine for @hot_cakesbakes brand data.
 
-Embeds marketing hooks with all-MiniLM-L6-v2 (local, MPS-accelerated),
+Embeds marketing hooks with all-MiniLM-L6-v2 (local),
 then segments posts into content pillars via K-Means.
 
 Input:  data/cleaned/ig_text_*.json   (from pipeline.py)
@@ -25,9 +25,25 @@ CLEANED_DIR   = _PROJECT_ROOT / "data" / "cleaned"
 OUTPUT_PATH   = _PROJECT_ROOT / "data" / "clusters.json"
 
 EMBED_MODEL  = "all-MiniLM-L6-v2"
-DEVICE       = "mps"          # Apple Silicon GPU — change to "cpu" if needed
+DEVICE       = "auto"         # auto | mps | cuda | cpu
 N_CLUSTERS   = 5
 RANDOM_STATE = 42
+
+
+def resolve_device(device: str = DEVICE) -> str:
+    """Pick the best available backend; avoids MPS warnings on non-Mac hosts."""
+    if device != "auto":
+        if device == "mps":
+            import torch
+            return "mps" if torch.backends.mps.is_available() else "cpu"
+        return device
+
+    import torch
+    if torch.backends.mps.is_available():
+        return "mps"
+    if torch.cuda.is_available():
+        return "cuda"
+    return "cpu"
 
 
 # ── Data loading ─────────────────────────────────────────────────────────────
@@ -50,13 +66,9 @@ def load_cleaned_posts(cleaned_dir: Path = CLEANED_DIR) -> list[dict]:
 def embed(texts: list[str], device: str = DEVICE) -> np.ndarray:
     """
     Encode texts with all-MiniLM-L6-v2 and L2-normalise for cosine similarity.
-    Falls back to CPU if the requested device is unavailable.
     """
-    try:
-        model = SentenceTransformer(EMBED_MODEL, device=device)
-    except Exception:
-        print(f"  Warning: device='{device}' unavailable, falling back to cpu.")
-        model = SentenceTransformer(EMBED_MODEL, device="cpu")
+    resolved = resolve_device(device)
+    model = SentenceTransformer(EMBED_MODEL, device=resolved)
 
     print(f"  Encoding {len(texts)} posts on {model.device}…")
     vecs = model.encode(texts, show_progress_bar=True, convert_to_numpy=True)
@@ -130,7 +142,7 @@ def run_clustering(
         "clusters"   : clusters,
     }
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(json.dumps(output, indent=2, ensure_ascii=False))
+    output_path.write_text(json.dumps(output, indent=2, ensure_ascii=False), encoding="utf-8")
     print(f"\nSaved → {output_path}")
 
     return output

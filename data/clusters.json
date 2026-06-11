@@ -1,0 +1,695 @@
+{
+  "n_clusters": 5,
+  "cluster_map": {
+    "_-L3aIOWU": 2,
+    "_1oBbJIpC": 1,
+    "_3QOdFP67": 0,
+    "_7WncaD-Y": 4,
+    "_8RipX84N": 1,
+    "__mE3Pn05": 2,
+    "__MsUw5Ec": 3,
+    "_a_yzw6QI": 0,
+    "_aIjsZOtP": 1,
+    "_bO_RYq7Q": 4,
+    "_cGCbbMJt": 0,
+    "_dbGiIemd": 3,
+    "_dFthdMkl": 4,
+    "_dH2pGwPW": 4,
+    "_hr1FAZ4G": 1,
+    "_ihpHY-BJ": 4,
+    "_j_1RXHMo": 2,
+    "_k-G8_IQF": 2,
+    "_l67-mjDP": 1,
+    "_mDn10Kz5": 0,
+    "_pHwiALHg": 4,
+    "_qhd63jlg": 4,
+    "_qNBEPIsn": 4,
+    "_qVgxET2O": 4,
+    "_s5z6K1r1": 2,
+    "_sJes6bJi": 1,
+    "_tiairi22": 0,
+    "_uZirMG1W": 0,
+    "_wCiqLkZb": 4,
+    "_x6sGjtp3": 1,
+    "_xFtkF7LR": 4,
+    "_xICzQo38": 1,
+    "_zkAkyCAS": 0,
+    "_zTDgD88E": 2,
+    "BAaf6ymqby": 0,
+    "BAagxFIk4H": 0,
+    "BACbQSB1qt": 4,
+    "BAClQrFW6f": 1,
+    "BAEOXqg4wn": 2,
+    "BAf3qLq0Cq": 3,
+    "BAfxCIig0E": 4,
+    "BAGuWKjC5x": 4,
+    "BAHlxZQEbD": 0,
+    "BAIDB954dl": 1,
+    "BAJNoKB8_r": 0,
+    "BAjpfit6SY": 2,
+    "BAJYb-Jz7Q": 1,
+    "BAKN2SleKr": 2,
+    "BAKQ9giaLG": 0,
+    "BALebqfz_j": 3,
+    "BALwjTl_Kv": 0,
+    "BAlwXljgax": 2,
+    "BAM_n61UB_": 0,
+    "BAMAeJUSDs": 0,
+    "BAMpVdh4Wj": 1,
+    "BAMQdd4uHB": 1,
+    "BAMryyXcZ-": 3,
+    "BAMVPI374a": 2,
+    "BANJmmmKom": 4,
+    "BANT6QlXKO": 0,
+    "BANuuHmCxX": 0,
+    "BANwBdna0k": 1,
+    "BANzAXPOWj": 0,
+    "BAOdcQvJK-": 0,
+    "BAP8NpltE4": 3,
+    "BAPDGiiVGv": 4,
+    "BAPN1-P-Ai": 4,
+    "BAPoYvpEHG": 0,
+    "BAQ5-4Rasu": 4,
+    "BAQAeBRkay": 2,
+    "BAQMCbqMJN": 1,
+    "BAQMyt8sjE": 3,
+    "BAQR5Zxg3m": 4,
+    "BAQunUzlAo": 4,
+    "BAQWXJDHNx": 0,
+    "BAr-WcnADH": 1,
+    "BAREMIDeLr": 0,
+    "BARfkoYWpe": 3,
+    "BARGSMmOqA": 2,
+    "BARUZ64Ito": 3,
+    "BARykEvXt3": 0,
+    "BAS7QvJg5w": 1,
+    "BASHCMAi7V": 3,
+    "BASVYRXS5x": 3,
+    "BASxwTNTSY": 2,
+    "BAUdui6vkm": 1,
+    "BAUHESHcYw": 1,
+    "BAVB6cUjQm": 4,
+    "BAVLZS4Dzt": 0,
+    "BAVomXUpqu": 1,
+    "BAVsuwek9f": 2,
+    "BAWg3vRO3D": 0,
+    "BAWuT_XVEf": 0,
+    "BAWX2-KOS1": 0,
+    "BAX3dnjuQz": 0,
+    "BAYYMiyCJP": 3,
+    "BAZCbXcQ82": 0,
+    "BAZr6HQtiA": 3,
+    "BB3ng3N7Hl": 0,
+    "BB4YR3Upju": 0,
+    "BB8tJFbMsG": 0,
+    "BBeaGUIfmL": 1,
+    "BBgsrpd33-": 4,
+    "BBhnGElwLY": 4,
+    "BBJMCbq2cS": 4,
+    "BBKnAg285U": 0,
+    "BBN6o2EGIP": 4,
+    "BBNtSM2JOB": 3,
+    "BBSO7gYo8E": 0,
+    "BBWsbmXiZz": 4,
+    "BBy1jLY9AY": 4,
+    "BBzPAdfAFf": 3,
+    "DVh7gDjjFfI": 1
+  },
+  "clusters": {
+    "0": [
+      {
+        "shortcode": "_3QOdFP67",
+        "timestamp_utc": "2026-01-17T04:29:45+00:00",
+        "marketing_hook": "Dekho na guys… phir bolo craving nahi hui 😭🍰\nDM to order 💌\n\nMade with love , soft moist,Homemade cake,Home baker , freshly baked , chocolate overload,eggless,"
+      },
+      {
+        "shortcode": "_a_yzw6QI",
+        "timestamp_utc": "2026-03-19T04:48:04+00:00",
+        "marketing_hook": "100% Homemade eggless donuts ,Soft, fresh & chocolate-loaded donuts 🍫🍩\nMade with love & fried to perfection ✨\n\nLimited boxes available today ⏳\n\nDM now to order 💌\nTo Order (Link in bio)"
+      },
+      {
+        "shortcode": "_cGCbbMJt",
+        "timestamp_utc": "2025-10-12T06:32:12+00:00",
+        "marketing_hook": "Chocolate Cake 🤎\n\nTo order / enquires DM @hot_cakesbakes"
+      },
+      {
+        "shortcode": "_mDn10Kz5",
+        "timestamp_utc": "2026-04-18T04:41:29+00:00",
+        "marketing_hook": "Yesterday's brownie bulk order 🍫✨\nNow accepting wholesale & bulk orders!\nPerfect for stall owners & resellers –\nyou can keep your margin and sell easily 💸\n\nAvailable items:\n• Brownies\n• Bomboloni ( Filling & without filling )\n• Donuts\n• cake sponge \n• bowl cake sponge ( vanilla , chocolate, red velvet)\n\nFreshly made | Good quality | Reasonable rates\nDM to order or collaborate 🤍"
+      },
+      {
+        "shortcode": "_tiairi22",
+        "timestamp_utc": "2025-12-04T04:51:52+00:00",
+        "marketing_hook": "🎂 Handmade Black Forest, crafted fresh for every order.\n✨ Premium ingredients, pure indulgence.\n🍒 Creating every Black Forest with love and perfection.\n🤎 Because good cake makes every moment special.\n\nFor orders/enquiries DM @hot_cakesbakes\n\n( Black Forest cake,homemade cakes,premium bakery,made on order,whipping cream,freshly baked,cake making,cake process reel,Trending cake reel,Quality ingredients,Handmade with love,cake making )"
+      },
+      {
+        "shortcode": "_uZirMG1W",
+        "timestamp_utc": "2026-02-21T05:00:59+00:00",
+        "marketing_hook": "POV: It's just a sponge… until a baker touches it 👩🏻‍🍳✨\n5 seconds transformation.\nHours of effort.\nOne happy customer 💕\nCustomised cakes available.\nBook your dates in advance 💌"
+      },
+      {
+        "shortcode": "_zkAkyCAS",
+        "timestamp_utc": "2026-04-25T04:40:23+00:00",
+        "marketing_hook": "They say love is in the little things…\nbut honestly? it looks like this 😭❤️\nSoft, fresh, filled with pure happiness 🍩✨\n\nSend this to the one who owes you this ASAP 👀\n⚡ DM to order | Limited fresh batches daily"
+      },
+      {
+        "shortcode": "BAaf6ymqby",
+        "timestamp_utc": "2026-05-18T04:53:44+00:00",
+        "marketing_hook": "24 hours. Zero sleep. Full kitchen chaos… but totally worth it 🥹✨\n\n100 pcs Bomboloni 🍩\n12kg sponge 🎂\n2 custom cakes ✨\n\n* many small orders packed with love ❤️\n\nThis is why we were fully booked this weekend 🫶🏻\nAlhamdulillah for every single order, support & trust in my small business."
+      },
+      {
+        "shortcode": "BAagxFIk4H",
+        "timestamp_utc": "2026-02-07T04:40:17+00:00",
+        "marketing_hook": "Even if she's your forever…\nmake it special.\nAsk her. Surprise her.\nSay it with cake this Valentine 🌹🍰❤️\nBecause love deserves something sweet.\n\nIntroducing our Bento Cake + 2 Cupcake Valentine Hamper ❤️"
+      },
+      {
+        "shortcode": "BAHlxZQEbD",
+        "timestamp_utc": "2025-12-06T05:18:15+00:00",
+        "marketing_hook": "POV: Packing a cute Bento Cake for today's order 🎀✨\nMade fresh, packed with love & ready to make someone's day.\n\nFor Orders/Enquiries DM @hot_cakesbakes"
+      },
+      {
+        "shortcode": "BAJNoKB8_r",
+        "timestamp_utc": "2025-10-06T06:09:07+00:00",
+        "marketing_hook": "Birthday Cake 🤎\n\nTo order / enquire DM @hot_cakesbakes"
+      },
+      {
+        "shortcode": "BAKQ9giaLG",
+        "timestamp_utc": "2026-02-18T04:40:23+00:00",
+        "marketing_hook": "Cakes said \"maybe next month\" 😭\nBomboloni said \"don't worry, I got you.\" 🍩😮‍💨"
+      },
+      {
+        "shortcode": "BALwjTl_Kv",
+        "timestamp_utc": "2026-03-23T04:40:34+00:00",
+        "marketing_hook": "POV: self control left the chat 😭🍫\n\nFreshly made, rich chocolate ganache that hits different every single time.\nIf you're seeing this… it's your sign to order dessert today 👀✨"
+      },
+      {
+        "shortcode": "BAM_n61UB_",
+        "timestamp_utc": "2026-02-15T04:49:01+00:00",
+        "marketing_hook": "Valentine Special Hamper ❤️\nIf he wanted to, he would… order this 😌💘\nTag him as a hint 👀🎁\nDM to customize yours ❤️"
+      },
+      {
+        "shortcode": "BAMAeJUSDs",
+        "timestamp_utc": "2026-01-03T05:39:22+00:00",
+        "marketing_hook": "Warning ⚠️ These brownies make people fall in love 🤎\n\nFor Orders / Enquries DM @hot_cakesbakes"
+      },
+      {
+        "shortcode": "BANT6QlXKO",
+        "timestamp_utc": "2026-05-27T04:51:49+00:00",
+        "marketing_hook": "Oreo Glass Cake 🍪🤎"
+      },
+      {
+        "shortcode": "BANuuHmCxX",
+        "timestamp_utc": "2025-12-26T14:27:54+00:00",
+        "marketing_hook": "Handcrafted Santa cake made fresh on order 🎅🍰\nNo preservatives | Premium ingredients\nBook your Christmas cake now 🎄\n\nSanta cake ,Christmas cake,xmasbaking,Santa reel ,homebakery,cake reel,made to order ,No preservatives\n\nFor Order /Enquries DM @hot_cakesbakes\n\n#santacake ,#cakereel #bakingreels #mumbaibaker #homemadecakes #reelsindia #trending #supportsmallbusiness #navimumbaikar"
+      },
+      {
+        "shortcode": "BANzAXPOWj",
+        "timestamp_utc": "2026-06-05T05:18:05+00:00",
+        "marketing_hook": "POV: A customer tried our mini pancakes once… and came back with a 120-piece order 🤭🥞✨\n\nNothing makes us happier than repeat customers and bulk orders! Freshly made, chocolate-loaded, and perfect for every celebration. ❤️"
+      },
+      {
+        "shortcode": "BAOdcQvJK-",
+        "timestamp_utc": "2025-10-16T05:47:26+00:00",
+        "marketing_hook": "Looking for a Dutch Truffle Cake that actually tastes homemade? Ours is made without premix, in a spotless kitchen, and with premium ingredients. One bite and you'll know the difference! 😍🍫\n\nOur Dutch Truffle Cake is rich, smooth, and 100% made from scratch – no premix, no shortcuts. Just pure chocolate indulgence, baked with care and hygiene 🎂🧼🍫\n\nTo order /enquire : DM @hot_cakesbakes"
+      },
+      {
+        "shortcode": "BAPoYvpEHG",
+        "timestamp_utc": "2025-10-24T05:28:00+00:00",
+        "marketing_hook": "When your cake matches your mood - bright,messy and happy✨"
+      },
+      {
+        "shortcode": "BAQWXJDHNx",
+        "timestamp_utc": "2026-01-04T05:45:29+00:00",
+        "marketing_hook": "Cravings don't ask for permission 😌🍩\nFreshly made Bomboloni\nDM to order 🤍\n\nFor Orders / Enquries DM @hot_cakesbakes\n\nBomboloni,freshly made,made on order ,filled Bomboloni,Daily fresh,handmade desserts,donut craving,chocolate filled"
+      },
+      {
+        "shortcode": "BAREMIDeLr",
+        "timestamp_utc": "2026-02-25T04:40:30+00:00",
+        "marketing_hook": "Packing a 7th anniversary surprise 🤎✨\nFrom my oven to their forever memories 🎂💍\nEvery swirl, every drip, made with love.\n\nDM to order your celebration cake 💌"
+      },
+      {
+        "shortcode": "BARykEvXt3",
+        "timestamp_utc": "2026-04-29T04:40:24+00:00",
+        "marketing_hook": "Because it's never about the price… it's about the effort ❤️\nMake your special moments sweeter with our custom bento cakes 🫶\n\nDM to order | 1 day prior booking"
+      },
+      {
+        "shortcode": "BAVLZS4Dzt",
+        "timestamp_utc": "2026-02-03T04:40:12+00:00",
+        "marketing_hook": "POV: Tiny hearts, messy cake… but every bite is pure love 🤍❤️🍰\nThe crumb coat went viral, and now here's the real finale! Not perfect, but made with passion and flavor 😌✨\nBaking is messy, learning is fun, and every cake tells a story 💕\n\nFalooda cake ,viral cake,dessert goals,bake with love ,food reels,progress over perfection,tinny heart cake ,cake inspo\n\n#falooda #cakelovers #bakingreels #cakedecorating #homebaker #sweettooth #bakingcommunity #foodiereels #viralcake #bakewithlove #cakeart #reelsvideo❤️ #cakestagram #navimumbaikar #madetoorder #foodieheaven #dessertlove"
+      },
+      {
+        "shortcode": "BAWg3vRO3D",
+        "timestamp_utc": "2026-05-10T04:45:42+00:00",
+        "marketing_hook": "Ordered half kg… received extra love instead 🤎✨\nBecause at our bakery, we don't believe in \"less toppings\" 😭🍫\n\nRich chocolate glaze, soft sponge & those perfect piping details made with pure love ✨\nYour celebrations deserve more than just a basic cake 🎂"
+      },
+      {
+        "shortcode": "BAWuT_XVEf",
+        "timestamp_utc": "2026-05-21T05:35:02+00:00",
+        "marketing_hook": "POV: one spoon and you're addicted 🤍🍫\nWhite chocolate + Oreo = the most dangerous combo 😮‍💨✨\nOur White Choco Oreo Bowl is loaded with creamy goodness, crunchy Oreo & pure chocolate happiness 🤍🍪\nDm to order yours 🤎"
+      },
+      {
+        "shortcode": "BAWX2-KOS1",
+        "timestamp_utc": "2026-01-10T04:47:54+00:00",
+        "marketing_hook": "Not just a cake… a goodbye they'll remember forever 🎓🍰\n\nBaked with love for a special farewell 🎓🤍\n3 KG chocolate farewell cake\nfor Class 10th (2025–26) ❤️\nFlavor : Dutch Truffle"
+      },
+      {
+        "shortcode": "BAX3dnjuQz",
+        "timestamp_utc": "2026-04-26T04:40:08+00:00",
+        "marketing_hook": "Flowers fade… but brownies stay in your heart forever 😭🍫\nSoft, fudgy, chocolate-loaded brownies made fresh at home 🤤✨\n\nTag the one who should surprise you with this ❤️👇\nDM to order yours now ✨"
+      },
+      {
+        "shortcode": "BAZCbXcQ82",
+        "timestamp_utc": "2026-01-16T05:19:37+00:00",
+        "marketing_hook": "For the days when comfort comes in cake form 🤍🍰\n\nComfort cake , stress relief,soft girl vibe,bakery therapy,dessert mood, rasmalai cake , royal dessert , home made cakes , homebakery"
+      },
+      {
+        "shortcode": "BB3ng3N7Hl",
+        "timestamp_utc": "2025-11-11T05:38:29+00:00",
+        "marketing_hook": "Eggless cookie 🍪\n\nAt Hot_CakesBakes, every cookie is baked fresh with love 🤍\nFrom mixing to packing — we maintain full hygiene so you can enjoy every bite safely 🍪✨\nBecause homemade means care in every detail 🧤💛"
+      },
+      {
+        "shortcode": "BB4YR3Upju",
+        "timestamp_utc": "2025-12-02T05:05:39+00:00",
+        "marketing_hook": "Freshly baked 30 cupcakes for today's order ✨ Thank you for choosing @hot_cakesbakes homemade goodness.\nAnother bulk order completed - 30 soft & fresh cupcakes ready to sweeten someone's day 🤍🧁\n\"Handcrafted in small batches. Baked fresh. Made with love 🤎\n\nFor Orders /enquires DM @hot_cakesbakes\n\nWhy you should order with us ?\n\n• we use quality ingredients \n• no premix \n• we baked fresh on orders \n• we do not store\n\n( Freshly baked ,sweet treats ,cupcake lovers,homemade goodness,mini delight,perfectly,happy bites,gourmet cupcake,bulk order joy,celebration ready,handcrafted,treat yourself,sweet moments,frosted to perfection"
+      },
+      {
+        "shortcode": "BB8tJFbMsG",
+        "timestamp_utc": "2026-01-27T04:59:48+00:00",
+        "marketing_hook": "Dutch Truffle Cake 🤎"
+      },
+      {
+        "shortcode": "BBKnAg285U",
+        "timestamp_utc": "2026-06-01T04:57:09+00:00",
+        "marketing_hook": "The kitchen at hot_cakes bakes smells incredible right now... 🤤 Watch these golden, fluffy Bomboloni fry to absolute perfection! Fresh, warm, and ready to be stuffed with your favorite fillings.\n\n🚨 THE 5-MINUTE CHALLENGE: Tag the friend who owes you a treat. If they don't reply to your tag in 5 minutes, they're buying you a box of fresh hot_cakes bakes Bomboloni this weekend. Clock is ticking! ⏰👇"
+      },
+      {
+        "shortcode": "BBSO7gYo8E",
+        "timestamp_utc": "2026-05-19T04:45:02+00:00",
+        "marketing_hook": "How can I stop now… when people trust me with their special days 🤍⚽\nFrom late-night baking to early morning deliveries, every cake carries emotions, love & hard work. Grateful for every single order, every repeat client, and every \"Mashallah\" that keeps me going 🫶✨\nCustom cakes made with love 🎂\nDm to book your special day orders 💌"
+      }
+    ],
+    "1": [
+      {
+        "shortcode": "_1oBbJIpC",
+        "timestamp_utc": "2026-05-01T04:40:39+00:00",
+        "marketing_hook": "POV: You asked for 350g… but I don't believe in \"just enough\" ❤️\nBecause when it's from my kitchen, it's always a little extra love (and grams 😉)"
+      },
+      {
+        "shortcode": "_8RipX84N",
+        "timestamp_utc": "2026-02-26T04:41:02+00:00",
+        "marketing_hook": "Making Cakes instead of life decision.✨\n\nDm To order your sweet therapy 🤍"
+      },
+      {
+        "shortcode": "_aIjsZOtP",
+        "timestamp_utc": "2026-02-06T04:46:20+00:00",
+        "marketing_hook": "One bite of rasmalai cake & all diet plans got cancelled 😌✨\nSoft. Milky. Royal. 💛\n\nRasmalai cake , Indian dessert, milk cake ,soft cake ,fusion dessert ,viral cake , trending cake"
+      },
+      {
+        "shortcode": "_hr1FAZ4G",
+        "timestamp_utc": "2026-01-21T04:54:06+00:00",
+        "marketing_hook": "wait—come check this 🤎\nsoft butter cookies + chocolate dip 🍪\ntell me you wouldn't eat just one 😭"
+      },
+      {
+        "shortcode": "_l67-mjDP",
+        "timestamp_utc": "2026-03-07T04:43:01+00:00",
+        "marketing_hook": "Step 1: Follow the page\nStep 2: Comment PUDDING\nStep 3: I'll send the recipe in DM ❤️\n\nNo oven. No fancy ingredients. Just biscuits and Homemade chocolate syrup (no chocolate needed)🍮✨\n\nThis **super creamy Biscuit Pudding** is one of the easiest desserts you can make at home. Soft layers, homemade chocolate syrup and ready with simple ingredients 😍\n\nComment **\"PUDDING\"** and I'll send it to you ❤️\n\nDon't forget to **save this reel** so you can try it later!\n\nEasy dessert ,No bake dessert,10minute dessert,quick dessert recipe,Home made dessert ,creamy biscuit pudding ,must try"
+      },
+      {
+        "shortcode": "_sJes6bJi",
+        "timestamp_utc": "2026-05-23T05:28:37+00:00",
+        "marketing_hook": "Pistachio kunafa bowl 🤍"
+      },
+      {
+        "shortcode": "_x6sGjtp3",
+        "timestamp_utc": "2026-05-06T05:10:58+00:00",
+        "marketing_hook": "Soft sponge soaked in rich rasmalai milk, layered with creamy frosting & topped with juicy rasmalai pieces 💛\nA perfect fusion of classic Indian dessert and cake—made fresh for your special moments ✨\nCustom orders available for birthdays & celebrations 🎂\nDM to order or book yours today!"
+      },
+      {
+        "shortcode": "_xICzQo38",
+        "timestamp_utc": "2026-03-06T04:51:28+00:00",
+        "marketing_hook": "Fresh donuts going into the oil and turning perfectly golden 🍩✨\nThis is the most satisfying moment for any baker. Soft, fluffy and made fresh at home."
+      },
+      {
+        "shortcode": "BAClQrFW6f",
+        "timestamp_utc": "2026-05-26T04:40:56+00:00",
+        "marketing_hook": "🍫✨ Layers so good, one bite is never enough 🤎\nFreshly made chocolate dessert tubs loaded with rich creamy goodness 😍"
+      },
+      {
+        "shortcode": "BAIDB954dl",
+        "timestamp_utc": "2025-10-08T03:09:21+00:00",
+        "marketing_hook": "A little cream, a little yellow, and a whole lot of sweetness! 🍰💛\n\nIn frame : 1/2 kg birthday cake"
+      },
+      {
+        "shortcode": "BAJYb-Jz7Q",
+        "timestamp_utc": "2025-11-09T06:04:11+00:00",
+        "marketing_hook": "Say hello to our new Chocolate Chunk Cookies! 🤎"
+      },
+      {
+        "shortcode": "BAMpVdh4Wj",
+        "timestamp_utc": "2026-01-25T04:31:08+00:00",
+        "marketing_hook": "Me every time I choose \"healthy\" for 5 minutes…\nAlso me falling for donuts like this 👀🍩💸\nTag that friend who can't say no to sweets 😭"
+      },
+      {
+        "shortcode": "BAMQdd4uHB",
+        "timestamp_utc": "2026-01-18T04:47:51+00:00",
+        "marketing_hook": "You stopped rushing life 🤍\nSo I baked it slowly, with love and patience 🍰✨\nBecause good things take time.\nSoft layers. Fresh cream. Made at home.\nDM to order 💌\n\nAsthetic,soft,baking,homemade with love,dessert love"
+      },
+      {
+        "shortcode": "BANwBdna0k",
+        "timestamp_utc": "2026-02-13T04:40:29+00:00",
+        "marketing_hook": "12 hours later… still making it perfect 🧠❌🍫\n\n12 hours of baking, frosting & ganache pouring… and we still don't compromise on quality 🤎\nEvery layer made with love, patience & a little bit of madness 🥴🍰\nTag a chocolate lover who would finish this in seconds 👇"
+      },
+      {
+        "shortcode": "BAQMCbqMJN",
+        "timestamp_utc": "2026-02-08T04:44:18+00:00",
+        "marketing_hook": "POV: The cream decides your mood today 😮‍💨\nBaking isn't always aesthetic…\nSome days it's patience, practice & pressure 🤍🍰\nStill showing up. Still creating.\n👉 Save this if you relate\n👉 Comment \"CREAM\" if this happens to you too"
+      },
+      {
+        "shortcode": "BAr-WcnADH",
+        "timestamp_utc": "2026-03-03T04:45:40+00:00",
+        "marketing_hook": "AI tried… but real bakers don't resign 😌🍩🔥\nSoft. Sugary. Perfectly risen.\nHandmade > Artificial 🤍"
+      },
+      {
+        "shortcode": "BAS7QvJg5w",
+        "timestamp_utc": "2025-10-25T05:36:48+00:00",
+        "marketing_hook": "You're healing through baking 🤌🏻✨\n\nIn frame : 1 kg Pineapple Cake 💛\n\n100% fresh. 0% premix. 100% yum 😍"
+      },
+      {
+        "shortcode": "BAUdui6vkm",
+        "timestamp_utc": "2026-05-14T04:59:05+00:00",
+        "marketing_hook": "No talking. Just a baker healing herself with new equipment ASMR ✨\n\nEvery small upgrade feels so special when you build your baking business from home 🥹🤍\nCan't wait to create more dreamy cakes, bomboloni & desserts with this beauty ✨🍰"
+      },
+      {
+        "shortcode": "BAUHESHcYw",
+        "timestamp_utc": "2026-04-30T04:48:03+00:00",
+        "marketing_hook": "Not just cream — we fill it with real, juicy rasmalai in every layer 🤤✨\nBecause a rasmalai cake should actually taste like rasmalai, right? 😮‍💨\nSave this for your next celebration & tag someone who needs this ASAP 👇💛"
+      },
+      {
+        "shortcode": "BAVomXUpqu",
+        "timestamp_utc": "2026-03-20T04:40:45+00:00",
+        "marketing_hook": "Something went wrong… but I kept frying anyway 👀🍩\nReal bakers know… not every batch is perfect 💔\nCan YOU spot the mistake? 👇"
+      },
+      {
+        "shortcode": "BBeaGUIfmL",
+        "timestamp_utc": "2026-03-11T04:46:04+00:00",
+        "marketing_hook": "100% Fresh homemade eggless donuts ❤️\n\nSoft, fluffy and made fresh in small batches.\nIf this reel made you crave donuts… mission successful 🤤"
+      },
+      {
+        "shortcode": "DVh7gDjjFfI",
+        "timestamp_utc": "2026-03-06T04:51:28+00:00",
+        "marketing_hook": "Fresh donuts going into the oil and turning perfectly golden 🍩✨\nThis is the most satisfying moment for any baker. Soft, fluffy and made fresh at home."
+      }
+    ],
+    "2": [
+      {
+        "shortcode": "_-L3aIOWU",
+        "timestamp_utc": "2026-06-03T04:45:12+00:00",
+        "marketing_hook": "The hustle doesn't sleep, and neither do our cravings. 🤫🍩\n\nBy day: \"I'm trying to eat healthier.\" 🥗\nBy night: Baking a fresh batch of hot, fluffy donuts because the midnight motivation hit. 🤷‍♀️✨\n\nWhen you run a bakery, the kitchen calls your name at 1 AM, and honestly, who are we to argue? We take our donut-decorating duties very seriously—no matter the hour—to make sure you always get the absolute best.\n\nTag that friend who always ruins their diet at midnight, and tell them it's time to place an order! 👇"
+      },
+      {
+        "shortcode": "__mE3Pn05",
+        "timestamp_utc": "2026-05-22T04:41:29+00:00",
+        "marketing_hook": "Drop ❤️ If you agree"
+      },
+      {
+        "shortcode": "_j_1RXHMo",
+        "timestamp_utc": "2026-02-09T04:42:04+00:00",
+        "marketing_hook": "I'll stick to baking… not voiceovers 😭🎂\nLet the cake do the talking.\n\nFunny baker, voiceover fail,home baker life , behind the scenes,relatable reel,bakery content"
+      },
+      {
+        "shortcode": "_k-G8_IQF",
+        "timestamp_utc": "2025-12-13T05:26:38+00:00",
+        "marketing_hook": "From Pinterest to real life 🎂📌\nHome-baked with love 🤍\nHow did I do? 👀"
+      },
+      {
+        "shortcode": "_s5z6K1r1",
+        "timestamp_utc": "2026-01-24T04:36:20+00:00",
+        "marketing_hook": "We all know \"tomorrow\" never comes 🤍"
+      },
+      {
+        "shortcode": "_zTDgD88E",
+        "timestamp_utc": "2026-02-11T04:40:09+00:00",
+        "marketing_hook": "You were not supposed to stop here 🍓\nBut this sound controls your brain 😌\n🎧 Sound ON"
+      },
+      {
+        "shortcode": "BAEOXqg4wn",
+        "timestamp_utc": "2025-11-22T04:45:54+00:00",
+        "marketing_hook": "Created with love 🤎"
+      },
+      {
+        "shortcode": "BAjpfit6SY",
+        "timestamp_utc": "2025-12-07T05:10:19+00:00",
+        "marketing_hook": "Every single order still makes my heart do a little happy dance 🥹🎀\nRunning a small business means nothing goes unnoticed - every message, every order, every kind word.\nForever grateful 🤍✨"
+      },
+      {
+        "shortcode": "BAKN2SleKr",
+        "timestamp_utc": "2026-02-05T04:40:22+00:00",
+        "marketing_hook": "Not famous.\nJust a small business, supported by strangers 🖤\nForever grateful for every view, like, share & order.\nThis is how dreams grow — quietly, honestly.\n✨ If you support small businesses, you're part of the dream ✨\n\nSmall business journey,gratitude,building dreams,small business owner,behind the scene,slow moments ,aesthetic reel,real business ,handmade ,home baker ,growth mindset"
+      },
+      {
+        "shortcode": "BAlwXljgax",
+        "timestamp_utc": "2026-06-06T11:02:59+00:00",
+        "marketing_hook": "Taking 47 pictures of the brownie 🤎📸\nAnd still posting the first one 😭"
+      },
+      {
+        "shortcode": "BAMVPI374a",
+        "timestamp_utc": "2026-03-08T04:40:31+00:00",
+        "marketing_hook": "Sometimes the kitchen is the only place that feels like home 🍫✨\nBaking, chocolate, and a little peace in every swirl. 🦋"
+      },
+      {
+        "shortcode": "BAQAeBRkay",
+        "timestamp_utc": "2025-10-21T05:40:19+00:00",
+        "marketing_hook": "He said he's charging extra for premium handling 💸🫡\n\nHe's just 13….but already my biggest supporter 🥺📦❤️"
+      },
+      {
+        "shortcode": "BARGSMmOqA",
+        "timestamp_utc": "2025-11-02T05:49:28+00:00",
+        "marketing_hook": "Me: It's for content 😌\nAlso me: finishes the pastry 😂🍫\n\n#fyp #trending #instagood #instamood #instagram #content #bakers #fyp #explore \n#BakersBeLike #RelatableReel #HomeBakerLife #ChocolateMood\""
+      },
+      {
+        "shortcode": "BASxwTNTSY",
+        "timestamp_utc": "2026-01-20T04:45:08+00:00",
+        "marketing_hook": "Not responsible for sudden cravings 😮‍💨🍩\nComment \"🍩\" if you felt this"
+      },
+      {
+        "shortcode": "BAVsuwek9f",
+        "timestamp_utc": "2026-01-31T04:31:57+00:00",
+        "marketing_hook": "One order can be luck…\nComing back is love ❤️🍩\nRepeat customers = real success ✨"
+      }
+    ],
+    "3": [
+      {
+        "shortcode": "__MsUw5Ec",
+        "timestamp_utc": "2026-03-25T04:40:25+00:00",
+        "marketing_hook": "You came for Bomboloni… but trust me, these Nutella cookies will steal the show 🍪🤤\nSoft, gooey & loaded with rich Nutella in every bite ❤️"
+      },
+      {
+        "shortcode": "_dbGiIemd",
+        "timestamp_utc": "2026-04-23T04:40:16+00:00",
+        "marketing_hook": "Our BEST SELLER Nutella Bomboloni 🍫🤤\nSoft, fluffy, sugar-coated & filled with rich Nutella in every bite 😍✨\n\nThis is the one everyone keeps coming back for… and once you try, you'll know why 😭🔥\nBe careful — one is never enough 👀"
+      },
+      {
+        "shortcode": "BAf3qLq0Cq",
+        "timestamp_utc": "2026-05-31T05:34:02+00:00",
+        "marketing_hook": "Kitkat Nutella Brownie bowl 🤎\n\nOur KitKat Nutella Brownie Bowl is loaded with fudgy brownies, rich Nutella, and crunchy KitKat in every bite.\n\nSave this reel for your next chocolate craving and tag your dessert partner below. 👇"
+      },
+      {
+        "shortcode": "BALebqfz_j",
+        "timestamp_utc": "2026-05-20T04:42:29+00:00",
+        "marketing_hook": "Freshly fried, soft, fluffy & dangerously addictive 🤤\nOne box can fix every mood 😭🤎\n\nTo Order (link in bio)"
+      },
+      {
+        "shortcode": "BAMryyXcZ-",
+        "timestamp_utc": "2026-03-01T04:40:04+00:00",
+        "marketing_hook": "Soft, rich & loaded with chocolate 🤎🍫\n\nOur best-selling KitKat & Truffle donuts are freshly made and packed with love 🍩✨\nIf you love chocolate, this box is for you 😭"
+      },
+      {
+        "shortcode": "BAP8NpltE4",
+        "timestamp_utc": "2026-01-11T04:53:16+00:00",
+        "marketing_hook": "POV: You found Nutella at the center 🤤🍪\nThis is your sign to order 😌"
+      },
+      {
+        "shortcode": "BAQMyt8sjE",
+        "timestamp_utc": "2026-04-11T04:40:37+00:00",
+        "marketing_hook": "Soft, fluffy Bomboloni filled with rich Nutella 🤤🍫\nFreshly made & packed with love… one bite and you're obsessed 😭✨\nPerfect for your sweet cravings, late night treats & coffee dates ☕🍩"
+      },
+      {
+        "shortcode": "BARfkoYWpe",
+        "timestamp_utc": "2026-03-30T11:02:38+00:00",
+        "marketing_hook": "Warm, soft, and loaded with chocolate chips… 🍪✨\nThese Nutella Cookies are not just cookies, they're pure comfort in every bite 🤎\nFreshly baked. Perfectly gooey.\nAnd honestly… one is never enough 😮‍💨"
+      },
+      {
+        "shortcode": "BARUZ64Ito",
+        "timestamp_utc": "2026-02-23T04:45:39+00:00",
+        "marketing_hook": "Almond Nutella Cake 🤎"
+      },
+      {
+        "shortcode": "BASHCMAi7V",
+        "timestamp_utc": "2026-02-14T04:40:14+00:00",
+        "marketing_hook": "Warning ⚠️ This Nutella Almond Cake will ruin all other desserts for you 🤤🍫✨\nCreamy. Chocolaty. Crunchy. Irresistible."
+      },
+      {
+        "shortcode": "BASVYRXS5x",
+        "timestamp_utc": "2025-11-01T05:00:37+00:00",
+        "marketing_hook": "A little crunch, a lot of Nutella 💫🤎\n\nWe fill our cakes with lots of rich Nutella and crunchy almonds — every bite tastes heavenly 🍫🌰✨\nAt Hot Cakes Bakes, we believe in quality. No premix, no shortcuts — just fresh, homemade goodness baked with love 💖\n\n#nutella #foryou #trend #homemade #supportsmallbusiness #fyp #almond #explorepage✨ #instagrowth"
+      },
+      {
+        "shortcode": "BAYYMiyCJP",
+        "timestamp_utc": "2026-05-13T05:12:54+00:00",
+        "marketing_hook": "Soft & fluffy Bomboloni filled with rich Nutella till every bite melts in your mouth 🤤🍩✨\nMade fresh at home with lots of love ❤️"
+      },
+      {
+        "shortcode": "BAZr6HQtiA",
+        "timestamp_utc": "2026-04-09T05:45:31+00:00",
+        "marketing_hook": "Not just popular… it's our BEST SELLER for a reason 🍩🍫\nSoft dough, sugar-coated, filled with rich Nutella 🤤\nTry once & you'll keep coming back 😭\nDM to order 💌"
+      },
+      {
+        "shortcode": "BBNtSM2JOB",
+        "timestamp_utc": "2025-12-30T05:06:30+00:00",
+        "marketing_hook": "If loving Nutella brownies is wrong, I don't wanna be right 🍫😌"
+      },
+      {
+        "shortcode": "BBzPAdfAFf",
+        "timestamp_utc": "2026-04-07T04:40:47+00:00",
+        "marketing_hook": "Almond Nutella Cake 🤤✨\nSoft almond layers + rich Nutella = pure heaven in every bite 🤎\nIf you're a real dessert lover, this one is for you 😍"
+      }
+    ],
+    "4": [
+      {
+        "shortcode": "_7WncaD-Y",
+        "timestamp_utc": "2026-04-08T04:40:09+00:00",
+        "marketing_hook": "There's something about freshly fried Bomboloni, hot coffee & old songs… it just feels like comfort in every bite ☕🍩🎶\nSoft, warm & made fresh — once you try, you'll crave it again 🤤"
+      },
+      {
+        "shortcode": "_bO_RYq7Q",
+        "timestamp_utc": "2026-04-19T04:40:13+00:00",
+        "marketing_hook": "Fresh Bomboloni bulk order going out today 🤎✨\nPerfect for stalls, cafés & home sellers\nWe supply fresh desserts at wholesale rates so you can keep your own margin & grow your business 💰\n\nAffordable | Fresh | Ready to sell"
+      },
+      {
+        "shortcode": "_dFthdMkl",
+        "timestamp_utc": "2026-03-12T05:02:48+00:00",
+        "marketing_hook": "100% Fresh homemade Bomboloni 🍩 frying till perfectly golden 🤤\nSoft, fluffy and made fresh with love.\nIf this popped up on your feed, it's your sign to try Bomboloni today 🍩"
+      },
+      {
+        "shortcode": "_dH2pGwPW",
+        "timestamp_utc": "2026-04-21T04:53:44+00:00",
+        "marketing_hook": "Today's bulk order 🤎✨\nFreshly prepared Bomboloni made with love & care 🍩\nFrom small orders to bulk — growing step by step 🤍\nThank you for trusting our desserts 💛\nWe provide fresh & affordable desserts for bulk, parties & stall supply 💰"
+      },
+      {
+        "shortcode": "_ihpHY-BJ",
+        "timestamp_utc": "2025-11-15T05:12:48+00:00",
+        "marketing_hook": "If making Bomboloni counts as therapy, then I've healed 1000 times 😌🍩✨"
+      },
+      {
+        "shortcode": "_pHwiALHg",
+        "timestamp_utc": "2026-03-04T04:40:30+00:00",
+        "marketing_hook": "A few TIPS for perfect Bomboloni 🤍🍩\n\n1️⃣ Always weight your ingredients using a scale for accurate measurements. Precision makes a huge difference in texture.\n\n2️⃣ Knead the dough until smooth and elastic - don't overmix, but make sure gluten is properly developed.\n\n3️⃣ Do the windowpane test. If the dough stretches thin without tearing, it's ready.\n\n4️⃣ Let the dough proof patiently until doubled in size. Proper proofing gives that soft, airy inside.\n\n5️⃣ Keep the oil temperature between 160–170°C. Too hot will brown fast, too low will absorb oil.\n\n6️⃣ Flip gently only once, when one side turns golden. This helps maintain shape and develop the perfect white ring.\n\nConsistency + patience = perfect Bomboloni every time ✨🤍\n\nSave this for your next batch 🍩"
+      },
+      {
+        "shortcode": "_qhd63jlg",
+        "timestamp_utc": "2026-04-05T04:40:25+00:00",
+        "marketing_hook": "You saw this for a reason… now don't ignore your craving 🤤🔥\nFreshly made Bomboloni, soft like clouds & filled with pure happiness 💛"
+      },
+      {
+        "shortcode": "_qNBEPIsn",
+        "timestamp_utc": "2026-01-28T04:30:18+00:00",
+        "marketing_hook": "Wada toh sab karte hain…\nBomboloni koi-koi khilata hai 😌🍩"
+      },
+      {
+        "shortcode": "_qVgxET2O",
+        "timestamp_utc": "2025-11-16T05:01:09+00:00",
+        "marketing_hook": "Bomboloni ASMR for your cravings 🍩✨\nFresh, soft & filled to perfection.\nTurn your sound on 🔊✨\n#satisfying"
+      },
+      {
+        "shortcode": "_wCiqLkZb",
+        "timestamp_utc": "2026-04-04T04:40:17+00:00",
+        "marketing_hook": "Soft, fresh & sugar-coated Bomboloni that MELTS in your mouth 🤤🍩\nNot your regular donut… this is pure happiness 😮‍💨✨"
+      },
+      {
+        "shortcode": "_xFtkF7LR",
+        "timestamp_utc": "2026-03-24T05:05:44+00:00",
+        "marketing_hook": "✨ Freshly made Bomboloni, soft, fluffy & filled with love 🤍\nEvery bite = pure happiness 😍"
+      },
+      {
+        "shortcode": "BACbQSB1qt",
+        "timestamp_utc": "2025-12-10T06:06:03+00:00",
+        "marketing_hook": "My brother's savage mode comes free with every dessert bite 😎🍰"
+      },
+      {
+        "shortcode": "BAfxCIig0E",
+        "timestamp_utc": "2026-03-16T04:43:17+00:00",
+        "marketing_hook": "Soft, golden & fresh Bomboloni frying… this is your sign to save this reel 🍩✨\nIf this made you hungry, send it to someone who should buy you Bomboloni 👀"
+      },
+      {
+        "shortcode": "BAGuWKjC5x",
+        "timestamp_utc": "2026-03-31T04:44:54+00:00",
+        "marketing_hook": "Soft, fluffy & coated in sugar ✨\nOur classic Bomboloni is simple… but dangerously addictive 🍩"
+      },
+      {
+        "shortcode": "BANJmmmKom",
+        "timestamp_utc": "2026-02-17T04:40:12+00:00",
+        "marketing_hook": "That perfect white line isn't luck… it's technique 🤍🍩\nGolden outside, soft inside, fried to perfection every single time.\n\nFresh Bomboloni available on order 💌\nDM to book yours today!"
+      },
+      {
+        "shortcode": "BAPDGiiVGv",
+        "timestamp_utc": "2026-03-22T04:42:26+00:00",
+        "marketing_hook": "You + me + this box = all we need right now 🤍\nSoft, fresh & filled Bomboloni made with love ✨\nTrust me… 2 is never enough 😭"
+      },
+      {
+        "shortcode": "BAPN1-P-Ai",
+        "timestamp_utc": "2026-03-05T04:41:25+00:00",
+        "marketing_hook": "Not every batch becomes perfect… and that's the reality of baking.\nThe process looked perfect, the dough felt right, but sometimes Bomboloni has other plans. 🥲\nEvery failed batch is just practice for the perfect one. Bakers will understand this feeling."
+      },
+      {
+        "shortcode": "BAQ5-4Rasu",
+        "timestamp_utc": "2026-03-17T04:40:27+00:00",
+        "marketing_hook": "If they really care about you… they'll send you this Iftar box 🥹❤️\n\nFresh, soft Nutella-filled Bomboloni 🍩🍫✨\nThat rich Nutella inside = pure happiness 🤤\n\nTag someone who needs to send you this 👇\nOr be the one who sends it 💌"
+      },
+      {
+        "shortcode": "BAQR5Zxg3m",
+        "timestamp_utc": "2026-05-02T04:41:35+00:00",
+        "marketing_hook": "Bulk orders available 📦🍩\nFrom classic plain Bomboloni to rich filled flavours 🤍\nPlanning to start a stall or café?\nPartner with us for fresh daily supply 🤝✨\n\nDM to book or collaborate — limited slots only!"
+      },
+      {
+        "shortcode": "BAQunUzlAo",
+        "timestamp_utc": "2026-04-24T04:40:59+00:00",
+        "marketing_hook": "They'll understand the hint… or they won't 😭👀\nEither way, these soft, fresh, Nutella-loaded bomboloni are going out fast today 🤤\nOnce you try them, there's no going back 💔✨\nDM now to order before they're gone 📦"
+      },
+      {
+        "shortcode": "BAVB6cUjQm",
+        "timestamp_utc": "2026-03-27T04:40:30+00:00",
+        "marketing_hook": "POV: \"aaj se meetha band\"… and then this happens 😌🍩\nSoft, fluffy, filled Bomboloni that no one can resist 🤤"
+      },
+      {
+        "shortcode": "BBgsrpd33-",
+        "timestamp_utc": "2026-03-26T04:40:20+00:00",
+        "marketing_hook": "Mini Bomboloni bites , soft & perfectly fried Bomboloni loading… 🤤✨\nThat first bite = pure happiness 💛\nFreshly made, fluffy inside & crispy outside 😍"
+      },
+      {
+        "shortcode": "BBhnGElwLY",
+        "timestamp_utc": "2026-02-12T04:40:11+00:00",
+        "marketing_hook": "When the oil temperature is perfect and the Bomboloni decides to rise like it has goals 😌🍩✨\nMidnight cravings loading…"
+      },
+      {
+        "shortcode": "BBJMCbq2cS",
+        "timestamp_utc": "2026-01-23T04:34:31+00:00",
+        "marketing_hook": "I love, I love…\nwhen the bomboloni speaks for itself 🍩🤍\nDM to order ✨"
+      },
+      {
+        "shortcode": "BBN6o2EGIP",
+        "timestamp_utc": "2026-01-29T04:34:35+00:00",
+        "marketing_hook": "Diet chal rahi hai…\nisliye quietly pack kar rahe hai 😌🍩\n\nBomboloni,donut cravings,dessert lover,desi humour,might night cravings,diet chal rahi hai"
+      },
+      {
+        "shortcode": "BBWsbmXiZz",
+        "timestamp_utc": "2026-03-02T04:40:27+00:00",
+        "marketing_hook": "Perfect Bomboloni don't come easy 😭🔥\nBut we don't give up 💪\nDM to order before I get another mini heart attack while flipping 😂"
+      },
+      {
+        "shortcode": "BBy1jLY9AY",
+        "timestamp_utc": "2026-01-19T04:49:24+00:00",
+        "marketing_hook": "That golden turn never gets old 🍩✨\n\nBomboloni,Freshly fried,Italian dessert,soft doughnuts,Homebaker,bakery business,support small business,fresh dessert"
+      }
+    ]
+  }
+}
