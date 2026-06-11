@@ -33,14 +33,13 @@ BRAND_PROFILE_PATH = _PROJECT_ROOT / "data" / "brand_profile.json"
 OLLAMA_MODEL = "granite3.1-dense:8b"
 
 # ── Benchmark context injected into every prompt ──────────────────────────────
-# Plain-English thresholds that Granite uses to calibrate its diagnosis.
 _BENCHMARKS = """
 Instagram performance benchmarks for a micro-creator account (<5k followers):
-  - Hook rate (% watching past 3s): <20% = weak hook, 20-35% = average, >35% = strong
-  - Watch time %: <30% = skipped, 30-50% = moderate, >50% = algorithm-promoted
-  - Shares: the single most important distribution signal — even 2-3 shares on a small account matters
-  - Saves: indicates aspirational or educational value — important for Reels that teach or inspire
-  - Like-to-view ratio: <2% = low engagement, 2-5% = good, >5% = viral signal
+  - Shares: the single most powerful distribution signal — even 2-3 shares on a small account matters more than 50 likes
+  - Saves: indicates aspirational or educational value — high saves mean people want to return to this content
+  - Reach vs Views: if reach << views, the same people are replaying (good for Reels); if reach ≈ views, little replay
+  - Like-to-view ratio: <2% = low resonance, 2-5% = solid, >5% = strong viral signal
+  - Avg watch time (Reels): <3s = hook failed, 3-7s = moderate, >7s = strong retention for short-form content
 """
 
 _TEMPLATE = """\
@@ -56,31 +55,29 @@ Brand voice profile for this type of content:
   Emoji style       : {emoji_style}
 
 Post being analyzed:
-  Caption     : "{caption}"
-  Post type   : {post_type}
-  Posted      : {posted_day}, {posted_hour}
+  Caption   : "{caption}"
+  Post type : {post_type}
 
-Performance metrics:
-  Views       : {views}
-  Watch time  : {watch_time_pct}% watched
-  Hook rate   : {hook_rate}% watched past 3 seconds
-  Shares      : {shares}
-  Saves       : {saves}
-  Likes       : {likes}
-  Comments    : {comments}
+Performance metrics (from Instagram Insights):
+  Views     : {views}
+  Reach     : {reach}
+  Likes     : {likes}
+  Comments  : {comments}
+  Shares    : {shares}
+  Saves     : {saves}{avg_watch_line}
 
 Using these metrics AND the brand's established voice patterns above, diagnose this post.
-Be specific. Do not give generic advice. Reference the actual caption and actual numbers.
+Be specific. Reference the actual caption text and actual numbers.
 
 Return ONLY valid JSON — no preamble, no explanation, no markdown fences:
 
 {{
   "verdict": "<one of: succeeded | underperformed | failed>",
   "diagnosis": "<2-3 sentences: what the numbers tell you overall — be specific>",
-  "what_worked": "<1-2 sentences: what drove any positive signal — use 'N/A' if nothing>",
-  "what_failed": "<1-2 sentences: the specific metric or content element causing the issue>",
-  "brand_voice_gap": "<1-2 sentences: how this caption differs from the brand's established pattern — reference specific signature phrases or structural elements>",
-  "change_next_time": "<2-3 concrete, specific changes to make on the next similar post>"
+  "what_worked": "<1-2 sentences: which metric(s) were a positive signal — use 'N/A' if nothing>",
+  "what_failed": "<1-2 sentences: the specific metric or content element causing underperformance>",
+  "brand_voice_gap": "<1-2 sentences: how this caption differs from the brand's established patterns — reference the signature phrases or structure above>",
+  "change_next_time": "<2-3 concrete, specific changes to try on the next similar post>"
 }}
 """
 
@@ -89,9 +86,9 @@ _PROMPT = PromptTemplate(
         "brand_name", "benchmarks",
         "content_pillar", "tone_descriptors", "signature_phrases",
         "structural_signature", "emoji_style",
-        "caption", "post_type", "posted_day", "posted_hour",
-        "views", "watch_time_pct", "hook_rate",
-        "shares", "saves", "likes", "comments",
+        "caption", "post_type",
+        "views", "reach", "likes", "comments", "shares", "saves",
+        "avg_watch_line",
     ],
     template=_TEMPLATE,
 )
@@ -128,23 +125,24 @@ class WhyEngine:
 
     def analyze(
         self,
-        caption      : str,
-        post_type    : str,
-        posted_day   : str,
-        posted_hour  : str,
-        views        : int,
-        watch_time_pct: float,
-        hook_rate    : float,
-        shares       : int,
-        saves        : int,
-        likes        : int,
-        comments     : int,
-        cluster_id   : int = 0,
+        caption             : str,
+        post_type           : str,
+        views               : int,
+        reach               : int,
+        likes               : int,
+        comments            : int,
+        shares              : int,
+        saves               : int,
+        avg_watch_time_secs : float | None = None,
+        cluster_id          : int = 0,
     ) -> dict:
         """
         Returns a diagnosis dict:
         {verdict, diagnosis, what_worked, what_failed,
          brand_voice_gap, change_next_time}
+
+        avg_watch_time_secs — Reels only, from Instagram Insights
+        ("Average watch time: Xs"). Pass None for carousels/static posts.
         """
         cluster = next(
             (c for c in self._profile["cluster_profiles"] if c["cluster_id"] == cluster_id),
@@ -153,25 +151,29 @@ class WhyEngine:
         p   = cluster["profile"]
         voc = p.get("vocabulary_patterns", {})
 
+        avg_watch_line = (
+            f"\n  Avg watch time : {avg_watch_time_secs}s"
+            if avg_watch_time_secs is not None
+            else ""
+        )
+
         raw = self._chain.invoke({
-            "brand_name"         : self._profile["brand_name"],
-            "benchmarks"         : _BENCHMARKS,
-            "content_pillar"     : p.get("content_pillar", "product_showcase"),
-            "tone_descriptors"   : ", ".join(p.get("tone_descriptors", [])),
-            "signature_phrases"  : ", ".join(voc.get("signature_phrases", [])),
+            "brand_name"          : self._profile["brand_name"],
+            "benchmarks"          : _BENCHMARKS,
+            "content_pillar"      : p.get("content_pillar", "product_showcase"),
+            "tone_descriptors"    : ", ".join(p.get("tone_descriptors", [])),
+            "signature_phrases"   : ", ".join(voc.get("signature_phrases", [])),
             "structural_signature": p.get("structural_signature", ""),
-            "emoji_style"        : voc.get("emoji_style", ""),
-            "caption"            : caption,
-            "post_type"          : post_type,
-            "posted_day"         : posted_day,
-            "posted_hour"        : posted_hour,
-            "views"              : str(views),
-            "watch_time_pct"     : str(watch_time_pct),
-            "hook_rate"          : str(hook_rate),
-            "shares"             : str(shares),
-            "saves"              : str(saves),
-            "likes"              : str(likes),
-            "comments"           : str(comments),
+            "emoji_style"         : voc.get("emoji_style", ""),
+            "caption"             : caption,
+            "post_type"           : post_type,
+            "views"               : str(views),
+            "reach"               : str(reach),
+            "likes"               : str(likes),
+            "comments"            : str(comments),
+            "shares"              : str(shares),
+            "saves"               : str(saves),
+            "avg_watch_line"      : avg_watch_line,
         })
 
         try:
@@ -200,18 +202,16 @@ if __name__ == "__main__":
 
     # Real example: a simple product post that likely underperformed
     result = engine.analyze(
-        caption       = "Chocolate Cake 🤎\n\nTo order / enquire DM @hot_cakesbakes",
-        post_type     = "Reel",
-        posted_day    = "Tuesday",
-        posted_hour   = "7:00 PM",
-        views         = 420,
-        watch_time_pct= 28.0,
-        hook_rate     = 18.0,
-        shares        = 1,
-        saves         = 3,
-        likes         = 22,
-        comments      = 2,
-        cluster_id    = 0,
+        caption             = "Chocolate Cake 🤎\n\nTo order / enquire DM @hot_cakesbakes",
+        post_type           = "Reel",
+        views               = 420,
+        reach               = 390,
+        likes               = 22,
+        comments            = 2,
+        shares              = 1,
+        saves               = 3,
+        avg_watch_time_secs = 4.2,
+        cluster_id          = 0,
     )
 
     print(f"\nVerdict: {result['verdict_label']}")

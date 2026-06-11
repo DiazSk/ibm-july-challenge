@@ -358,9 +358,7 @@ def render_postmortem_tab(profile: dict):
     with col_a:
         pm_caption = st.text_area(
             "Caption you posted",
-            placeholder=(
-                'e.g. "Chocolate Cake 🤎\n\nTo order / enquire DM @hot_cakesbakes"'
-            ),
+            placeholder='e.g. "Chocolate Cake 🤎\n\nTo order / enquire DM @hot_cakesbakes"',
             height=130,
         )
     with col_b:
@@ -376,27 +374,6 @@ def render_postmortem_tab(profile: dict):
             help="Choose the cluster that best describes this post",
         )
 
-    col_day, col_hour = st.columns(2, gap="large")
-    with col_day:
-        pm_day = st.selectbox(
-            "Day posted",
-            ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
-            index=4,
-            key="pm_day",
-        )
-    with col_hour:
-        pm_hour = st.selectbox(
-            "Time posted",
-            [
-                "6:00 AM", "7:00 AM", "8:00 AM", "9:00 AM", "10:00 AM",
-                "11:00 AM", "12:00 PM", "1:00 PM", "2:00 PM", "3:00 PM",
-                "4:00 PM", "5:00 PM", "6:00 PM", "7:00 PM", "8:00 PM",
-                "9:00 PM", "10:00 PM", "11:00 PM",
-            ],
-            index=12,
-            key="pm_hour",
-        )
-
     # ── Metrics input ─────────────────────────────────────────────────────────
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown(
@@ -405,32 +382,36 @@ def render_postmortem_tab(profile: dict):
     )
     st.markdown(
         "<div style='font-size:0.78rem;color:#9A8F83;margin-bottom:1rem;'>"
-        "Find these in Instagram → Professional Dashboard → Content → tap the post.</div>",
+        "Instagram app → tap the post → <b>View Insights</b>. "
+        "All fields are from that screen.</div>",
         unsafe_allow_html=True,
     )
 
-    c1, c2, c3, c4 = st.columns(4, gap="medium")
+    c1, c2, c3 = st.columns(3, gap="medium")
     with c1:
-        pm_views    = st.number_input("Views",     min_value=0, value=420, step=10, key="pm_views")
-        pm_likes    = st.number_input("Likes",     min_value=0, value=22,  step=1,  key="pm_likes")
+        pm_views    = st.number_input("Views / Plays", min_value=0, value=420, step=10, key="pm_views")
+        pm_reach    = st.number_input("Reach",         min_value=0, value=390, step=10, key="pm_reach")
     with c2:
-        pm_shares   = st.number_input("Shares",    min_value=0, value=1,   step=1,  key="pm_shares")
-        pm_comments = st.number_input("Comments",  min_value=0, value=2,   step=1,  key="pm_comments")
+        pm_likes    = st.number_input("Likes",    min_value=0, value=22, step=1, key="pm_likes")
+        pm_comments = st.number_input("Comments", min_value=0, value=2,  step=1, key="pm_comments")
     with c3:
-        pm_saves    = st.number_input("Saves",     min_value=0, value=3,   step=1,  key="pm_saves")
-        pm_hook     = st.number_input(
-            "Hook rate %",
-            min_value=0.0, max_value=100.0, value=18.0, step=0.5,
-            help="% who watched past the first 3 seconds",
-            key="pm_hook",
-        )
-    with c4:
-        pm_watch    = st.number_input(
-            "Watch time %",
-            min_value=0.0, max_value=100.0, value=28.0, step=0.5,
-            help="Average % of the video watched",
-            key="pm_watch",
-        )
+        pm_shares   = st.number_input("Shares", min_value=0, value=1, step=1, key="pm_shares")
+        pm_saves    = st.number_input("Saves",  min_value=0, value=3, step=1, key="pm_saves")
+
+    # Avg watch time — Reels only, optional
+    pm_avg_watch = None
+    if pm_post_type == "Reel":
+        st.markdown("<br>", unsafe_allow_html=True)
+        col_watch, col_spacer = st.columns([1, 2], gap="medium")
+        with col_watch:
+            raw_watch = st.number_input(
+                "Avg watch time (seconds)",
+                min_value=0.0, value=0.0, step=0.5,
+                help='Shown as "Average watch time: Xs" on Reels Insights. Leave at 0 if not available.',
+                key="pm_avg_watch",
+            )
+            if raw_watch > 0:
+                pm_avg_watch = float(raw_watch)
 
     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -444,18 +425,16 @@ def render_postmortem_tab(profile: dict):
         with st.spinner("Diagnosing post with Granite…"):
             try:
                 result = get_why_engine().analyze(
-                    caption        = pm_caption.strip(),
-                    post_type      = pm_post_type,
-                    posted_day     = pm_day,
-                    posted_hour    = pm_hour,
-                    views          = int(pm_views),
-                    watch_time_pct = float(pm_watch),
-                    hook_rate      = float(pm_hook),
-                    shares         = int(pm_shares),
-                    saves          = int(pm_saves),
-                    likes          = int(pm_likes),
-                    comments       = int(pm_comments),
-                    cluster_id     = cluster_options[pm_cluster],
+                    caption             = pm_caption.strip(),
+                    post_type           = pm_post_type,
+                    views               = int(pm_views),
+                    reach               = int(pm_reach),
+                    likes               = int(pm_likes),
+                    comments            = int(pm_comments),
+                    shares              = int(pm_shares),
+                    saves               = int(pm_saves),
+                    avg_watch_time_secs = pm_avg_watch,
+                    cluster_id          = cluster_options[pm_cluster],
                 )
             except Exception as exc:
                 st.error(f"Analysis failed: {exc}")
