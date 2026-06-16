@@ -12,9 +12,10 @@ Built for the IBM July Challenge.
 
 | Tab | What you get |
 |-----|-------------|
-| **Create** | Blank Page Solver → 3 creative directions → Caption Brief → 3 caption variants + image prompt → Script Studio (Reel / Carousel / Static) |
-| **Analyze** | Paste a post + its Instagram Insights metrics → Why Engine diagnosis: what worked, what failed, brand voice gap, what to change |
+| **Create** | Blank Page Solver → 3 creative directions → Caption Brief → 3 caption variants + image prompt → Script Studio (Reel / Carousel / Static) → Save to Workbench |
+| **Analyze** | Paste a post + its Instagram Insights metrics → Why Engine diagnosis → Recovery Brief (automatically generated on underperforms/failures) → Save to Workbench |
 | **Discover** | Voice Timeline chart (9-month content distribution) + Strategic Insights (volume vs. richness mismatches + strategy brief) |
+| **Workbench** | Persistent SQLite scratchpad — saved captions, scripts, and recovery briefs survive across sessions; star, review, and outcome-track your saved assets |
 
 ---
 
@@ -62,9 +63,9 @@ For detailed setup, onboarding your own Instagram account, and verification step
 
 ## Stack
 
-**Backend:** FastAPI · Ollama (IBM Granite 3.1 8B) · LangChain · sentence-transformers · scikit-learn · Instaloader  
+**Backend:** FastAPI · Ollama (IBM Granite 3.1 8B) · LangChain · sentence-transformers · scikit-learn · SQLite · Instaloader  
 **Frontend:** Next.js 16 · React 19 · TypeScript · Tailwind CSS · React Query  
-**Model:** `granite3.1-dense:8b` — 9 Granite invocations, all local
+**Model:** `granite3.1-dense:8b` — 10 coordinated Granite invocations, zero third-party AI dependencies, all local
 
 ---
 
@@ -94,4 +95,9 @@ POST /api/analyze/why-engine
 
 GET  /api/discover/voice-timeline
 GET  /api/discover/strategic-insights
+
+POST   /api/workbench/assets
+GET    /api/workbench/assets
+PATCH  /api/workbench/assets/{id}
+DELETE /api/workbench/assets/{id}
 ```

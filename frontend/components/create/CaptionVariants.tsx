@@ -10,6 +10,7 @@ interface Props {
   onRegenerate: () => void;
   imageLoading: boolean;
   regenerateLoading: boolean;
+  onPin?: (caption: string) => void;
 }
 
 export default function CaptionVariants({
@@ -19,8 +20,15 @@ export default function CaptionVariants({
   onRegenerate,
   imageLoading,
   regenerateLoading,
+  onPin,
 }: Props) {
   const [copied, setCopied] = useState<number | null>(null);
+  const [pinnedSet, setPinnedSet] = useState<Set<number>>(new Set());
+
+  function handlePin(idx: number, caption: string) {
+    onPin?.(caption);
+    setPinnedSet((prev) => new Set([...prev, idx]));
+  }
 
   async function copy(text: string, idx: number) {
     await navigator.clipboard.writeText(text);
@@ -103,6 +111,23 @@ export default function CaptionVariants({
               >
                 {copied === i ? "Copied" : "Copy"}
               </button>
+              {onPin && (
+                <button
+                  onClick={() => handlePin(i, c.caption)}
+                  disabled={pinnedSet.has(i)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] rounded-lg border transition-colors disabled:opacity-60"
+                  style={{
+                    borderColor: pinnedSet.has(i)
+                      ? "var(--color-ql-accent)"
+                      : "var(--color-ql-border)",
+                    color: pinnedSet.has(i)
+                      ? "var(--color-ql-accent)"
+                      : "var(--color-ql-muted)",
+                  }}
+                >
+                  {pinnedSet.has(i) ? "Saved ✓" : "Save"}
+                </button>
+              )}
               <button
                 onClick={() => onGenerateImage(c.caption)}
                 disabled={imageLoading}

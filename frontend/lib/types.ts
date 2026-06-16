@@ -72,6 +72,26 @@ export interface WhyEngineResult {
   what_failed: string;
   brand_voice_gap: string;
   change_next_time: string;
+  recovery_brief?: {
+    new_hook: string;
+    recommended_format: "Reel" | "Carousel" | "Static";
+    recovery_script: string;
+    reasoning: string;
+  };
+}
+
+// Workbench
+export interface WorkbenchAsset {
+  id: string;
+  asset_type: string;
+  cluster_label: string | null;
+  cluster_id: number | null;
+  content: string | Record<string, unknown>;
+  pinned: boolean;
+  source_tab: string | null;
+  actual_outcome: string | null;
+  recovery_brief_generated: boolean;
+  created_at: string;
 }
 
 // Discover tab

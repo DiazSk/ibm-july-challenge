@@ -11,6 +11,7 @@ import type {
   StrategicInsightsResult,
   OnboardStatus,
   HasProfileResult,
+  WorkbenchAsset,
 } from "./types";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
@@ -99,6 +100,43 @@ export const resetToDemo = () =>
   apiFetch<{ status: string; handle: string }>("/api/onboard/reset-demo", {
     method: "POST",
   });
+
+// Workbench
+export const getWorkbenchAssets = (pinned?: boolean) => {
+  const qs = pinned !== undefined ? `?pinned=${pinned}` : "";
+  return apiFetch<WorkbenchAsset[]>(`/api/workbench/assets${qs}`);
+};
+
+export const saveAsset = (asset: {
+  asset_type: string;
+  content: unknown;
+  cluster_label?: string | null;
+  cluster_id?: number | null;
+  source_tab?: string | null;
+}) =>
+  apiFetch<WorkbenchAsset>("/api/workbench/assets", {
+    method: "POST",
+    body: JSON.stringify(asset),
+  });
+
+export const updateAsset = (
+  id: string,
+  update: { pinned?: boolean; actual_outcome?: string; recovery_brief_generated?: boolean }
+) =>
+  apiFetch<WorkbenchAsset>(`/api/workbench/assets/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(update),
+  });
+
+export async function deleteAsset(id: string): Promise<void> {
+  const res = await fetch(`${BASE}/api/workbench/assets/${id}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => res.statusText);
+    throw new Error(`${res.status} ${text}`);
+  }
+}
 
 export async function uploadExport(
   file      : File,

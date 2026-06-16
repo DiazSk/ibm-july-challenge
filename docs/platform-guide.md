@@ -1,6 +1,8 @@
 # StyleSync Platform Guide
 
-StyleSync is a Creative Intelligence Platform for HotCakes Bakes (@hot_cakesbakes), an artisanal bakery in Navi Mumbai. It uses **IBM Granite 3.1 8B** (running locally via Ollama) to understand the brand's 9-month Instagram history, then turns that understanding into a set of tools for generating, diagnosing, and strategically improving content.
+StyleSync is a Creative Intelligence Platform for HotCakes Bakes (@hot_cakesbakes), an artisanal bakery in Navi Mumbai.
+
+Ten coordinated IBM Granite 3.1 8B invocations — zero third-party AI dependencies — run a closed feedback loop between behavioral clustering and content generation, operating on eight months of real creator data. When a post fails, StyleSync generates a brand-specific recovery brief. When a caption is saved, it becomes a training signal in the Content Workbench.
 
 ---
 
@@ -106,6 +108,21 @@ Granite analyzes what made the reference post work (its hook style, emotional an
 
 The Why Engine is Granite call #4. It cross-references the post's metrics against the cluster's expected performance patterns and the brand's voice profile to identify causal factors — not correlations.
 
+### Recovery Brief
+
+**When you see it:** Automatically appears below the diagnosis whenever the verdict is **Underperformed** or **Failed** — no extra action required.
+
+**What it is:** Granite call #10 — chained directly from the Why Engine result. Using the identified diagnosis, failure mode, and brand voice gap, Granite generates a concrete recovery strategy:
+
+| Field | What it contains |
+|-------|-----------------|
+| **New Hook** | A single punchy opening line that directly fixes the identified failure |
+| **Recommended Format** | Reel, Carousel, or Static — whichever best addresses the failure mode |
+| **Recovery Script** | ~150-word script in brand voice for the recommended format (hook, body, CTA) |
+| **Why This Works** | 1-2 sentences explaining how this approach addresses the original failure |
+
+**Save to Workbench:** Click the button to save the recovery brief to the Content Workbench, where it persists between sessions alongside saved captions and scripts.
+
 ---
 
 ## Discover Tab
@@ -206,9 +223,11 @@ This scrapes posts, builds embeddings, runs K-Means clustering, and generates th
 
 ### Granite Invocations Summary
 
+Ten coordinated calls, all running locally against `granite3.1-dense:8b` — zero cloud AI dependencies.
+
 | # | Module | What it does |
 |---|--------|--------------|
-| 1 | `pipeline.py` | Extracts brand profile from post corpus |
+| 1 | `profile_extractor.py` | Extracts brand profile from post corpus |
 | 2 | `caption_generator.py` | Generates 3 on-brand caption variants |
 | 3 | `image_prompt_generator.py` | Generates art direction prompt |
 | 4 | `why_engine.py` | Diagnoses post performance |
@@ -217,3 +236,4 @@ This scrapes posts, builds embeddings, runs K-Means clustering, and generates th
 | 7 | `blank_page_solver.py` (DirectionGenerator) | Generates 3 creative directions |
 | 8 | `strategic_insights.py` | Writes strategy brief + experiment |
 | 9 | `script_generator.py` | Generates Reel/Carousel/Static script |
+| 10 | `recovery_brief.py` | Generates recovery brief for underperforming posts |

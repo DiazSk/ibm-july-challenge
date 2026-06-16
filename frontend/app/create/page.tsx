@@ -1,15 +1,19 @@
 "use client";
 
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import BlankPageSolver from "@/components/create/BlankPageSolver";
 import CaptionBrief from "@/components/create/CaptionBrief";
 import CaptionVariants from "@/components/create/CaptionVariants";
 import ImageDirectionCard from "@/components/create/ImageDirectionCard";
 import ScriptStudio from "@/components/create/ScriptStudio";
-import { generateCaptions, generateImagePrompt } from "@/lib/api";
+import WorkbenchDrawer from "@/components/workbench/WorkbenchDrawer";
+import { generateCaptions, generateImagePrompt, saveAsset } from "@/lib/api";
 import type { Caption, ImagePromptResult } from "@/lib/types";
 
 export default function CreatePage() {
+  const queryClient = useQueryClient();
+
   const [product, setProduct] = useState("");
   const [occasion, setOccasion] = useState("");
   const [desiredFeel, setDesiredFeel] = useState("");
@@ -22,6 +26,8 @@ export default function CreatePage() {
 
   const [imageResult, setImageResult] = useState<ImagePromptResult | null>(null);
   const [imageLoading, setImageLoading] = useState(false);
+
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   function handleBlankPageApply(feel: string, cId: number) {
     setDesiredFeel(feel);
@@ -81,8 +87,36 @@ export default function CreatePage() {
     }
   }
 
+  async function handlePin(caption: string) {
+    try {
+      await saveAsset({
+        asset_type: "caption",
+        content: caption,
+        cluster_id: clusterId,
+        source_tab: "caption_brief",
+      });
+      queryClient.invalidateQueries({ queryKey: ["workbench"] });
+    } catch {
+      // silent
+    }
+  }
+
   return (
+    <>
     <div className="max-w-2xl mx-auto">
+      <div className="flex justify-end mb-2">
+        <button
+          onClick={() => setDrawerOpen(true)}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] rounded-lg border transition-colors"
+          style={{
+            borderColor: "var(--color-ql-border)",
+            color: "var(--color-ql-muted)",
+          }}
+        >
+          Saved
+        </button>
+      </div>
+
       <BlankPageSolver onApply={handleBlankPageApply} />
 
       <CaptionBrief
@@ -106,6 +140,7 @@ export default function CreatePage() {
           onRegenerate={handleRegenerate}
           imageLoading={imageLoading}
           regenerateLoading={regenerateLoading}
+          onPin={handlePin}
         />
       )}
 
@@ -115,5 +150,7 @@ export default function CreatePage() {
         <ScriptStudio />
       </div>
     </div>
+    <WorkbenchDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
+    </>
   );
 }

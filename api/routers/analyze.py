@@ -9,7 +9,7 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from api.dependencies import get_why_engine
+from api.dependencies import get_why_engine, get_recovery_brief_generator
 
 router = APIRouter()
 
@@ -36,7 +36,7 @@ def run_why_engine(req: WhyEngineRequest) -> dict:
     """
     if not req.caption.strip():
         raise HTTPException(status_code=422, detail="caption is required")
-    return get_why_engine().analyze(
+    result = get_why_engine().analyze(
         caption             = req.caption.strip(),
         post_type           = req.post_type,
         views               = req.views,
@@ -48,3 +48,15 @@ def run_why_engine(req: WhyEngineRequest) -> dict:
         avg_watch_time_secs = req.avg_watch_time_secs,
         cluster_id          = req.cluster_id,
     )
+    if result.get("verdict", "").lower() in ("underperformed", "failed"):
+        try:
+            recovery = get_recovery_brief_generator().generate(
+                diagnosis       = result.get("diagnosis", ""),
+                what_failed     = result.get("what_failed", ""),
+                brand_voice_gap = result.get("brand_voice_gap", ""),
+                cluster_id      = req.cluster_id,
+            )
+            result["recovery_brief"] = recovery
+        except Exception:
+            pass  # non-fatal — Why Engine result returns even if this fails
+    return result

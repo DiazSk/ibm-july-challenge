@@ -65,3 +65,9 @@ def get_strategic_insights():
 def get_script_generator():
     from src.generation.script_generator import ScriptGenerator
     return ScriptGenerator()
+
+
+@lru_cache(maxsize=1)
+def get_recovery_brief_generator():
+    from src.generation.recovery_brief import RecoveryBriefGenerator
+    return RecoveryBriefGenerator()

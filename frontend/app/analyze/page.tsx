@@ -3,6 +3,7 @@
 import { useState } from "react";
 import WhyEngineForm from "@/components/analyze/WhyEngineForm";
 import DiagnosisPanel from "@/components/analyze/DiagnosisPanel";
+import RecoveryBrief from "@/components/analyze/RecoveryBrief";
 import { runWhyEngine } from "@/lib/api";
 import type { WhyEngineRequest, WhyEngineResult } from "@/lib/types";
 
@@ -57,6 +58,7 @@ export default function AnalyzePage() {
       )}
 
       {result && <DiagnosisPanel result={result} />}
+      {result && <RecoveryBrief result={result} clusterId={form.cluster_id} />}
     </div>
   );
 }

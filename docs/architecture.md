@@ -101,6 +101,7 @@ All nine modules live in `src/generation/` and follow the same pattern:
 | 7 | `DirectionGenerator` | `blank_page_solver.py` | `create.py` `/directions` | Moment analysis → 3 creative direction cards |
 | 8 | `StrategicInsights` | `strategic_insights.py` | `discover.py` `/strategic-insights` | Richness scores per cluster → strategy brief + experiment |
 | 9 | `ScriptGenerator` | `script_generator.py` | `create.py` `/script` | Reference post + metrics + format → full Reel/Carousel/Static script |
+| 10 | `RecoveryBriefGenerator` | `recovery_brief.py` | `analyze.py` (chained from #4) | Why Engine diagnosis → new hook + format + 150-word recovery script |
 
 ### Pattern: why LangChain + Ollama?
 
