@@ -1,0 +1,38 @@
+"""
+StyleSync FastAPI application.
+
+Run:
+    uvicorn api.main:app --reload --port 8000
+
+Interactive API docs:
+    http://localhost:8000/docs
+"""
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from api.routers import brand, create, analyze, discover
+
+app = FastAPI(
+    title       = "StyleSync API",
+    description = "Creative Intelligence Platform — IBM Granite-powered endpoints",
+    version     = "2.0.0",
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins     = ["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_credentials = True,
+    allow_methods     = ["*"],
+    allow_headers     = ["*"],
+)
+
+app.include_router(brand.router,    prefix="/api/brand",    tags=["Brand"])
+app.include_router(create.router,   prefix="/api/create",   tags=["Create"])
+app.include_router(analyze.router,  prefix="/api/analyze",  tags=["Analyze"])
+app.include_router(discover.router, prefix="/api/discover", tags=["Discover"])
+
+
+@app.get("/api/health")
+async def health():
+    return {"status": "ok", "service": "StyleSync API"}

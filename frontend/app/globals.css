@@ -1,0 +1,81 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ql-bg: #F9F7F4;
+  --color-ql-sidebar: #F0EDE8;
+  --color-ql-border: #E0DAD3;
+  --color-ql-dark: #2D2D2D;
+  --color-ql-accent: #8B7355;
+  --color-ql-text: #3D3D3D;
+  --color-ql-muted: #7A6F63;
+  --color-ql-card: #FFFFFF;
+  --color-ql-gap: #FDF8F2;
+
+  --color-verdict-succeeded: #5A8A6A;
+  --color-verdict-underperformed: #C4A35A;
+  --color-verdict-failed: #A35A5A;
+
+  --color-cluster-0: #5A8A6A;
+  --color-cluster-1: #8B7355;
+  --color-cluster-2: #A35A5A;
+  --color-cluster-3: #5A6A8A;
+  --color-cluster-4: #6A5A8A;
+
+  --font-family-serif: Georgia, "Times New Roman", serif;
+  --font-family-sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-family-mono: "SF Mono", "Fira Code", "Courier New", monospace;
+}
+
+:root {
+  --background: var(--color-ql-bg);
+  --foreground: var(--color-ql-text);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-family-sans);
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-family-serif);
+  color: var(--color-ql-dark);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+
+::selection {
+  background: var(--color-ql-accent);
+  color: #fff;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-ql-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-ql-border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-ql-muted);
+}
