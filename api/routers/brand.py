@@ -10,19 +10,82 @@ from fastapi import APIRouter, HTTPException
 
 router = APIRouter()
 
-_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+_PROJECT_ROOT  = Path(__file__).resolve().parent.parent.parent
 _PROFILE_PATH  = _PROJECT_ROOT / "data" / "brand_profile.json"
 _CLUSTERS_PATH = _PROJECT_ROOT / "data" / "clusters.json"
 
+_PILLAR_LABELS = {
+    "product_showcase"   : "Product Showcase",
+    "behind_scenes"      : "Behind the Scenes",
+    "seasonal_special"   : "Seasonal Special",
+    "customer_connection": "Customer Connection",
+    "brand_story"        : "Brand Story",
+}
 
-@router.get("/profile")
-async def get_profile():
+
+def _unique(items: list) -> list:
+    seen: set = set()
+    out: list = []
+    for x in items:
+        if x not in seen:
+            seen.add(x)
+            out.append(x)
+    return out
+
+
+def _load_profile() -> dict:
     if not _PROFILE_PATH.exists():
         raise HTTPException(
             status_code=404,
             detail="brand_profile.json not found. Run `python run_pipeline.py` first.",
         )
     return json.loads(_PROFILE_PATH.read_text(encoding="utf-8"))
+
+
+@router.get("/profile")
+async def get_profile():
+    raw = _load_profile()
+
+    tone_descriptors : list[str] = []
+    signature_phrases: list[str] = []
+    avoided_terms    : list[str] = []
+    recurring_words  : list[str] = []
+    content_pillars  : list[str] = []
+
+    for cp in raw.get("cluster_profiles", []):
+        p = cp.get("profile", {})
+        if p.get("parse_error"):
+            continue
+        pillar = _PILLAR_LABELS.get(
+            p.get("content_pillar", ""),
+            p.get("content_pillar", "").replace("_", " ").title(),
+        )
+        if pillar and pillar not in content_pillars:
+            content_pillars.append(pillar)
+        tone_descriptors  += p.get("tone_descriptors", [])
+        avoided_terms     += p.get("avoided_terms", [])
+        voc = p.get("vocabulary_patterns", {})
+        signature_phrases += voc.get("signature_phrases", [])
+        recurring_words   += voc.get("recurring_words", [])
+
+    return {
+        "brand_name"      : raw["brand_name"],
+        "handle"          : raw["ig_handle"],
+        "content_pillars" : content_pillars,
+        "tone_descriptors": _unique(tone_descriptors),
+        "signature_phrases": _unique(signature_phrases),
+        "avoided_terms"   : _unique(avoided_terms),
+        "recurring_words" : _unique(recurring_words),
+        "visual_style_notes": (
+            "Warm, intimate home-kitchen atmosphere. "
+            "Soft natural window light, muted warm tones — cream, caramel, chocolate brown. "
+            "Artisanal textures and imperfect handmade details."
+        ),
+        "target_audience": (
+            "Instagram dessert lovers seeking homemade artisanal cakes and bomboloni "
+            "in Navi Mumbai."
+        ),
+    }
 
 
 @router.get("/clusters")
@@ -32,4 +95,37 @@ async def get_clusters():
             status_code=404,
             detail="clusters.json not found. Run `python run_pipeline.py` first.",
         )
-    return json.loads(_CLUSTERS_PATH.read_text(encoding="utf-8"))
+    raw_clusters = json.loads(_CLUSTERS_PATH.read_text(encoding="utf-8"))
+    profile      = _load_profile()
+
+    # Build a lookup: cluster_id → profile data
+    profile_by_id: dict[int, dict] = {
+        cp["cluster_id"]: cp
+        for cp in profile.get("cluster_profiles", [])
+    }
+
+    result: dict[str, dict] = {}
+    for cid_str, posts in raw_clusters.get("clusters", {}).items():
+        cid = int(cid_str)
+        cp  = profile_by_id.get(cid, {})
+        p   = cp.get("profile", {})
+        voc = p.get("vocabulary_patterns", {})
+        pillar = _PILLAR_LABELS.get(
+            p.get("content_pillar", ""),
+            p.get("content_pillar", "").replace("_", " ").title(),
+        )
+        result[cid_str] = {
+            "cluster_id"      : cid,
+            "pillar"          : pillar or f"Cluster {cid}",
+            "post_count"      : cp.get("post_count", len(posts)),
+            "tone_descriptors": p.get("tone_descriptors", []),
+            "signature_phrases": voc.get("signature_phrases", []),
+            "recurring_words" : voc.get("recurring_words", []),
+            "avoided_terms"   : p.get("avoided_terms", []),
+            "sample_captions" : [
+                post["marketing_hook"] for post in posts[:3]
+                if post.get("marketing_hook")
+            ],
+        }
+
+    return result
