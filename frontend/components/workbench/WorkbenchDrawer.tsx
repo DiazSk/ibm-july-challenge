@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getWorkbenchAssets, deleteAsset, updateAsset } from "@/lib/api";
 import type { WorkbenchAsset } from "@/lib/types";
@@ -18,17 +19,185 @@ const ASSET_LABELS: Record<string, string> = {
   recovery_brief: "Recovery Brief",
 };
 
-function contentPreview(asset: WorkbenchAsset): string {
-  if (typeof asset.content === "string") {
-    return asset.content.length > 120
-      ? asset.content.slice(0, 120) + "…"
-      : asset.content;
-  }
+function getPreviewText(asset: WorkbenchAsset): string {
+  if (typeof asset.content === "string") return asset.content;
   const obj = asset.content as Record<string, unknown>;
-  const raw = String(
-    obj.hook ?? obj.caption ?? obj.recovery_script ?? JSON.stringify(obj)
+  return String(obj.hook ?? obj.caption ?? obj.recovery_script ?? JSON.stringify(obj));
+}
+
+function getFullText(asset: WorkbenchAsset): string {
+  if (typeof asset.content === "string") return asset.content;
+
+  const obj = asset.content as Record<string, unknown>;
+
+  if (asset.asset_type === "reel_script") {
+    const parts: string[] = [];
+    if (obj.hook) parts.push(`Hook:\n${obj.hook}`);
+    if (obj.opening_line) parts.push(`Opening Line:\n${obj.opening_line}`);
+    if (obj.voiceover_script) parts.push(`Voiceover:\n${obj.voiceover_script}`);
+    const shots = obj.shot_suggestions as string[] | undefined;
+    if (shots?.length) parts.push(`Shot Suggestions:\n${shots.map((s, i) => `${i + 1}. ${s}`).join("\n")}`);
+    if (obj.caption) parts.push(`Caption:\n${obj.caption}`);
+    const tags = obj.hashtags as string[] | undefined;
+    if (tags?.length) parts.push(tags.join(" "));
+    return parts.join("\n\n");
+  }
+
+  if (asset.asset_type === "carousel") {
+    const parts: string[] = [];
+    if (obj.hook) parts.push(`Cover Slide:\n${obj.hook}`);
+    const slides = obj.slides as Array<{ slide: number; headline: string; body: string }> | undefined;
+    if (slides?.length) {
+      parts.push(slides.map((s) => `Slide ${s.slide}: ${s.headline}\n${s.body}`).join("\n\n"));
+    }
+    if (obj.cta_slide) parts.push(`CTA: ${obj.cta_slide}`);
+    if (obj.caption) parts.push(`Caption:\n${obj.caption}`);
+    const tags = obj.hashtags as string[] | undefined;
+    if (tags?.length) parts.push(tags.join(" "));
+    return parts.join("\n\n");
+  }
+
+  if (asset.asset_type === "static_script") {
+    const parts: string[] = [];
+    if (obj.headline) parts.push(`Headline:\n${obj.headline}`);
+    if (obj.caption) parts.push(`Caption:\n${obj.caption}`);
+    if (obj.visual_direction) parts.push(`Visual Direction:\n${obj.visual_direction}`);
+    const tags = obj.hashtags as string[] | undefined;
+    if (tags?.length) parts.push(tags.join(" "));
+    return parts.join("\n\n");
+  }
+
+  if (asset.asset_type === "recovery_brief") {
+    const parts: string[] = [];
+    if (obj.new_hook) parts.push(`Hook:\n${obj.new_hook}`);
+    if (obj.recommended_format) parts.push(`Format: ${obj.recommended_format}`);
+    if (obj.recovery_script) parts.push(`Script:\n${obj.recovery_script}`);
+    if (obj.reasoning) parts.push(`Reasoning:\n${obj.reasoning}`);
+    return parts.join("\n\n");
+  }
+
+  return String(obj.hook ?? obj.caption ?? obj.recovery_script ?? JSON.stringify(obj, null, 2));
+}
+
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  async function copy() {
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }
+  return (
+    <button
+      onClick={copy}
+      className="text-[10px] px-2 py-0.5 rounded border transition-colors"
+      style={{
+        borderColor: copied ? "var(--color-ql-accent)" : "var(--color-ql-border)",
+        color: copied ? "var(--color-ql-accent)" : "var(--color-ql-muted)",
+      }}
+    >
+      {copied ? "Copied" : "Copy"}
+    </button>
   );
-  return raw.length > 120 ? raw.slice(0, 120) + "…" : raw;
+}
+
+function AssetCard({
+  asset,
+  onPin,
+  onDelete,
+}: {
+  asset: WorkbenchAsset;
+  onPin: () => void;
+  onDelete: () => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const fullText = getFullText(asset);
+  const preview = getPreviewText(asset);
+  const isLong = preview.length > 120;
+  const displayText = expanded ? fullText : (isLong ? preview.slice(0, 120) + "…" : preview);
+
+  return (
+    <div
+      className="rounded-xl border p-3.5"
+      style={{
+        borderColor: asset.pinned ? "var(--color-ql-accent)" : "var(--color-ql-border)",
+        background: "var(--color-ql-card)",
+        transition: "border-color 0.15s",
+      }}
+    >
+      {/* Type badge + controls */}
+      <div className="flex items-center justify-between mb-2">
+        <span
+          className="text-[10px] font-medium uppercase tracking-[0.08em] px-2 py-0.5 rounded-md"
+          style={{ background: "var(--color-ql-border)", color: "var(--color-ql-muted)" }}
+        >
+          {ASSET_LABELS[asset.asset_type] ?? asset.asset_type}
+        </span>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={onPin}
+            className="w-6 h-6 flex items-center justify-center text-sm"
+            style={{
+              color: asset.pinned ? "var(--color-ql-accent)" : "var(--color-ql-muted)",
+              opacity: asset.pinned ? 1 : 0.35,
+              transition: "opacity 0.15s, color 0.15s",
+            }}
+            title={asset.pinned ? "Unstar" : "Star"}
+          >
+            ★
+          </button>
+          <button
+            onClick={onDelete}
+            className="w-6 h-6 flex items-center justify-center text-xs"
+            style={{ color: "var(--color-ql-muted)", opacity: 0.3 }}
+            title="Remove"
+          >
+            ✕
+          </button>
+        </div>
+      </div>
+
+      {/* Cluster label */}
+      {asset.cluster_label && (
+        <p className="text-[10px] mb-1.5" style={{ color: "var(--color-ql-accent)" }}>
+          {asset.cluster_label}
+        </p>
+      )}
+
+      {/* Content */}
+      <p
+        className="text-xs leading-relaxed whitespace-pre-wrap"
+        style={{ color: "var(--color-ql-dark)" }}
+      >
+        {displayText}
+      </p>
+
+      {/* Show more / less + Copy */}
+      <div className="flex items-center justify-between mt-2.5">
+        {isLong ? (
+          <button
+            onClick={() => setExpanded((v) => !v)}
+            className="text-[10px]"
+            style={{ color: "var(--color-ql-muted)", textDecoration: "underline", textUnderlineOffset: "2px" }}
+          >
+            {expanded ? "Show less" : "Show more"}
+          </button>
+        ) : (
+          <span />
+        )}
+        <CopyButton text={fullText} />
+      </div>
+
+      {/* Outcome badge */}
+      {asset.actual_outcome && (
+        <p
+          className="text-[10px] mt-2 uppercase tracking-[0.08em]"
+          style={{ color: "var(--color-ql-muted)", opacity: 0.5 }}
+        >
+          Outcome: {asset.actual_outcome}
+        </p>
+      )}
+    </div>
+  );
 }
 
 export default function WorkbenchDrawer({ open, onClose }: Props) {
@@ -85,10 +254,7 @@ export default function WorkbenchDrawer({ open, onClose }: Props) {
             </p>
             <p
               className="text-sm mt-0.5"
-              style={{
-                fontFamily: "Georgia, serif",
-                color: "var(--color-ql-dark)",
-              }}
+              style={{ fontFamily: "Georgia, serif", color: "var(--color-ql-dark)" }}
             >
               {assets.length} saved {assets.length === 1 ? "asset" : "assets"}
             </p>
@@ -131,84 +297,12 @@ export default function WorkbenchDrawer({ open, onClose }: Props) {
           )}
 
           {assets.map((asset) => (
-            <div
+            <AssetCard
               key={asset.id}
-              className="rounded-xl border p-3.5"
-              style={{
-                borderColor: asset.pinned
-                  ? "var(--color-ql-accent)"
-                  : "var(--color-ql-border)",
-                background: "var(--color-ql-card)",
-                transition: "border-color 0.15s",
-              }}
-            >
-              {/* Type badge + controls */}
-              <div className="flex items-center justify-between mb-2">
-                <span
-                  className="text-[10px] font-medium uppercase tracking-[0.08em] px-2 py-0.5 rounded-md"
-                  style={{
-                    background: "var(--color-ql-border)",
-                    color: "var(--color-ql-muted)",
-                  }}
-                >
-                  {ASSET_LABELS[asset.asset_type] ?? asset.asset_type}
-                </span>
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() =>
-                      pinMutation.mutate({ id: asset.id, pinned: !asset.pinned })
-                    }
-                    className="w-6 h-6 flex items-center justify-center text-sm"
-                    style={{
-                      color: asset.pinned
-                        ? "var(--color-ql-accent)"
-                        : "var(--color-ql-muted)",
-                      opacity: asset.pinned ? 1 : 0.35,
-                      transition: "opacity 0.15s, color 0.15s",
-                    }}
-                    title={asset.pinned ? "Unstar" : "Star"}
-                  >
-                    ★
-                  </button>
-                  <button
-                    onClick={() => deleteMutation.mutate(asset.id)}
-                    className="w-6 h-6 flex items-center justify-center text-xs"
-                    style={{ color: "var(--color-ql-muted)", opacity: 0.3 }}
-                    title="Remove"
-                  >
-                    ✕
-                  </button>
-                </div>
-              </div>
-
-              {/* Cluster label */}
-              {asset.cluster_label && (
-                <p
-                  className="text-[10px] mb-1.5"
-                  style={{ color: "var(--color-ql-accent)" }}
-                >
-                  {asset.cluster_label}
-                </p>
-              )}
-
-              {/* Content preview */}
-              <p
-                className="text-xs leading-relaxed"
-                style={{ color: "var(--color-ql-dark)" }}
-              >
-                {contentPreview(asset)}
-              </p>
-
-              {/* Outcome badge */}
-              {asset.actual_outcome && (
-                <p
-                  className="text-[10px] mt-2 uppercase tracking-[0.08em]"
-                  style={{ color: "var(--color-ql-muted)", opacity: 0.5 }}
-                >
-                  Outcome: {asset.actual_outcome}
-                </p>
-              )}
-            </div>
+              asset={asset}
+              onPin={() => pinMutation.mutate({ id: asset.id, pinned: !asset.pinned })}
+              onDelete={() => deleteMutation.mutate(asset.id)}
+            />
           ))}
         </div>
       </div>
