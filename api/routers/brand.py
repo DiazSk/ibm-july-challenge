@@ -14,12 +14,12 @@ _PROJECT_ROOT  = Path(__file__).resolve().parent.parent.parent
 _PROFILE_PATH  = _PROJECT_ROOT / "data" / "brand_profile.json"
 _CLUSTERS_PATH = _PROJECT_ROOT / "data" / "clusters.json"
 
-_PILLAR_LABELS = {
-    "product_showcase"   : "Product Showcase",
-    "behind_scenes"      : "Behind the Scenes",
-    "seasonal_special"   : "Seasonal Special",
-    "customer_connection": "Customer Connection",
-    "brand_story"        : "Brand Story",
+_CLUSTER_ID_LABELS = {
+    0: "Homemade Classics",
+    1: "Fusion Specials",
+    2: "Behind the Scenes",
+    3: "Nutella Series",
+    4: "Bomboloni",
 }
 
 
@@ -56,10 +56,7 @@ async def get_profile():
         p = cp.get("profile", {})
         if p.get("parse_error"):
             continue
-        pillar = _PILLAR_LABELS.get(
-            p.get("content_pillar", ""),
-            p.get("content_pillar", "").replace("_", " ").title(),
-        )
+        pillar = _CLUSTER_ID_LABELS.get(cp["cluster_id"], f"Cluster {cp['cluster_id']}")
         if pillar and pillar not in content_pillars:
             content_pillars.append(pillar)
         tone_descriptors  += p.get("tone_descriptors", [])
@@ -110,13 +107,9 @@ async def get_clusters():
         cp  = profile_by_id.get(cid, {})
         p   = cp.get("profile", {})
         voc = p.get("vocabulary_patterns", {})
-        pillar = _PILLAR_LABELS.get(
-            p.get("content_pillar", ""),
-            p.get("content_pillar", "").replace("_", " ").title(),
-        )
         result[cid_str] = {
             "cluster_id"      : cid,
-            "pillar"          : pillar or f"Cluster {cid}",
+            "pillar"          : _CLUSTER_ID_LABELS.get(cid, f"Cluster {cid}"),
             "post_count"      : cp.get("post_count", len(posts)),
             "tone_descriptors": p.get("tone_descriptors", []),
             "signature_phrases": voc.get("signature_phrases", []),
