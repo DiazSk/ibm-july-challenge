@@ -29,12 +29,12 @@ BRAND_PROFILE_PATH = _PROJECT_ROOT / "data" / "brand_profile.json"
 
 OLLAMA_MODEL = "granite3.1-dense:8b"
 
-_PILLAR_LABELS = {
-    "product_showcase"   : "Product Showcase",
-    "behind_scenes"      : "Behind the Scenes",
-    "seasonal_special"   : "Seasonal Special",
-    "customer_connection": "Customer Connection",
-    "brand_story"        : "Brand Story",
+_CLUSTER_ID_LABELS = {
+    0: "Homemade Classics",
+    1: "Fusion Specials",
+    2: "Behind the Scenes",
+    3: "Nutella Series",
+    4: "Bomboloni",
 }
 
 _TEMPLATE = """\
@@ -129,8 +129,7 @@ class VoiceTimeline:
             p = cp.get("profile", {})
             if p.get("parse_error"):
                 continue
-            raw_pillar = p.get("content_pillar", "product_showcase")
-            pillar     = _PILLAR_LABELS.get(raw_pillar, raw_pillar.replace("_", " ").title())
+            pillar = _CLUSTER_ID_LABELS.get(cp["cluster_id"], f"Cluster {cp['cluster_id']}")
             tones      = p.get("tone_descriptors", [])
             tone_str   = ", ".join(tones[:2]) if tones else ""
             label_lines.append(

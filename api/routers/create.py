@@ -6,7 +6,7 @@ All Granite calls are synchronous (Ollama), so endpoints use plain `def`
 pool, keeping the event loop unblocked.
 """
 
-from typing import Any
+from typing import Any, Literal
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -16,6 +16,7 @@ from api.dependencies import (
     get_direction_generator,
     get_image_generator,
     get_moment_analyzer,
+    get_script_generator,
 )
 
 router = APIRouter()
@@ -36,6 +37,19 @@ class CaptionsRequest(BaseModel):
     product: str
     occasion: str
     desired_feel: str = ""
+    cluster_id: int = 0
+    previous_captions: list[str] = []
+
+
+class ScriptRequest(BaseModel):
+    reference_caption: str
+    views: int = 0
+    reach: int = 0
+    likes: int = 0
+    comments: int = 0
+    shares: int = 0
+    saves: int = 0
+    format: Literal["Reel", "Carousel", "Static"] = "Reel"
     cluster_id: int = 0
 
 
@@ -79,10 +93,35 @@ def generate_captions(req: CaptionsRequest) -> list:
     if not req.occasion.strip():
         raise HTTPException(status_code=422, detail="occasion is required")
     return get_caption_generator().generate(
-        product      = req.product.strip(),
-        occasion     = req.occasion.strip(),
-        desired_feel = req.desired_feel.strip() or "on-brand and engaging",
-        cluster_id   = req.cluster_id,
+        product           = req.product.strip(),
+        occasion          = req.occasion.strip(),
+        desired_feel      = req.desired_feel.strip() or "on-brand and engaging",
+        cluster_id        = req.cluster_id,
+        previous_captions = req.previous_captions or None,
+    )
+
+
+@router.post("/script")
+def generate_script(req: ScriptRequest) -> dict:
+    """
+    Granite Call #9 — ScriptGenerator.
+    Returns a structured content script (Reel/Carousel/Static) inspired by a
+    high-performing reference post.
+    """
+    if not req.reference_caption.strip():
+        raise HTTPException(status_code=422, detail="reference_caption is required")
+    return get_script_generator().generate(
+        reference_caption = req.reference_caption.strip(),
+        metrics           = {
+            "views"   : req.views,
+            "reach"   : req.reach,
+            "likes"   : req.likes,
+            "comments": req.comments,
+            "shares"  : req.shares,
+            "saves"   : req.saves,
+        },
+        content_format = req.format,
+        cluster_id     = req.cluster_id,
     )
 
 

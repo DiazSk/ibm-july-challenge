@@ -5,6 +5,7 @@ import BlankPageSolver from "@/components/create/BlankPageSolver";
 import CaptionBrief from "@/components/create/CaptionBrief";
 import CaptionVariants from "@/components/create/CaptionVariants";
 import ImageDirectionCard from "@/components/create/ImageDirectionCard";
+import ScriptStudio from "@/components/create/ScriptStudio";
 import { generateCaptions, generateImagePrompt } from "@/lib/api";
 import type { Caption, ImagePromptResult } from "@/lib/types";
 
@@ -16,6 +17,8 @@ export default function CreatePage() {
 
   const [captions, setCaptions] = useState<Caption[]>([]);
   const [captionLoading, setCaptionLoading] = useState(false);
+  const [regenerateLoading, setRegenerateLoading] = useState(false);
+  const [allPreviousCaptions, setAllPreviousCaptions] = useState<string[]>([]);
 
   const [imageResult, setImageResult] = useState<ImagePromptResult | null>(null);
   const [imageLoading, setImageLoading] = useState(false);
@@ -30,12 +33,38 @@ export default function CreatePage() {
     setCaptions([]);
     setImageResult(null);
     try {
-      const result = await generateCaptions({ product, occasion, desired_feel: desiredFeel, cluster_id: clusterId });
+      const result = await generateCaptions({
+        product,
+        occasion,
+        desired_feel: desiredFeel,
+        cluster_id: clusterId,
+      });
       setCaptions(result);
+      setAllPreviousCaptions(result.map((c) => c.caption));
     } catch {
       // silent — user can retry
     } finally {
       setCaptionLoading(false);
+    }
+  }
+
+  async function handleRegenerate() {
+    setRegenerateLoading(true);
+    setImageResult(null);
+    try {
+      const result = await generateCaptions({
+        product,
+        occasion,
+        desired_feel: desiredFeel,
+        cluster_id: clusterId,
+        previous_captions: allPreviousCaptions,
+      });
+      setCaptions(result);
+      setAllPreviousCaptions((prev) => [...prev, ...result.map((c) => c.caption)]);
+    } catch {
+      // silent
+    } finally {
+      setRegenerateLoading(false);
     }
   }
 
@@ -74,11 +103,17 @@ export default function CreatePage() {
           captions={captions}
           product={product}
           onGenerateImage={handleGenerateImage}
+          onRegenerate={handleRegenerate}
           imageLoading={imageLoading}
+          regenerateLoading={regenerateLoading}
         />
       )}
 
       {imageResult && <ImageDirectionCard result={imageResult} />}
+
+      <div className="mt-8">
+        <ScriptStudio />
+      </div>
     </div>
   );
 }

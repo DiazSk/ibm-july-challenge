@@ -88,6 +88,7 @@ export interface VoiceTimelineResult {
   monthly_pct: MonthlyPct[];
   narrative: string;
   key_shift: string;
+  pillar_labels: Record<string, string>;
 }
 
 export interface ClusterScore {
@@ -100,6 +101,59 @@ export interface ClusterScore {
   richness_score_display: number;
   volume_rank: number;
   richness_rank: number;
+}
+
+// Script Studio
+export interface ScriptRequest {
+  reference_caption: string;
+  views: number;
+  reach: number;
+  likes: number;
+  comments: number;
+  shares: number;
+  saves: number;
+  format: "Reel" | "Carousel" | "Static";
+  cluster_id: number;
+}
+
+export interface ReelScript {
+  hook: string;
+  opening_line: string;
+  voiceover_script: string;
+  shot_suggestions: string[];
+  caption: string;
+  hashtags: string[];
+  reasoning?: string;
+}
+
+export interface CarouselSlide {
+  slide: number;
+  headline: string;
+  body: string;
+}
+
+export interface CarouselScript {
+  hook: string;
+  slides: CarouselSlide[];
+  cta_slide: string;
+  caption: string;
+  hashtags: string[];
+  reasoning?: string;
+}
+
+export interface StaticScript {
+  headline: string;
+  caption: string;
+  hashtags: string[];
+  visual_direction: string;
+  reasoning?: string;
+}
+
+export interface ScriptResult {
+  format: "Reel" | "Carousel" | "Static";
+  reasoning?: string;
+  // format-specific fields merged at top level
+  [key: string]: unknown;
 }
 
 export interface StrategicInsightsResult {

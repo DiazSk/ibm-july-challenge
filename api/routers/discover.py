@@ -27,6 +27,14 @@ _CLUSTERS_PATH = _PROJECT_ROOT / "data" / "clusters.json"
 
 _ALL_CLUSTER_COLS = ["C0", "C1", "C2", "C3", "C4"]
 
+_CLUSTER_ID_LABELS = {
+    0: "Homemade Classics",
+    1: "Fusion Specials",
+    2: "Behind the Scenes",
+    3: "Nutella Series",
+    4: "Bomboloni",
+}
+
 
 @lru_cache(maxsize=1)
 def _compute_voice_timeline() -> dict:
@@ -51,10 +59,13 @@ def _compute_voice_timeline() -> dict:
 
     narrative_result = vt.narrate_evolution(raw_counts, profile)
 
+    pillar_labels = {f"C{cid}": label for cid, label in _CLUSTER_ID_LABELS.items()}
+
     return {
-        "monthly_pct": monthly_pct,
-        "narrative"  : narrative_result.get("narrative", ""),
-        "key_shift"  : narrative_result.get("key_shift", ""),
+        "monthly_pct"  : monthly_pct,
+        "narrative"    : narrative_result.get("narrative", ""),
+        "key_shift"    : narrative_result.get("key_shift", ""),
+        "pillar_labels": pillar_labels,
     }
 
 

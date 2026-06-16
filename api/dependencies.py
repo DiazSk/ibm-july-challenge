@@ -59,3 +59,9 @@ def get_voice_timeline():
 def get_strategic_insights():
     from src.generation.strategic_insights import StrategicInsights
     return StrategicInsights()
+
+
+@lru_cache(maxsize=1)
+def get_script_generator():
+    from src.generation.script_generator import ScriptGenerator
+    return ScriptGenerator()

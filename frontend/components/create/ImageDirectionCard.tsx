@@ -22,21 +22,22 @@ export default function ImageDirectionCard({ result }: Props) {
       style={{ borderColor: "var(--color-ql-border)" }}
     >
       <div
-        className="px-4 py-2.5 flex items-center justify-between"
+        className="px-4 py-2.5 flex items-center justify-between border-b"
         style={{
-          background: "var(--color-ql-dark)",
+          background: "var(--color-ql-sidebar)",
+          borderColor: "var(--color-ql-border)",
         }}
       >
         <span
           className="text-[10px] font-medium uppercase tracking-[0.15em]"
-          style={{ color: "rgba(255,255,255,0.5)" }}
+          style={{ color: "var(--color-ql-muted)" }}
         >
           Image Direction
         </span>
         <button
           onClick={copy}
           className="text-[11px] transition-colors"
-          style={{ color: "rgba(255,255,255,0.6)" }}
+          style={{ color: "var(--color-ql-accent)" }}
         >
           {copied ? "Copied" : "Copy"}
         </button>
@@ -44,12 +45,12 @@ export default function ImageDirectionCard({ result }: Props) {
 
       <div
         className="px-4 py-3"
-        style={{ background: "#1A1A1A" }}
+        style={{ background: "var(--color-ql-bg)" }}
       >
         <p
           className="text-xs leading-relaxed"
           style={{
-            color: "#E8D5B8",
+            color: "var(--color-ql-text)",
             fontFamily: "var(--font-family-mono)",
           }}
         >

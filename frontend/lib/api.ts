@@ -47,6 +47,7 @@ export const generateCaptions = (payload: {
   occasion: string;
   desired_feel: string;
   cluster_id: number;
+  previous_captions?: string[];
 }) =>
   apiFetch<Caption[]>("/api/create/captions", {
     method: "POST",
@@ -57,6 +58,12 @@ export const generateImagePrompt = (caption: string, product: string) =>
   apiFetch<ImagePromptResult>("/api/create/image-prompt", {
     method: "POST",
     body: JSON.stringify({ caption, product }),
+  });
+
+export const generateScript = (payload: import("./types").ScriptRequest) =>
+  apiFetch<import("./types").ScriptResult>("/api/create/script", {
+    method: "POST",
+    body: JSON.stringify(payload),
   });
 
 // Analyze

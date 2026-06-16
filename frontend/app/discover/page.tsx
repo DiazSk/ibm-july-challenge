@@ -79,7 +79,7 @@ export default function DiscoverPage() {
               background: "var(--color-ql-card)",
             }}
           >
-            <VoiceTimelineChart data={timeline.data.monthly_pct} />
+            <VoiceTimelineChart data={timeline.data.monthly_pct} pillarLabels={timeline.data.pillar_labels} />
             <TimelineNarrative
               narrative={timeline.data.narrative}
               keyShift={timeline.data.key_shift}

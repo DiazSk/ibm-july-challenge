@@ -20,7 +20,7 @@ const CLUSTER_COLORS = ["#5A8A6A", "#8B7355", "#A35A5A", "#5A6A8A", "#6A5A8A"] a
 
 export default function StrategicInsightsChart({ scores }: Props) {
   const data = scores.map((s) => ({
-    name: `C${s.cluster_id}`,
+    name: s.pillar.split(" ")[0],
     pillar: s.pillar,
     Volume: s.volume_score,
     Richness: s.richness_score_display,

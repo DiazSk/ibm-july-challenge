@@ -13,6 +13,7 @@ import type { MonthlyPct } from "@/lib/types";
 
 interface Props {
   data: MonthlyPct[];
+  pillarLabels?: Record<string, string>;
 }
 
 const CLUSTERS = [
@@ -23,7 +24,7 @@ const CLUSTERS = [
   { key: "C4", color: "#6A5A8A" },
 ] as const;
 
-export default function VoiceTimelineChart({ data }: Props) {
+export default function VoiceTimelineChart({ data, pillarLabels = {} }: Props) {
   return (
     <ResponsiveContainer width="100%" height={260}>
       <AreaChart
@@ -73,6 +74,7 @@ export default function VoiceTimelineChart({ data }: Props) {
             key={key}
             type="monotone"
             dataKey={key}
+            name={pillarLabels[key] ?? key}
             stackId="1"
             stroke={color}
             strokeWidth={1.5}

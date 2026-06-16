@@ -47,8 +47,10 @@ Write 3 distinct Instagram caption variants. Each must:
 - Not use any of the avoided terms
 - Sound like a real person, not a marketing template
 - Each variant should take a different angle (e.g. emotional, sensory, humorous)
+- Use a maximum of 5 hashtags; choose them for reach and discoverability, not decoration
+- Place 2-3 niche targeting keywords naturally in the caption body (not as hashtags) to boost reach
 
-Return ONLY valid JSON — no preamble, no explanation, no markdown fences:
+{exclusion_block}Return ONLY valid JSON — no preamble, no explanation, no markdown fences:
 
 [
   {{
@@ -70,7 +72,7 @@ _PROMPT = PromptTemplate(
     input_variables=[
         "brand_name", "content_pillar", "tone_descriptors", "recurring_words",
         "signature_phrases", "emoji_style", "structural_signature", "avoided_terms",
-        "product", "occasion", "desired_feel",
+        "product", "occasion", "desired_feel", "exclusion_block",
     ],
     template=_TEMPLATE,
 )
@@ -78,14 +80,36 @@ _PROMPT = PromptTemplate(
 
 def _parse_captions(raw: str) -> list[dict]:
     text = raw.strip()
+
+    # Pass 1: strip markdown fences and extract the JSON array
     fence = re.search(r"```(?:json)?\s*([\s\S]*?)```", text)
     if fence:
         text = fence.group(1).strip()
     start = text.find("[")
     end   = text.rfind("]")
     if start != -1 and end != -1:
-        text = text[start : end + 1]
-    return json.loads(text)
+        candidate = text[start : end + 1]
+        try:
+            parsed = json.loads(candidate)
+            if isinstance(parsed, list) and parsed:
+                return parsed
+        except (json.JSONDecodeError, ValueError):
+            pass
+
+    # Pass 2: extract individual JSON objects from anywhere in the text
+    objects = re.findall(r'\{[^{}]+\}', text, re.DOTALL)
+    results = []
+    for obj_str in objects:
+        try:
+            obj = json.loads(obj_str)
+            if "caption" in obj:
+                results.append(obj)
+        except (json.JSONDecodeError, ValueError):
+            continue
+    if results:
+        return results
+
+    raise ValueError("Could not extract caption JSON from Granite response")
 
 
 class CaptionGenerator:
@@ -112,10 +136,12 @@ class CaptionGenerator:
         occasion: str,
         desired_feel: str,
         cluster_id: int = 0,
+        previous_captions: list[str] | None = None,
     ) -> list[dict]:
         """
         Returns a list of 3 dicts: [{caption, reasoning}, ...].
         Falls back to cluster 0 if the requested cluster_id is not found.
+        Pass previous_captions to guarantee the new batch differs from prior ones.
         """
         cluster = next(
             (c for c in self._profile["cluster_profiles"] if c["cluster_id"] == cluster_id),
@@ -124,7 +150,21 @@ class CaptionGenerator:
         p   = cluster["profile"]
         voc = p.get("vocabulary_patterns", {})
 
-        raw = self._chain.invoke({
+        if previous_captions:
+            numbered = "\n".join(f"  {i+1}. {cap}" for i, cap in enumerate(previous_captions))
+            exclusion_block = (
+                f"IMPORTANT — Do NOT repeat or closely paraphrase any of these "
+                f"previously generated captions:\n{numbered}\n\n"
+            )
+            temperature = 0.85
+        else:
+            exclusion_block = ""
+            temperature = 0.7
+
+        llm = OllamaLLM(model=self._llm.model, temperature=temperature, num_predict=900)
+        chain = _PROMPT | llm
+
+        raw = chain.invoke({
             "brand_name"          : self._profile["brand_name"],
             "content_pillar"      : p.get("content_pillar", "product_showcase"),
             "tone_descriptors"    : ", ".join(p.get("tone_descriptors", [])),
@@ -136,6 +176,7 @@ class CaptionGenerator:
             "product"             : product,
             "occasion"            : occasion,
             "desired_feel"        : desired_feel or "on-brand and engaging",
+            "exclusion_block"     : exclusion_block,
         })
 
         try:

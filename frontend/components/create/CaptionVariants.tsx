@@ -7,14 +7,18 @@ interface Props {
   captions: Caption[];
   product: string;
   onGenerateImage: (caption: string) => void;
+  onRegenerate: () => void;
   imageLoading: boolean;
+  regenerateLoading: boolean;
 }
 
 export default function CaptionVariants({
   captions,
   product,
   onGenerateImage,
+  onRegenerate,
   imageLoading,
+  regenerateLoading,
 }: Props) {
   const [copied, setCopied] = useState<number | null>(null);
 
@@ -28,12 +32,29 @@ export default function CaptionVariants({
 
   return (
     <div className="mt-6">
-      <p
-        className="text-[11px] font-medium uppercase tracking-[0.12em] mb-3"
-        style={{ color: "var(--color-ql-muted)" }}
-      >
-        Caption Variants
-      </p>
+      <div className="flex items-center justify-between mb-3">
+        <p
+          className="text-[11px] font-medium uppercase tracking-[0.12em]"
+          style={{ color: "var(--color-ql-muted)" }}
+        >
+          Caption Variants
+        </p>
+        <button
+          onClick={onRegenerate}
+          disabled={regenerateLoading}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] rounded-lg border transition-colors disabled:opacity-50"
+          style={{
+            borderColor: "var(--color-ql-border)",
+            color: "var(--color-ql-muted)",
+          }}
+        >
+          {regenerateLoading ? (
+            <span className="animate-pulse">Generating…</span>
+          ) : (
+            "Regenerate"
+          )}
+        </button>
+      </div>
       <div className="flex flex-col gap-3">
         {captions.map((c, i) => (
           <div
