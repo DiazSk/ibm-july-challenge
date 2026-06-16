@@ -7,27 +7,36 @@ import CaptionBrief from "@/components/create/CaptionBrief";
 import CaptionVariants from "@/components/create/CaptionVariants";
 import ImageDirectionCard from "@/components/create/ImageDirectionCard";
 import ScriptStudio from "@/components/create/ScriptStudio";
-import WorkbenchDrawer from "@/components/workbench/WorkbenchDrawer";
 import { generateCaptions, generateImagePrompt, saveAsset } from "@/lib/api";
+import { useLocalStorage } from "@/lib/useLocalStorage";
 import type { Caption, ImagePromptResult } from "@/lib/types";
 
 export default function CreatePage() {
   const queryClient = useQueryClient();
 
-  const [product, setProduct] = useState("");
-  const [occasion, setOccasion] = useState("");
-  const [desiredFeel, setDesiredFeel] = useState("");
-  const [clusterId, setClusterId] = useState(0);
+  // Persisted across tab changes and refreshes
+  const [product, setProduct, clearProduct] = useLocalStorage("ss_create_product", "");
+  const [occasion, setOccasion, clearOccasion] = useLocalStorage("ss_create_occasion", "");
+  const [desiredFeel, setDesiredFeel, clearDesiredFeel] = useLocalStorage("ss_create_feel", "");
+  const [clusterId, setClusterId, clearClusterId] = useLocalStorage("ss_create_cluster", 0);
 
+  // Ephemeral — reset on tab change (results of the current session)
   const [captions, setCaptions] = useState<Caption[]>([]);
   const [captionLoading, setCaptionLoading] = useState(false);
   const [regenerateLoading, setRegenerateLoading] = useState(false);
   const [allPreviousCaptions, setAllPreviousCaptions] = useState<string[]>([]);
-
   const [imageResult, setImageResult] = useState<ImagePromptResult | null>(null);
   const [imageLoading, setImageLoading] = useState(false);
 
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  function handleClearBrief() {
+    clearProduct();
+    clearOccasion();
+    clearDesiredFeel();
+    clearClusterId();
+    setCaptions([]);
+    setAllPreviousCaptions([]);
+    setImageResult(null);
+  }
 
   function handleBlankPageApply(feel: string, cId: number) {
     setDesiredFeel(feel);
@@ -102,21 +111,7 @@ export default function CreatePage() {
   }
 
   return (
-    <>
     <div className="max-w-2xl mx-auto">
-      <div className="flex justify-end mb-2">
-        <button
-          onClick={() => setDrawerOpen(true)}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] rounded-lg border transition-colors"
-          style={{
-            borderColor: "var(--color-ql-border)",
-            color: "var(--color-ql-muted)",
-          }}
-        >
-          Saved
-        </button>
-      </div>
-
       <BlankPageSolver onApply={handleBlankPageApply} />
 
       <CaptionBrief
@@ -129,6 +124,7 @@ export default function CreatePage() {
         onDesiredFeelChange={setDesiredFeel}
         onClusterChange={setClusterId}
         onGenerate={handleGenerateCaptions}
+        onClear={handleClearBrief}
         loading={captionLoading}
       />
 
@@ -150,7 +146,5 @@ export default function CreatePage() {
         <ScriptStudio />
       </div>
     </div>
-    <WorkbenchDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
-    </>
   );
 }

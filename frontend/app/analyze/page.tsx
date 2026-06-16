@@ -5,6 +5,7 @@ import WhyEngineForm from "@/components/analyze/WhyEngineForm";
 import DiagnosisPanel from "@/components/analyze/DiagnosisPanel";
 import RecoveryBrief from "@/components/analyze/RecoveryBrief";
 import { runWhyEngine } from "@/lib/api";
+import { useLocalStorage } from "@/lib/useLocalStorage";
 import type { WhyEngineRequest, WhyEngineResult } from "@/lib/types";
 
 const DEFAULT_FORM: WhyEngineRequest = {
@@ -20,10 +21,16 @@ const DEFAULT_FORM: WhyEngineRequest = {
 };
 
 export default function AnalyzePage() {
-  const [form, setForm] = useState<WhyEngineRequest>(DEFAULT_FORM);
+  const [form, setForm, clearForm] = useLocalStorage<WhyEngineRequest>("ss_analyze_form", DEFAULT_FORM);
   const [result, setResult] = useState<WhyEngineResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  function handleClearForm() {
+    clearForm();
+    setResult(null);
+    setError(null);
+  }
 
   async function handleSubmit() {
     setLoading(true);
@@ -41,6 +48,16 @@ export default function AnalyzePage() {
 
   return (
     <div className="max-w-2xl mx-auto">
+      <div className="flex justify-end mb-2">
+        <button
+          onClick={handleClearForm}
+          className="text-[11px] px-2 py-1 rounded border transition-colors"
+          style={{ borderColor: "var(--color-ql-border)", color: "var(--color-ql-muted)" }}
+        >
+          Clear
+        </button>
+      </div>
+
       <WhyEngineForm
         value={form}
         onChange={setForm}

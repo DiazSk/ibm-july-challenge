@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { getClusters, generateScript } from "@/lib/api";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { getClusters, generateScript, saveAsset } from "@/lib/api";
+import { useLocalStorage } from "@/lib/useLocalStorage";
 import type { ScriptResult } from "@/lib/types";
 
 type Format = "Reel" | "Carousel" | "Static";
@@ -29,6 +30,8 @@ interface Metrics {
   shares: number;
   saves: number;
 }
+
+const DEFAULT_METRICS: Metrics = { views: 0, reach: 0, likes: 0, comments: 0, shares: 0, saves: 0 };
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
@@ -217,14 +220,21 @@ function StaticOutput({ script }: { script: ScriptResult }) {
 }
 
 export default function ScriptStudio() {
+  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [refCaption, setRefCaption] = useState("");
-  const [metrics, setMetrics] = useState<Metrics>({ views: 0, reach: 0, likes: 0, comments: 0, shares: 0, saves: 0 });
-  const [format, setFormat] = useState<Format>("Reel");
-  const [clusterId, setClusterId] = useState(0);
+
+  // Persisted across tab changes and refreshes
+  const [refCaption, setRefCaption, clearRefCaption] = useLocalStorage("ss_script_caption", "");
+  const [metrics, setMetrics, clearMetrics] = useLocalStorage<Metrics>("ss_script_metrics", DEFAULT_METRICS);
+  const [format, setFormat, clearFormat] = useLocalStorage<Format>("ss_script_format", "Reel");
+  const [clusterId, setClusterId, clearClusterId] = useLocalStorage("ss_script_cluster", 0);
+
+  // Ephemeral
   const [result, setResult] = useState<ScriptResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const { data: clusters } = useQuery({ queryKey: ["clusters"], queryFn: getClusters });
   const clusterList = clusters
@@ -235,11 +245,22 @@ export default function ScriptStudio() {
     setMetrics((m) => ({ ...m, [key]: value }));
   }
 
+  function handleClearScript() {
+    clearRefCaption();
+    clearMetrics();
+    clearFormat();
+    clearClusterId();
+    setResult(null);
+    setError(null);
+    setSaved(false);
+  }
+
   async function handleGenerate() {
     if (!refCaption.trim()) return;
     setLoading(true);
     setError(null);
     setResult(null);
+    setSaved(false);
     try {
       const r = await generateScript({
         reference_caption: refCaption,
@@ -252,6 +273,27 @@ export default function ScriptStudio() {
       setError(e instanceof Error ? e.message : "Script generation failed");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleSave() {
+    if (!result) return;
+    setSaving(true);
+    try {
+      const clusterLabel = clusterList.find((c) => c.cluster_id === clusterId)?.pillar ?? null;
+      await saveAsset({
+        asset_type: format === "Reel" ? "reel_script" : format === "Carousel" ? "carousel" : "static_script",
+        content: result,
+        cluster_label: clusterLabel,
+        cluster_id: clusterId,
+        source_tab: "script_studio",
+      });
+      queryClient.invalidateQueries({ queryKey: ["workbench"] });
+      setSaved(true);
+    } catch {
+      // silent
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -284,6 +326,17 @@ export default function ScriptStudio() {
       {open && (
         <div className="px-5 pb-5 border-t" style={{ borderColor: "var(--color-ql-border)" }}>
           <div className="pt-4 flex flex-col gap-4">
+            {/* Clear button */}
+            <div className="flex items-center justify-end">
+              <button
+                onClick={handleClearScript}
+                className="text-[11px] px-2 py-1 rounded border transition-colors"
+                style={{ borderColor: "var(--color-ql-border)", color: "var(--color-ql-muted)" }}
+              >
+                Clear
+              </button>
+            </div>
+
             {/* Reference caption */}
             <div>
               <label className="block text-[11px] font-medium uppercase tracking-[0.12em] mb-1.5" style={{ color: "var(--color-ql-muted)" }}>
@@ -407,6 +460,20 @@ export default function ScriptStudio() {
                 {result.format === "Reel" && <ReelOutput script={result} />}
                 {result.format === "Carousel" && <CarouselOutput script={result} />}
                 {result.format === "Static" && <StaticOutput script={result} />}
+
+                <div className="mt-4 flex justify-end">
+                  <button
+                    onClick={handleSave}
+                    disabled={saved || saving}
+                    className="text-xs px-4 py-2 rounded-lg border transition-all"
+                    style={{
+                      borderColor: saved ? "var(--color-ql-accent)" : "var(--color-ql-border)",
+                      color: saved ? "var(--color-ql-accent)" : "var(--color-ql-muted)",
+                    }}
+                  >
+                    {saved ? "Saved ✓" : saving ? "Saving…" : "Save to Workbench"}
+                  </button>
+                </div>
               </div>
             )}
           </div>

@@ -13,6 +13,7 @@ interface Props {
   onDesiredFeelChange: (v: string) => void;
   onClusterChange: (v: number) => void;
   onGenerate: () => void;
+  onClear: () => void;
   loading: boolean;
 }
 
@@ -56,6 +57,7 @@ export default function CaptionBrief({
   onDesiredFeelChange,
   onClusterChange,
   onGenerate,
+  onClear,
   loading,
 }: Props) {
   const { data: clusters } = useQuery({
@@ -77,12 +79,21 @@ export default function CaptionBrief({
         background: "var(--color-ql-card)",
       }}
     >
-      <h3
-        className="text-base mb-4"
-        style={{ fontFamily: "Georgia, serif", color: "var(--color-ql-dark)" }}
-      >
-        Caption Brief
-      </h3>
+      <div className="flex items-center justify-between mb-4">
+        <h3
+          className="text-base"
+          style={{ fontFamily: "Georgia, serif", color: "var(--color-ql-dark)" }}
+        >
+          Caption Brief
+        </h3>
+        <button
+          onClick={onClear}
+          className="text-[11px] px-2 py-1 rounded border transition-colors"
+          style={{ borderColor: "var(--color-ql-border)", color: "var(--color-ql-muted)" }}
+        >
+          Clear
+        </button>
+      </div>
 
       <div className="flex flex-col gap-4">
         <Field label="Product">
