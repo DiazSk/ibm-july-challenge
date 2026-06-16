@@ -9,6 +9,8 @@ import type {
   WhyEngineResult,
   VoiceTimelineResult,
   StrategicInsightsResult,
+  OnboardStatus,
+  HasProfileResult,
 } from "./types";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
@@ -79,3 +81,39 @@ export const getVoiceTimeline = () =>
 
 export const getStrategicInsights = () =>
   apiFetch<StrategicInsightsResult>("/api/discover/strategic-insights");
+
+// Onboarding
+export const checkHasProfile = () =>
+  apiFetch<HasProfileResult>("/api/onboard/has-profile");
+
+export const startOnboard = (handle: string, brand_name: string) =>
+  apiFetch<{ job_id: string }>("/api/onboard/start", {
+    method: "POST",
+    body: JSON.stringify({ handle, brand_name }),
+  });
+
+export const getOnboardStatus = (jobId: string) =>
+  apiFetch<OnboardStatus>(`/api/onboard/status/${jobId}`);
+
+export const resetToDemo = () =>
+  apiFetch<{ status: string; handle: string }>("/api/onboard/reset-demo", {
+    method: "POST",
+  });
+
+export async function uploadExport(
+  file      : File,
+  account   : string,
+  brand_name: string,
+): Promise<{ job_id: string }> {
+  const form = new FormData();
+  form.append("file", file);
+  form.append("account", account);
+  form.append("brand_name", brand_name);
+  const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+  const res = await fetch(`${BASE_URL}/api/onboard/upload`, { method: "POST", body: form });
+  if (!res.ok) {
+    const text = await res.text().catch(() => res.statusText);
+    throw new Error(`${res.status} ${text}`);
+  }
+  return res.json();
+}

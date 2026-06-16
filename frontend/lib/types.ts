@@ -156,6 +156,20 @@ export interface ScriptResult {
   [key: string]: unknown;
 }
 
+// Onboarding
+export interface OnboardStatus {
+  status  : "queued" | "running" | "done" | "error";
+  progress: number;
+  message : string;
+  handle ?: string;
+  error  ?: string;
+}
+
+export interface HasProfileResult {
+  has_profile: boolean;
+  handle     : string | null;
+}
+
 export interface StrategicInsightsResult {
   scores: ClusterScore[];
   tensions: string[];

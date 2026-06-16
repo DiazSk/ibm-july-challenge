@@ -114,12 +114,22 @@ def _parse_json(raw: str) -> dict:
 
 class BrandProfileExtractor:
     """
-    Builds a structured brand profile for @hot_cakesbakes by running each
-    content cluster through IBM Granite 3.1 (local Ollama inference).
+    Builds a structured brand profile by running each content cluster through
+    IBM Granite 3.1 (local Ollama inference). Accepts optional brand identity
+    params so any account's data can be analyzed, not just @hot_cakesbakes.
     """
 
-    def __init__(self, model: str = OLLAMA_MODEL):
-        self.model = model
+    def __init__(
+        self,
+        model      : str = OLLAMA_MODEL,
+        brand_name : str = BRAND_NAME,
+        ig_handle  : str = IG_HANDLE,
+        brand_bio  : str = BRAND_BIO,
+    ):
+        self.model       = model
+        self._brand_name = brand_name
+        self._ig_handle  = ig_handle
+        self._brand_bio  = brand_bio
         self._llm  = OllamaLLM(
             model       = model,
             temperature = 0.0,       # deterministic — brand analysis needs consistency
@@ -143,9 +153,9 @@ class BrandProfileExtractor:
         print(f"  → Cluster {cluster_id}  ({len(posts)} posts)  calling Granite…")
 
         raw = self._chain.invoke({
-            "brand_name": BRAND_NAME,
-            "ig_handle" : IG_HANDLE,
-            "brand_bio" : BRAND_BIO,
+            "brand_name": self._brand_name,
+            "ig_handle" : self._ig_handle,
+            "brand_bio" : self._brand_bio,
             "n_posts"   : str(n_posts),
             "posts_text": posts_text,
         })
@@ -190,9 +200,9 @@ class BrandProfileExtractor:
             cluster_profiles.append(result)
 
         brand_profile = {
-            "brand_name"      : BRAND_NAME,
-            "ig_handle"       : IG_HANDLE,
-            "brand_bio"       : BRAND_BIO,
+            "brand_name"      : self._brand_name,
+            "ig_handle"       : self._ig_handle,
+            "brand_bio"       : self._brand_bio,
             "model_used"      : self.model,
             "inference_backend": "ollama-local",
             "n_clusters"      : len(cluster_profiles),
