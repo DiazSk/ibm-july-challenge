@@ -49,13 +49,13 @@ def _clear_caches() -> None:
             get_caption_generator, get_image_generator, get_why_engine,
             get_moment_analyzer, get_direction_generator, get_voice_timeline,
             get_strategic_insights, get_script_generator,
-            get_recovery_brief_generator,
+            get_recovery_brief_generator, get_boost_advisor,
         )
         for fn in (
             get_caption_generator, get_image_generator, get_why_engine,
             get_moment_analyzer, get_direction_generator, get_voice_timeline,
             get_strategic_insights, get_script_generator,
-            get_recovery_brief_generator,
+            get_recovery_brief_generator, get_boost_advisor,
         ):
             try:
                 fn.cache_clear()
@@ -65,9 +65,12 @@ def _clear_caches() -> None:
         pass
 
     try:
-        from api.routers.discover import _compute_voice_timeline, _compute_strategic_insights
+        from api.routers.discover import (
+            _compute_voice_timeline, _compute_strategic_insights, _compute_boost_advisor,
+        )
         _compute_voice_timeline.cache_clear()
         _compute_strategic_insights.cache_clear()
+        _compute_boost_advisor.cache_clear()
     except Exception:
         pass
 

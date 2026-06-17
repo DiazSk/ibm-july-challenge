@@ -71,3 +71,9 @@ def get_script_generator():
 def get_recovery_brief_generator():
     from src.generation.recovery_brief import RecoveryBriefGenerator
     return RecoveryBriefGenerator()
+
+
+@lru_cache(maxsize=1)
+def get_boost_advisor():
+    from src.generation.boost_advisor import BoostAdvisor
+    return BoostAdvisor()

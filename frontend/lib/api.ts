@@ -9,6 +9,7 @@ import type {
   WhyEngineResult,
   VoiceTimelineResult,
   StrategicInsightsResult,
+  BoostAdvisorResult,
   OnboardStatus,
   HasProfileResult,
   WorkbenchAsset,
@@ -82,6 +83,9 @@ export const getVoiceTimeline = () =>
 
 export const getStrategicInsights = () =>
   apiFetch<StrategicInsightsResult>("/api/discover/strategic-insights");
+
+export const getBoostAdvisor = () =>
+  apiFetch<BoostAdvisorResult>("/api/discover/boost-advisor");
 
 // Onboarding
 export const checkHasProfile = () =>

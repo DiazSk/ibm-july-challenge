@@ -198,3 +198,15 @@ export interface StrategicInsightsResult {
   underutilized_cluster: number | null;
   overused_cluster: number | null;
 }
+
+export interface BoostAdvisorResult {
+  boost_cluster_id: number;
+  boost_cluster_name: string;
+  boost_post_hook: string;
+  reasoning: string;
+  boost_strategy: string;
+  expected_impact: string;
+  dont_boost_cluster_id: number;
+  dont_boost_cluster_name: string;
+  dont_boost_reason: string;
+}

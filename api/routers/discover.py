@@ -17,7 +17,7 @@ from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
 
-from api.dependencies import get_voice_timeline, get_strategic_insights
+from api.dependencies import get_voice_timeline, get_strategic_insights, get_boost_advisor
 
 router = APIRouter()
 
@@ -117,3 +117,42 @@ def strategic_insights() -> dict:
             detail="Data files not found. Run `python run_pipeline.py` first.",
         )
     return _compute_strategic_insights()
+
+
+@lru_cache(maxsize=1)
+def _compute_boost_advisor() -> dict:
+    profile  = json.loads(_PROFILE_PATH.read_text(encoding="utf-8"))
+    clusters = json.loads(_CLUSTERS_PATH.read_text(encoding="utf-8"))
+
+    cluster_engagement = clusters.get("cluster_engagement", {})
+    if not cluster_engagement:
+        raise ValueError(
+            "No cluster_engagement data found. "
+            "Run the pipeline with demo data or add engagement data to clusters.json."
+        )
+
+    # Reuse already-computed richness scores (cached) if available, else compute fresh
+    si     = get_strategic_insights()
+    scores = si.compute_richness_scores(profile, clusters)
+
+    advisor = get_boost_advisor()
+    result  = advisor.generate(scores, cluster_engagement, profile)
+    return result
+
+
+@router.get("/boost-advisor")
+def boost_advisor() -> dict:
+    """
+    Granite Call #11 — BoostAdvisor.
+    Returns recommendation for which post/cluster to boost on Instagram.
+    Cached after first call.
+    """
+    if not _PROFILE_PATH.exists() or not _CLUSTERS_PATH.exists():
+        raise HTTPException(
+            status_code=404,
+            detail="Data files not found. Run `python run_pipeline.py` first.",
+        )
+    try:
+        return _compute_boost_advisor()
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))

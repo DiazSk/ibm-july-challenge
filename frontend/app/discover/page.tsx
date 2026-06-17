@@ -1,11 +1,12 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { getVoiceTimeline, getStrategicInsights } from "@/lib/api";
+import { getVoiceTimeline, getStrategicInsights, getBoostAdvisor } from "@/lib/api";
 import VoiceTimelineChart from "@/components/discover/VoiceTimelineChart";
 import TimelineNarrative from "@/components/discover/TimelineNarrative";
 import StrategicInsightsChart from "@/components/discover/StrategicInsightsChart";
 import StrategyBrief from "@/components/discover/StrategyBrief";
+import BoostAdvisorCard from "@/components/discover/BoostAdvisor";
 
 function SectionHeading({ children }: { children: React.ReactNode }) {
   return (
@@ -56,6 +57,11 @@ export default function DiscoverPage() {
   const insights = useQuery({
     queryKey: ["strategic-insights"],
     queryFn: getStrategicInsights,
+  });
+
+  const boostAdvisor = useQuery({
+    queryKey: ["boost-advisor"],
+    queryFn: getBoostAdvisor,
   });
 
   return (
@@ -109,6 +115,36 @@ export default function DiscoverPage() {
           >
             <StrategicInsightsChart scores={insights.data.scores} />
             <StrategyBrief result={insights.data} />
+          </div>
+        )}
+      </section>
+
+      {/* Boost Advisor */}
+      <section>
+        <SectionHeading>Boost Advisor</SectionHeading>
+        <p className="text-xs mb-4" style={{ color: "var(--color-ql-muted)" }}>
+          Instagram tells you <em>that</em> you can boost — StyleSync tells you <em>which post</em> to put money behind and why.
+        </p>
+
+        {boostAdvisor.isLoading && <LoadingBlock />}
+        {boostAdvisor.isError && (
+          <ErrorBlock message="Could not load Boost Advisor — is the FastAPI server running?" />
+        )}
+        {boostAdvisor.data && (
+          <div
+            className="rounded-xl border p-5"
+            style={{
+              borderColor: "var(--color-ql-border)",
+              background: "var(--color-ql-card)",
+            }}
+          >
+            <p
+              className="text-[11px] uppercase tracking-[0.1em] font-medium"
+              style={{ color: "var(--color-ql-muted)" }}
+            >
+              Granite #11 · Engagement-weighted recommendation
+            </p>
+            <BoostAdvisorCard result={boostAdvisor.data} />
           </div>
         )}
       </section>
