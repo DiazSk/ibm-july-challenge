@@ -1,6 +1,6 @@
 # Environment variables
 .env
-
+.idea
 # Scraped dataset
 scraped_dataset/
 
