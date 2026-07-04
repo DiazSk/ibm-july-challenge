@@ -106,7 +106,7 @@ A persistent SQLite scratchpad that survives refreshes and sessions. Every gener
 
 ## The IBM Granite Architecture
 
-StyleSync runs **11 coordinated IBM Granite 3.1 8B invocations** — every single one running locally via Ollama, with zero cloud API calls during inference.
+StyleSync runs **12 coordinated IBM Granite 3.1 8B invocations** — every single one running locally via Ollama, with zero cloud API calls during inference.
 
 | # | Invocation | Purpose |
 |---|------------|---------|
@@ -121,8 +121,11 @@ StyleSync runs **11 coordinated IBM Granite 3.1 8B invocations** — every singl
 | 9 | Script Generator | Full Reel/Carousel/Static production script |
 | 10 | Recovery Brief | Recovery hook + format + script chained from Why Engine failure |
 | 11 | Boost Advisor | Engagement-weighted recommendation for which post/cluster to boost |
+| 12 | Voice Refiner | Refines a raw spoken caption idea into polished on-brand copy, read back aloud |
 
-These are not 10 identical calls with different prompts. Each invocation operates on a different data shape, a different reasoning task, and a different output structure. Together they form a closed feedback loop: your history informs your generation, your generation outcomes feed back into your diagnosis, your diagnosis informs your next creation.
+These are not 12 identical calls with different prompts. Each invocation operates on a different data shape, a different reasoning task, and a different output structure. Together they form a closed feedback loop: your history informs your generation, your generation outcomes feed back into your diagnosis, your diagnosis informs your next creation.
+
+**The voice loop (Granite #12):** Creator speaks a raw caption idea → browser's on-device speech recognition captures the transcript → Granite refines it into polished on-brand copy calibrated to the creator's content cluster voice → browser speech synthesis reads it back aloud. No audio ever leaves the machine — only the text transcript reaches local FastAPI → local Ollama.
 
 **Why local matters:**
 - No API cost. No rate limits. No dependency on external availability.
@@ -150,7 +153,7 @@ These are not 10 identical calls with different prompts. Each invocation operate
 | Creative evolution | Not tracked | Voice Timeline (Granite #5) |
 | Content strategy | Not offered | Strategic Insights (Granite #8) |
 | Boost Advisor | Not offered | Granite #11 — which post to boost + why |
-| AI stack | Unspecified | IBM Granite 3.1 8B, 10 invocations, local |
+| AI stack | Unspecified | IBM Granite 3.1 8B, 12 invocations, local |
 | Privacy | Requires Instagram scraping | Fully local, no external calls |
 
 **The strategic gap Octupie misses:** If you optimize entirely on competitor signal, you converge toward what everyone else is doing. StyleSync answers a different question — not "what's popular?" but "what's *yours*, and where have you drifted from it?"

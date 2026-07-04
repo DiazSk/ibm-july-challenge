@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import BlankPageSolver from "@/components/create/BlankPageSolver";
+import VoiceCapture from "@/components/create/VoiceCapture";
 import CaptionBrief from "@/components/create/CaptionBrief";
 import CaptionVariants from "@/components/create/CaptionVariants";
 import ImageDirectionCard from "@/components/create/ImageDirectionCard";
@@ -113,6 +114,8 @@ export default function CreatePage() {
   return (
     <div className="max-w-2xl mx-auto">
       <BlankPageSolver onApply={handleBlankPageApply} />
+
+      <VoiceCapture clusterId={clusterId} onCaption={setProduct} />
 
       <CaptionBrief
         product={product}

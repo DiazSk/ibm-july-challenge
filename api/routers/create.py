@@ -17,6 +17,7 @@ from api.dependencies import (
     get_image_generator,
     get_moment_analyzer,
     get_script_generator,
+    get_voice_refiner,
 )
 
 router = APIRouter()
@@ -56,6 +57,11 @@ class ScriptRequest(BaseModel):
 class ImagePromptRequest(BaseModel):
     caption: str
     product: str
+
+
+class VoiceRefineRequest(BaseModel):
+    transcript: str
+    cluster_id: int = 0
 
 
 # ── Endpoints ─────────────────────────────────────────────────────────────────
@@ -153,6 +159,31 @@ def generate_script(req: ScriptRequest) -> dict:
         pass  # keep the script-generated caption as fallback
 
     return script
+
+
+@router.post("/voice-refine")
+def voice_refine(req: VoiceRefineRequest) -> dict:
+    """
+    Granite Call #12 — VoiceRefiner.
+    Takes a raw spoken transcript and returns a polished on-brand caption
+    calibrated to the given content cluster's brand voice.
+    """
+    if not req.transcript.strip():
+        raise HTTPException(status_code=422, detail="transcript is required")
+
+    import json
+    from pathlib import Path
+    _PROFILE_PATH = Path(__file__).resolve().parent.parent.parent / "data" / "brand_profile.json"
+    try:
+        brand_profile = json.loads(_PROFILE_PATH.read_text(encoding="utf-8"))
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail=f"Brand profile not found: {exc}")
+
+    return get_voice_refiner().refine(
+        transcript   = req.transcript.strip(),
+        cluster_id   = req.cluster_id,
+        brand_profile= brand_profile,
+    )
 
 
 @router.post("/image-prompt")

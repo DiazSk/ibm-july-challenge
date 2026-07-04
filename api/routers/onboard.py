@@ -49,13 +49,13 @@ def _clear_caches() -> None:
             get_caption_generator, get_image_generator, get_why_engine,
             get_moment_analyzer, get_direction_generator, get_voice_timeline,
             get_strategic_insights, get_script_generator,
-            get_recovery_brief_generator, get_boost_advisor,
+            get_recovery_brief_generator, get_boost_advisor, get_voice_refiner,
         )
         for fn in (
             get_caption_generator, get_image_generator, get_why_engine,
             get_moment_analyzer, get_direction_generator, get_voice_timeline,
             get_strategic_insights, get_script_generator,
-            get_recovery_brief_generator, get_boost_advisor,
+            get_recovery_brief_generator, get_boost_advisor, get_voice_refiner,
         ):
             try:
                 fn.cache_clear()

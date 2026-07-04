@@ -210,3 +210,9 @@ export interface BoostAdvisorResult {
   dont_boost_cluster_name: string;
   dont_boost_reason: string;
 }
+
+// Voice loop
+export interface VoiceRefineResult {
+  refined_caption: string;
+  reasoning: string;
+}

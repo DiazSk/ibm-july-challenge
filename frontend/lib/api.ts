@@ -10,6 +10,7 @@ import type {
   VoiceTimelineResult,
   StrategicInsightsResult,
   BoostAdvisorResult,
+  VoiceRefineResult,
   OnboardStatus,
   HasProfileResult,
   WorkbenchAsset,
@@ -86,6 +87,12 @@ export const getStrategicInsights = () =>
 
 export const getBoostAdvisor = () =>
   apiFetch<BoostAdvisorResult>("/api/discover/boost-advisor");
+
+export const voiceRefineCaption = (transcript: string, cluster_id: number) =>
+  apiFetch<VoiceRefineResult>("/api/create/voice-refine", {
+    method: "POST",
+    body: JSON.stringify({ transcript, cluster_id }),
+  });
 
 // Onboarding
 export const checkHasProfile = () =>
