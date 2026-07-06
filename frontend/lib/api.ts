@@ -11,6 +11,7 @@ import type {
   StrategicInsightsResult,
   BoostAdvisorResult,
   VoiceRefineResult,
+  AgentChatResponse,
   OnboardStatus,
   HasProfileResult,
   WorkbenchAsset,
@@ -93,6 +94,29 @@ export const voiceRefineCaption = (transcript: string, cluster_id: number) =>
     method: "POST",
     body: JSON.stringify({ transcript, cluster_id }),
   });
+
+// JARVIS agent
+export const agentChat = (
+  userMessage: string,
+  sessionId: string,
+  history: { role: string; content: string }[] = [],
+) =>
+  apiFetch<AgentChatResponse>("/api/agent/chat", {
+    method: "POST",
+    body: JSON.stringify({
+      user_message: userMessage,
+      session_id  : sessionId,
+      messages    : history,
+    }),
+  });
+
+export async function clearAgentSession(sessionId: string): Promise<void> {
+  const res = await fetch(`${BASE}/api/agent/session/${sessionId}`, { method: "DELETE" });
+  if (!res.ok && res.status !== 204) {
+    const text = await res.text().catch(() => res.statusText);
+    throw new Error(`${res.status} ${text}`);
+  }
+}
 
 // Onboarding
 export const checkHasProfile = () =>

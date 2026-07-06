@@ -106,7 +106,7 @@ A persistent SQLite scratchpad that survives refreshes and sessions. Every gener
 
 ## The IBM Granite Architecture
 
-StyleSync runs **12 coordinated IBM Granite 3.1 8B invocations** — every single one running locally via Ollama, with zero cloud API calls during inference.
+StyleSync runs **14 coordinated IBM Granite 3.1 8B invocations** — every single one running locally via Ollama, with zero cloud API calls during inference.
 
 | # | Invocation | Purpose |
 |---|------------|---------|
@@ -122,10 +122,12 @@ StyleSync runs **12 coordinated IBM Granite 3.1 8B invocations** — every singl
 | 10 | Recovery Brief | Recovery hook + format + script chained from Why Engine failure |
 | 11 | Boost Advisor | Engagement-weighted recommendation for which post/cluster to boost |
 | 12 | Voice Refiner | Refines a raw spoken caption idea into polished on-brand copy, read back aloud |
+| 13 | JARVIS Agent | Multi-turn conversational brain — intent routing + natural spoken response |
+| 14 | Inspiration Synthesizer | Web research snippets → 3 brand-adapted content ideas |
 
-These are not 12 identical calls with different prompts. Each invocation operates on a different data shape, a different reasoning task, and a different output structure. Together they form a closed feedback loop: your history informs your generation, your generation outcomes feed back into your diagnosis, your diagnosis informs your next creation.
+These are not 14 identical calls with different prompts. Each invocation operates on a different data shape, a different reasoning task, and a different output structure. Together they form a closed feedback loop: your history informs your generation, your generation outcomes feed back into your diagnosis, your diagnosis informs your next creation.
 
-**The voice loop (Granite #12):** Creator speaks a raw caption idea → browser's on-device speech recognition captures the transcript → Granite refines it into polished on-brand copy calibrated to the creator's content cluster voice → browser speech synthesis reads it back aloud. No audio ever leaves the machine — only the text transcript reaches local FastAPI → local Ollama.
+**The JARVIS Voice Agent (Granite #13 + #14):** A persistent floating AI agent accessible from every page. It holds multi-turn conversations in natural language — by voice (push-to-talk) or text — and knows the creator's brand deeply. Ask it a question about your best-performing cluster, say "write me a caption for fresh bomboloni," or ask it to "research trending bakery content" — JARVIS dispatches to the right tool, synthesizes the result, and responds in voice. It can generate captions (Granite #2), run post-mortems (Granite #4), search the web for creator inspiration and synthesize it into 3 brand-adapted ideas (Granite #14), read and save assets to the Workbench, and answer any brand strategy question from the full profile. No audio ever leaves the machine — browser SpeechRecognition + SpeechSynthesis stay on-device; only the text transcript reaches local FastAPI → local Ollama.
 
 **Why local matters:**
 - No API cost. No rate limits. No dependency on external availability.
@@ -153,7 +155,7 @@ These are not 12 identical calls with different prompts. Each invocation operate
 | Creative evolution | Not tracked | Voice Timeline (Granite #5) |
 | Content strategy | Not offered | Strategic Insights (Granite #8) |
 | Boost Advisor | Not offered | Granite #11 — which post to boost + why |
-| AI stack | Unspecified | IBM Granite 3.1 8B, 12 invocations, local |
+| AI stack | Unspecified | IBM Granite 3.1 8B, 14 invocations, local |
 | Privacy | Requires Instagram scraping | Fully local, no external calls |
 
 **The strategic gap Octupie misses:** If you optimize entirely on competitor signal, you converge toward what everyone else is doing. StyleSync answers a different question — not "what's popular?" but "what's *yours*, and where have you drifted from it?"
@@ -206,7 +208,9 @@ This is a zero-new-data-source feature — everything needed is already in `clus
 
 2. **Show the data** — Discover tab. Voice Timeline: 8 months of creative evolution narrated by Granite. Strategic Insights: Cluster 0 is over-invested (volume rank #1, richness rank #3). Cluster 1 is underutilized (richness rank #1, volume rank #3). That gap is a strategy recommendation.
 
-3. **Close with the diagnosis** — Analyze tab. Paste a real low-performing post. Why Engine produces: verdict (Underperformed), specific diagnosis, brand voice gap. Recovery Brief generates automatically: new hook, recommended format, full 150-word script. Save to Workbench.
+3. **JARVIS moment** — click the mic button (bottom-right, any page). Say: *"Research trending bakery content and give me 3 ideas."* JARVIS searches the web, synthesizes 3 brand-adapted ideas via Granite #14, reads them back aloud, and displays idea cards. Say *"use the second one"* → JARVIS generates a full caption and injects it into the Caption Brief. This is the J.A.R.V.I.S. moment: natural spoken conversation with an AI that knows your brand.
+
+4. **Close with the diagnosis** — Analyze tab. Paste a real low-performing post. Why Engine produces: verdict (Underperformed), specific diagnosis, brand voice gap. Recovery Brief generates automatically: new hook, recommended format, full 150-word script. Save to Workbench.
 
 **The closing line:** *StyleSync is not a content tool. It's a creative operating system built from your own history — the first AI that starts from who you already are.*
 

@@ -216,3 +216,42 @@ export interface VoiceRefineResult {
   refined_caption: string;
   reasoning: string;
 }
+
+// JARVIS agent
+export type ActionResultType =
+  | "caption"
+  | "inspiration"
+  | "workbench_items"
+  | "post_mortem"
+  | "saved";
+
+export interface InspirationIdea {
+  title: string;
+  angle: string;
+  what_to_post: string;
+  caption_hook: string;
+}
+
+export interface ActionResult {
+  type: ActionResultType;
+  data: {
+    caption?   : string;
+    cluster_id?: number;
+    ideas?     : InspirationIdea[];
+    topic?     : string;
+    items?     : unknown[];
+    id?        : string;
+    // post_mortem fields:
+    verdict_label?   : string;
+    diagnosis?       : string;
+    what_failed?     : string;
+    change_next_time?: string;
+    [key: string]    : unknown;
+  };
+}
+
+export interface AgentChatResponse {
+  response      : string;
+  action_result ?: ActionResult | null;
+  session_id    : string;
+}

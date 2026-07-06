@@ -83,3 +83,15 @@ def get_boost_advisor():
 def get_voice_refiner():
     from src.generation.voice_refiner import VoiceRefiner
     return VoiceRefiner()
+
+
+@lru_cache(maxsize=1)
+def get_jarvis_agent():
+    from src.generation.jarvis_agent import JarvisAgent
+    return JarvisAgent()
+
+
+@lru_cache(maxsize=1)
+def get_inspiration_synthesizer():
+    from src.generation.jarvis_agent import InspirationSynthesizer
+    return InspirationSynthesizer()

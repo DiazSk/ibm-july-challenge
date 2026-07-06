@@ -30,3 +30,6 @@ streamlit>=1.35.0
 fastapi>=0.111.0
 uvicorn[standard]>=0.30.0
 python-multipart>=0.0.9
+
+# JARVIS agent — web search for creator inspiration (no API key needed)
+duckduckgo-search>=6.0.0

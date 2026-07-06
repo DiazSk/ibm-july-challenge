@@ -3,6 +3,7 @@ import "./globals.css";
 import Providers from "@/components/layout/Providers";
 import Sidebar from "@/components/layout/Sidebar";
 import NavTabs from "@/components/layout/NavTabs";
+import JarvisWidget from "@/components/agent/JarvisWidget";
 
 export const metadata: Metadata = {
   title: "StyleSync — Creative Intelligence Platform",
@@ -48,6 +49,7 @@ export default function RootLayout({
             </header>
             <main className="flex-1 overflow-y-auto p-6">{children}</main>
           </div>
+          <JarvisWidget />
         </Providers>
       </body>
     </html>
