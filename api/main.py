@@ -11,7 +11,7 @@ Interactive API docs:
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from api.routers import brand, create, analyze, discover, onboard, workbench, agent
+from api.routers import brand, create, analyze, discover, onboard, workbench, agent, voice
 
 app = FastAPI(
     title       = "StyleSync API",
@@ -34,6 +34,7 @@ app.include_router(analyze.router,  prefix="/api/analyze",  tags=["Analyze"])
 app.include_router(discover.router,   prefix="/api/discover",   tags=["Discover"])
 app.include_router(workbench.router,  prefix="/api/workbench",  tags=["Workbench"])
 app.include_router(agent.router,      prefix="/api/agent",      tags=["Agent"])
+app.include_router(voice.router,      prefix="/api/voice",      tags=["Voice"])
 
 
 @app.get("/api/health")

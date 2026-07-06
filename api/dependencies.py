@@ -95,3 +95,15 @@ def get_jarvis_agent():
 def get_inspiration_synthesizer():
     from src.generation.jarvis_agent import InspirationSynthesizer
     return InspirationSynthesizer()
+
+
+@lru_cache(maxsize=1)
+def get_voice_transcriber():
+    from src.generation.voice_transcriber import VoiceTranscriber
+    return VoiceTranscriber()
+
+
+@lru_cache(maxsize=1)
+def get_voice_synthesizer():
+    from src.generation.voice_synthesizer import VoiceSynthesizer
+    return VoiceSynthesizer()

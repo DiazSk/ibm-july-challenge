@@ -33,3 +33,9 @@ python-multipart>=0.0.9
 
 # JARVIS agent — web search for creator inspiration (no API key needed)
 duckduckgo-search>=6.0.0
+
+# Voice pipeline — Whisper STT + Kokoro TTS (Voicebox's built-in engine)
+# Windows/CUDA: pip install torch --index-url https://download.pytorch.org/whl/cu121 first
+faster-whisper>=1.0.0
+kokoro>=0.9.2
+soundfile>=0.12.1

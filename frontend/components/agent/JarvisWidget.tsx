@@ -61,16 +61,6 @@ function TrashIcon({ size = 13 }: { size?: number }) {
   );
 }
 
-function SpeakerIcon({ size = 13 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
-      stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-      <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
-    </svg>
-  );
-}
-
 // ── Action cards ──────────────────────────────────────────────────────────────
 
 function CaptionCard({
@@ -221,12 +211,12 @@ export default function JarvisWidget() {
   const [isOpen,    setIsOpen]    = useState(false);
   const [phase,     setPhase]     = useState<Phase>("idle");
   const [messages,  setMessages]  = useState<LocalMessage[]>([]);
-  const [interim,   setInterim]   = useState("");
   const [supported, setSupported] = useState(true);
 
-  const bottomRef   = useRef<HTMLDivElement>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const srRef       = useRef<{ stop: () => void } | null>(null);
+  const bottomRef        = useRef<HTMLDivElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef   = useRef<Blob[]>([]);
+  const currentAudioRef  = useRef<HTMLAudioElement | null>(null);
 
   const sessionId   = useState(() => {
     if (typeof window === "undefined") return crypto.randomUUID();
@@ -238,11 +228,9 @@ export default function JarvisWidget() {
     return id;
   })[0];
 
-  // Check STT support
+  // Check MediaRecorder support
   useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const w = window as any;
-    if (!(w.SpeechRecognition || w.webkitSpeechRecognition)) {
+    if (typeof navigator === "undefined" || !("mediaDevices" in navigator)) {
       setSupported(false);
     }
   }, []);
@@ -278,15 +266,24 @@ export default function JarvisWidget() {
       });
       setPhase("speaking");
 
-      // TTS readback
-      if (typeof window !== "undefined" && window.speechSynthesis) {
-        window.speechSynthesis.cancel();
-        const utt  = new SpeechSynthesisUtterance(res.response);
-        utt.rate   = 0.92;
-        utt.pitch  = 1.0;
-        utt.onend  = () => setPhase("ready");
-        window.speechSynthesis.speak(utt);
-      } else {
+      // TTS via Kokoro backend
+      currentAudioRef.current?.pause();
+      try {
+        const audioRes = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"}/api/voice/synthesize`,
+          {
+            method : "POST",
+            headers: { "Content-Type": "application/json" },
+            body   : JSON.stringify({ text: res.response }),
+          }
+        );
+        const audioBlob = await audioRes.blob();
+        const audioUrl  = URL.createObjectURL(audioBlob);
+        const audio     = new Audio(audioUrl);
+        currentAudioRef.current = audio;
+        audio.onended = () => { setPhase("ready"); URL.revokeObjectURL(audioUrl); };
+        audio.play();
+      } catch {
         setPhase("ready");
       }
     } catch {
@@ -295,53 +292,53 @@ export default function JarvisWidget() {
     }
   }
 
-  // ── Push-to-talk ────────────────────────────────────────────────────────
+  // ── Push-to-talk (MediaRecorder) ────────────────────────────────────────
+  const handleRecordingStop = useCallback(async () => {
+    setPhase("thinking");
+    const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+    if (blob.size < 500) { setPhase("ready"); return; }
+    try {
+      const fd = new FormData();
+      fd.append("audio", blob, "recording.webm");
+      const data = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"}/api/voice/transcribe`,
+        { method: "POST", body: fd }
+      ).then(r => r.json());
+      if (!data.transcript?.trim()) { setPhase("ready"); return; }
+      await sendToJarvis(data.transcript);
+    } catch {
+      addMessage({ role: "assistant", content: "Transcription failed — try again." });
+      setPhase("ready");
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const stopListening = useCallback(() => {
-    srRef.current?.stop();
+    if (mediaRecorderRef.current?.state === "recording") {
+      mediaRecorderRef.current.stop();
+      mediaRecorderRef.current.stream.getTracks().forEach(t => t.stop());
+    }
   }, []);
 
-  const startListening = useCallback(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const w  = window as any;
-    const SR = w.SpeechRecognition ?? w.webkitSpeechRecognition;
-    if (!SR) return;
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const sr: any = new SR();
-    sr.continuous     = false;
-    sr.interimResults = true;
-    sr.lang           = "en-US";
-    srRef.current     = sr;
-    let finalBuffer   = "";
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    sr.onresult = (e: any) => {
-      let interimText = "";
-      for (let i = e.resultIndex; i < e.results.length; i++) {
-        if (e.results[i].isFinal) finalBuffer += e.results[i][0].transcript + " ";
-        else interimText += e.results[i][0].transcript;
-      }
-      setInterim(interimText);
-    };
-
-    sr.onend = () => {
-      setInterim("");
-      const captured = finalBuffer.trim();
-      if (captured) sendToJarvis(captured);
-      else setPhase("ready");
-    };
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    sr.onerror = (e: any) => {
-      setInterim("");
-      addMessage({ role: "assistant", content: `Mic error: ${e.error}. Try again.` });
+  const startListening = useCallback(async () => {
+    try {
+      const stream   = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mimeType = MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "";
+      const recorder = mimeType
+        ? new MediaRecorder(stream, { mimeType })
+        : new MediaRecorder(stream);
+      audioChunksRef.current = [];
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
+      recorder.onstop = handleRecordingStop;
+      mediaRecorderRef.current = recorder;
+      recorder.start();
+      setPhase("listening");
+    } catch {
+      addMessage({ role: "assistant", content: "Mic access denied — check browser permissions." });
       setPhase("ready");
-    };
-
-    setPhase("listening");
-    setInterim("");
-    sr.start();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    }
+  }, [handleRecordingStop]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Caption injection ───────────────────────────────────────────────────
   function handleUseCaption(caption: string) {
@@ -359,7 +356,7 @@ export default function JarvisWidget() {
 
   // ── Clear conversation ──────────────────────────────────────────────────
   async function handleClear() {
-    window.speechSynthesis?.cancel();
+    currentAudioRef.current?.pause();
     setMessages([]);
     setPhase("idle");
     try { await clearAgentSession(sessionId); } catch { /* silent */ }
@@ -477,14 +474,12 @@ export default function JarvisWidget() {
             />
           ))}
 
-          {/* Live transcript while listening */}
+          {/* Recording indicator */}
           {isListening && (
             <div className="flex items-start gap-2">
               <div className="max-w-[85%] ml-auto rounded-2xl px-3.5 py-2.5 text-[12px]"
                 style={{ background: "var(--color-ql-gap)", color: "var(--color-ql-muted)" }}>
-                {interim || (
-                  <span className="animate-pulse">Listening…</span>
-                )}
+                <span className="animate-pulse">Recording…</span>
               </div>
             </div>
           )}
@@ -564,23 +559,6 @@ export default function JarvisWidget() {
             </form>
           )}
 
-          {/* TTS replay when speaking */}
-          {phase === "speaking" && messages.length > 0 && (
-            <button
-              onClick={() => {
-                const last = messages.filter(m => m.role === "assistant").at(-1);
-                if (!last) return;
-                window.speechSynthesis?.cancel();
-                const utt = new SpeechSynthesisUtterance(last.content);
-                utt.rate = 0.92;
-                window.speechSynthesis?.speak(utt);
-              }}
-              className="flex items-center gap-1.5 mt-2 text-[11px] hover:opacity-70 transition-opacity"
-              style={{ color: "var(--color-ql-muted)" }}
-            >
-              <SpeakerIcon size={12} /> Replay
-            </button>
-          )}
         </div>
       </div>
     </div>
