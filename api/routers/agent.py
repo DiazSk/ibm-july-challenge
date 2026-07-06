@@ -10,6 +10,7 @@ All Granite calls are synchronous (Ollama), so plain `def` endpoints.
 """
 
 import json
+import re
 import sqlite3
 from pathlib import Path
 
@@ -31,6 +32,51 @@ from src.generation.jarvis_agent import (
 )
 
 router = APIRouter()
+
+# ── Caption intent pre-filter ─────────────────────────────────────────────────
+# Granite 3.1 8B sometimes generates a caption directly instead of returning the
+# JSON tool call.  This pre-filter detects unambiguous "write me a caption" intent
+# and synthesises the tool call before Granite is consulted, ensuring
+# action_result.type == "caption" is always set for those requests.
+
+_CAPTION_INTENT_RE = re.compile(
+    r"\b(write|create|generate|make|craft|give\s+me|draft|compose)\b.{0,60}\b(caption|post|copy)\b"
+    r"|\bcaption\s+(for|about|on)\b",
+    re.IGNORECASE,
+)
+_CLUSTER_HINT: list[tuple[re.Pattern, int]] = [
+    (re.compile(r"\bbomboloni\b", re.IGNORECASE), 4),
+    (re.compile(r"\bnutella\b", re.IGNORECASE), 3),
+    (re.compile(r"\brasmalai\b|\bkunafa\b|\bbiscuit\s+pudding\b", re.IGNORECASE), 1),
+    (re.compile(r"\bbehind[\s-]+(the[\s-]+)?scenes?\b|\bour\s+story\b", re.IGNORECASE), 2),
+]
+_STRIP_META_RE = re.compile(
+    r"\b(write|create|generate|make|craft|give|me|a|an|draft|compose|caption|post|copy|for|please|the|my)\b",
+    re.IGNORECASE,
+)
+
+
+def _detect_caption_intent(user_msg: str) -> dict | None:
+    """
+    Returns a synthetic generate_caption tool call when the user clearly wants a
+    caption, bypassing Granite intent routing.  CaptionGenerator (with full cluster
+    voice injection) still runs for the actual generation.
+    Returns None for everything else so Granite handles it normally.
+    """
+    if not _CAPTION_INTENT_RE.search(user_msg):
+        return None
+    cluster_id = 0  # Homemade Classics default
+    for pattern, cid in _CLUSTER_HINT:
+        if pattern.search(user_msg):
+            cluster_id = cid
+            break
+    topic = _STRIP_META_RE.sub(" ", user_msg)
+    topic = " ".join(topic.split()).strip() or user_msg.strip()
+    return {
+        "response": None,
+        "tool": {"name": "generate_caption", "params": {"topic": topic, "cluster_id": cluster_id}},
+    }
+
 
 _PROJECT_ROOT  = Path(__file__).resolve().parent.parent.parent
 _PROFILE_PATH  = _PROJECT_ROOT / "data" / "brand_profile.json"
@@ -225,7 +271,7 @@ def agent_chat(req: AgentChatRequest) -> dict:
     messages_for_call = history + [{"role": "user", "content": user_msg}]
 
     # ── Call 1: Intent routing ────────────────────────────────────────────
-    call1 = agent.chat(messages_for_call)
+    call1 = _detect_caption_intent(user_msg) or agent.chat(messages_for_call)
     tool  = call1.get("tool")
     resp1 = call1.get("response")
 

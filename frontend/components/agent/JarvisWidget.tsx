@@ -277,12 +277,13 @@ export default function JarvisWidget() {
             body   : JSON.stringify({ text: res.response }),
           }
         );
+        if (!audioRes.ok) throw new Error(`TTS ${audioRes.status}`);
         const audioBlob = await audioRes.blob();
         const audioUrl  = URL.createObjectURL(audioBlob);
         const audio     = new Audio(audioUrl);
         currentAudioRef.current = audio;
         audio.onended = () => { setPhase("ready"); URL.revokeObjectURL(audioUrl); };
-        audio.play();
+        await audio.play();
       } catch {
         setPhase("ready");
       }

@@ -70,7 +70,9 @@ class VoiceSynthesizer:
         )
 
         buf = io.BytesIO()
-        sf.write(buf, samples, _SAMPLE_RATE, format="WAV")
+        # PCM_16 = 16-bit signed integer — universally supported by browsers.
+        # soundfile handles float32→int16 conversion automatically.
+        sf.write(buf, samples, _SAMPLE_RATE, format="WAV", subtype="PCM_16")
         return buf.getvalue()
 
     @staticmethod
