@@ -259,15 +259,13 @@ export default function JarvisWidget() {
 
     try {
       const res = await agentChat(trimmed, sessionId, historyForApi());
-      addMessage({
-        role        : "assistant",
-        content     : res.response,
-        actionResult: res.action_result ?? null,
-      });
-      setPhase("speaking");
 
-      // TTS via Kokoro backend
+      // Fetch audio before showing text so both arrive simultaneously.
+      setPhase("speaking");
       currentAudioRef.current?.pause();
+
+      let audio: HTMLAudioElement | null = null;
+      let audioUrl: string | null = null;
       try {
         const audioRes = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"}/api/voice/synthesize`,
@@ -279,12 +277,28 @@ export default function JarvisWidget() {
         );
         if (!audioRes.ok) throw new Error(`TTS ${audioRes.status}`);
         const audioBlob = await audioRes.blob();
-        const audioUrl  = URL.createObjectURL(audioBlob);
-        const audio     = new Audio(audioUrl);
+        audioUrl = URL.createObjectURL(audioBlob);
+        audio = new Audio(audioUrl);
         currentAudioRef.current = audio;
-        audio.onended = () => { setPhase("ready"); URL.revokeObjectURL(audioUrl); };
-        await audio.play();
       } catch {
+        // TTS failed — text still shows, phase resets below
+      }
+
+      // Show text and start playback at the same moment
+      addMessage({
+        role        : "assistant",
+        content     : res.response,
+        actionResult: res.action_result ?? null,
+      });
+
+      if (audio && audioUrl) {
+        audio.onended = () => { setPhase("ready"); URL.revokeObjectURL(audioUrl!); };
+        try {
+          await audio.play();
+        } catch {
+          setPhase("ready");
+        }
+      } else {
         setPhase("ready");
       }
     } catch {
