@@ -62,7 +62,7 @@ export default function OnboardPage() {
         setStatus(s);
         if (s.status === "done") {
           clearInterval(id);
-          setTimeout(() => router.push("/create"), 800);
+          setTimeout(() => router.push("/app/dashboard"), 800);
         } else if (s.status === "error") {
           clearInterval(id);
         }
@@ -130,7 +130,7 @@ export default function OnboardPage() {
           </p>
           <h1
             className="text-2xl mb-1"
-            style={{ fontFamily: "Georgia, serif", color: "var(--color-ql-dark)" }}
+            style={{ fontFamily: "var(--font-display)", color: "var(--color-ql-dark)" }}
           >
             {status.status === "done"
               ? "Brand voice ready"
@@ -218,7 +218,7 @@ export default function OnboardPage() {
         </p>
         <h1
           className="text-2xl mb-1"
-          style={{ fontFamily: "Georgia, serif", color: "var(--color-ql-dark)" }}
+          style={{ fontFamily: "var(--font-display)", color: "var(--color-ql-dark)" }}
         >
           AI Art Direction
         </h1>
@@ -229,9 +229,9 @@ export default function OnboardPage() {
 
         {/* Demo account button */}
         <button
-          onClick={() => router.push("/create")}
+          onClick={() => router.push("/app/dashboard")}
           className="w-full py-3.5 text-sm font-medium rounded-xl transition-colors mb-6"
-          style={{ background: "var(--color-ql-dark)", color: "#fff" }}
+          style={{ background: "var(--color-ql-dark)", color: "var(--color-ql-bg)" }}
         >
           Use Demo Account (@hot_cakesbakes)
         </button>
@@ -280,14 +280,14 @@ export default function OnboardPage() {
           </div>
 
           {submitError && !showUpload && (
-            <p className="text-[11px]" style={{ color: "#B45309" }}>{submitError}</p>
+            <p className="text-[11px]" style={{ color: "var(--destructive)" }}>{submitError}</p>
           )}
 
           <button
             onClick={handleStartHandle}
             disabled={loading || !handle.trim()}
             className="w-full py-3 text-sm font-medium rounded-lg transition-colors disabled:opacity-40"
-            style={{ background: "var(--color-ql-accent)", color: "#fff" }}
+            style={{ background: "var(--color-ql-accent)", color: "var(--color-ql-bg)" }}
           >
             {loading && !showUpload ? (
               <span className="animate-pulse">Starting analysis…</span>
@@ -344,14 +344,14 @@ export default function OnboardPage() {
             </div>
 
             {submitError && showUpload && (
-              <p className="text-[11px]" style={{ color: "#B45309" }}>{submitError}</p>
+              <p className="text-[11px]" style={{ color: "var(--destructive)" }}>{submitError}</p>
             )}
 
             <button
               onClick={handleStartUpload}
               disabled={loading || !uploadFile}
               className="w-full py-3 text-sm font-medium rounded-lg transition-colors disabled:opacity-40"
-              style={{ background: "var(--color-ql-accent)", color: "#fff" }}
+              style={{ background: "var(--color-ql-accent)", color: "var(--color-ql-bg)" }}
             >
               {loading && showUpload ? (
                 <span className="animate-pulse">Uploading…</span>

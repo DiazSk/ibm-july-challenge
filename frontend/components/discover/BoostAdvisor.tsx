@@ -3,11 +3,11 @@
 import type { BoostAdvisorResult } from "@/lib/types";
 
 const CLUSTER_COLORS: Record<number, string> = {
-  0: "#5A8A6A",
-  1: "#8B7355",
-  2: "#A35A5A",
-  3: "#5A6A8A",
-  4: "#6A5A8A",
+  0: "var(--color-cluster-0)",
+  1: "var(--color-cluster-1)",
+  2: "var(--color-cluster-2)",
+  3: "var(--color-cluster-3)",
+  4: "var(--color-cluster-4)",
 };
 
 interface Props {
@@ -32,7 +32,7 @@ export default function BoostAdvisor({ result }: Props) {
         <div className="flex items-center gap-2 mb-3">
           <span
             className="text-[10px] font-medium uppercase tracking-[0.1em] px-2.5 py-1 rounded-md"
-            style={{ background: accentColor, color: "#fff" }}
+            style={{ background: accentColor, color: "var(--color-ql-bg)" }}
           >
             Boost This
           </span>
@@ -47,7 +47,7 @@ export default function BoostAdvisor({ result }: Props) {
         {/* Best post hook */}
         <p
           className="text-sm leading-relaxed mb-4"
-          style={{ fontFamily: "Georgia, serif", color: "var(--color-ql-dark)" }}
+          style={{ fontFamily: "var(--font-display)", color: "var(--color-ql-dark)" }}
         >
           &ldquo;{result.boost_post_hook}&rdquo;
         </p>

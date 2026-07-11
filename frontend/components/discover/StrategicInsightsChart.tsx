@@ -16,7 +16,13 @@ interface Props {
   scores: ClusterScore[];
 }
 
-const CLUSTER_COLORS = ["#5A8A6A", "#8B7355", "#A35A5A", "#5A6A8A", "#6A5A8A"] as const;
+const CLUSTER_COLORS = [
+  "var(--color-cluster-0)",
+  "var(--color-cluster-1)",
+  "var(--color-cluster-2)",
+  "var(--color-cluster-3)",
+  "var(--color-cluster-4)",
+] as const;
 
 export default function StrategicInsightsChart({ scores }: Props) {
   const data = scores.map((s) => ({
@@ -37,12 +43,12 @@ export default function StrategicInsightsChart({ scores }: Props) {
       >
         <XAxis
           dataKey="name"
-          tick={{ fontSize: 10, fill: "#7A6F63" }}
+          tick={{ fontSize: 10, fill: "var(--color-ql-muted)" }}
           tickLine={false}
-          axisLine={{ stroke: "#E0DAD3" }}
+          axisLine={{ stroke: "var(--color-ql-border)" }}
         />
         <YAxis
-          tick={{ fontSize: 10, fill: "#7A6F63" }}
+          tick={{ fontSize: 10, fill: "var(--color-ql-muted)" }}
           tickLine={false}
           axisLine={false}
           domain={[0, 5]}
@@ -50,11 +56,11 @@ export default function StrategicInsightsChart({ scores }: Props) {
         />
         <Tooltip
           contentStyle={{
-            background: "#fff",
-            border: "1px solid #E0DAD3",
+            background: "var(--color-ql-card)",
+            border: "1px solid var(--color-ql-border)",
             borderRadius: 8,
             fontSize: 11,
-            color: "#3D3D3D",
+            color: "var(--color-ql-text)",
           }}
           formatter={(v, name) => [`${v} / 5`, name]}
           labelFormatter={(label, payload) => {
@@ -65,14 +71,14 @@ export default function StrategicInsightsChart({ scores }: Props) {
         <Legend
           iconType="square"
           iconSize={8}
-          wrapperStyle={{ fontSize: 11, color: "#7A6F63" }}
+          wrapperStyle={{ fontSize: 11, color: "var(--color-ql-muted)" }}
         />
 
         <Bar dataKey="Volume" radius={[3, 3, 0, 0]}>
           {data.map((d) => (
             <Cell
               key={d.cluster_id}
-              fill={CLUSTER_COLORS[d.cluster_id] ?? "#8B7355"}
+              fill={CLUSTER_COLORS[d.cluster_id] ?? "var(--color-cluster-1)"}
               fillOpacity={0.85}
             />
           ))}
@@ -81,7 +87,7 @@ export default function StrategicInsightsChart({ scores }: Props) {
           {data.map((d) => (
             <Cell
               key={d.cluster_id}
-              fill={CLUSTER_COLORS[d.cluster_id] ?? "#8B7355"}
+              fill={CLUSTER_COLORS[d.cluster_id] ?? "var(--color-cluster-1)"}
               fillOpacity={0.35}
             />
           ))}

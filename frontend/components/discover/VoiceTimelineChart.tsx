@@ -17,11 +17,11 @@ interface Props {
 }
 
 const CLUSTERS = [
-  { key: "C0", color: "#5A8A6A" },
-  { key: "C1", color: "#8B7355" },
-  { key: "C2", color: "#A35A5A" },
-  { key: "C3", color: "#5A6A8A" },
-  { key: "C4", color: "#6A5A8A" },
+  { key: "C0", color: "var(--color-cluster-0)" },
+  { key: "C1", color: "var(--color-cluster-1)" },
+  { key: "C2", color: "var(--color-cluster-2)" },
+  { key: "C3", color: "var(--color-cluster-3)" },
+  { key: "C4", color: "var(--color-cluster-4)" },
 ] as const;
 
 export default function VoiceTimelineChart({ data, pillarLabels = {} }: Props) {
@@ -42,31 +42,31 @@ export default function VoiceTimelineChart({ data, pillarLabels = {} }: Props) {
 
         <XAxis
           dataKey="month"
-          tick={{ fontSize: 10, fill: "#7A6F63" }}
+          tick={{ fontSize: 10, fill: "var(--color-ql-muted)" }}
           tickLine={false}
-          axisLine={{ stroke: "#E0DAD3" }}
+          axisLine={{ stroke: "var(--color-ql-border)" }}
           tickFormatter={(v: string) => v.slice(5)}
         />
         <YAxis
           tickFormatter={(v: number) => `${v}%`}
-          tick={{ fontSize: 10, fill: "#7A6F63" }}
+          tick={{ fontSize: 10, fill: "var(--color-ql-muted)" }}
           tickLine={false}
           axisLine={false}
         />
         <Tooltip
           contentStyle={{
-            background: "#fff",
-            border: "1px solid #E0DAD3",
+            background: "var(--color-ql-card)",
+            border: "1px solid var(--color-ql-border)",
             borderRadius: 8,
             fontSize: 11,
-            color: "#3D3D3D",
+            color: "var(--color-ql-text)",
           }}
           formatter={(v) => [`${Number(v).toFixed(1)}%`]}
         />
         <Legend
           iconType="circle"
           iconSize={6}
-          wrapperStyle={{ fontSize: 11, color: "#7A6F63" }}
+          wrapperStyle={{ fontSize: 11, color: "var(--color-ql-muted)" }}
         />
 
         {CLUSTERS.map(({ key, color }) => (

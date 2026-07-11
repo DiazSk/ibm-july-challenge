@@ -10,7 +10,13 @@ interface Props {
 
 type Step = "idle" | "analyzing" | "directions" | "generating-directions" | "applied";
 
-const CLUSTER_COLORS = ["#5A8A6A", "#8B7355", "#A35A5A", "#5A6A8A", "#6A5A8A"] as const;
+const CLUSTER_COLORS = [
+  "var(--color-cluster-0)",
+  "var(--color-cluster-1)",
+  "var(--color-cluster-2)",
+  "var(--color-cluster-3)",
+  "var(--color-cluster-4)",
+] as const;
 
 export default function BlankPageSolver({ onApply }: Props) {
   const [open, setOpen] = useState(false);
@@ -62,12 +68,12 @@ export default function BlankPageSolver({ onApply }: Props) {
     >
       <button
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between px-5 py-4 text-left transition-colors hover:bg-[#f7f5f2]"
+        className="w-full flex items-center justify-between px-5 py-4 text-left transition-colors hover:bg-[var(--color-ql-gap)]"
       >
         <div>
           <p
             className="text-sm font-medium"
-            style={{ color: "var(--color-ql-dark)", fontFamily: "Georgia, serif" }}
+            style={{ color: "var(--color-ql-dark)", fontFamily: "var(--font-display)" }}
           >
             Blank Page Solver
           </p>
@@ -172,7 +178,7 @@ export default function BlankPageSolver({ onApply }: Props) {
                   <div className="mt-2 flex items-center gap-2">
                     <span
                       className="w-2 h-2 rounded-full"
-                      style={{ background: CLUSTER_COLORS[analysis.best_cluster_id] ?? "#8B7355" }}
+                      style={{ background: CLUSTER_COLORS[analysis.best_cluster_id] ?? "var(--color-cluster-1)" }}
                     />
                     <p className="text-xs" style={{ color: "var(--color-ql-muted)" }}>
                       {analysis.cluster_reason}
@@ -211,8 +217,8 @@ export default function BlankPageSolver({ onApply }: Props) {
                           className="text-xs font-medium"
                           style={{
                             color:
-                              chosen === i ? "#fff" : "var(--color-ql-dark)",
-                            fontFamily: "Georgia, serif",
+                              chosen === i ? "var(--color-ql-bg)" : "var(--color-ql-dark)",
+                            fontFamily: "var(--font-display)",
                           }}
                         >
                           {d.direction_title}
@@ -221,7 +227,7 @@ export default function BlankPageSolver({ onApply }: Props) {
                           className="text-[11px] mt-0.5"
                           style={{
                             color:
-                              chosen === i ? "rgba(255,255,255,0.7)" : "var(--color-ql-muted)",
+                              chosen === i ? "color-mix(in oklch, var(--color-ql-bg) 70%, transparent)" : "var(--color-ql-muted)",
                           }}
                         >
                           {d.angle}
@@ -241,7 +247,7 @@ export default function BlankPageSolver({ onApply }: Props) {
                     className="flex-1 py-2.5 text-xs font-medium rounded-lg transition-colors disabled:opacity-40"
                     style={{
                       background: "var(--color-ql-dark)",
-                      color: "#fff",
+                      color: "var(--color-ql-bg)",
                     }}
                   >
                     Analyze Moment
@@ -251,7 +257,7 @@ export default function BlankPageSolver({ onApply }: Props) {
                   <button
                     disabled
                     className="flex-1 py-2.5 text-xs font-medium rounded-lg opacity-60"
-                    style={{ background: "var(--color-ql-dark)", color: "#fff" }}
+                    style={{ background: "var(--color-ql-dark)", color: "var(--color-ql-bg)" }}
                   >
                     <span className="animate-pulse">
                       {step === "analyzing" ? "Analyzing…" : "Finding directions…"}
@@ -265,7 +271,7 @@ export default function BlankPageSolver({ onApply }: Props) {
                       className="flex-1 py-2.5 text-xs font-medium rounded-lg transition-colors"
                       style={{
                         background: "var(--color-ql-dark)",
-                        color: "#fff",
+                        color: "var(--color-ql-bg)",
                       }}
                     >
                       Apply Direction

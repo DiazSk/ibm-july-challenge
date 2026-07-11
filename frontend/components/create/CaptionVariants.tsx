@@ -134,7 +134,7 @@ export default function CaptionVariants({
                 className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] rounded-lg transition-colors disabled:opacity-50"
                 style={{
                   background: "var(--color-ql-accent)",
-                  color: "#fff",
+                  color: "var(--color-ql-bg)",
                 }}
               >
                 {imageLoading ? "Generating…" : "→ Image Direction"}

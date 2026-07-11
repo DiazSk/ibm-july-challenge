@@ -2,7 +2,13 @@
 
 import type { StrategicInsightsResult } from "@/lib/types";
 
-const CLUSTER_COLORS = ["#5A8A6A", "#8B7355", "#A35A5A", "#5A6A8A", "#6A5A8A"] as const;
+const CLUSTER_COLORS = [
+  "var(--color-cluster-0)",
+  "var(--color-cluster-1)",
+  "var(--color-cluster-2)",
+  "var(--color-cluster-3)",
+  "var(--color-cluster-4)",
+] as const;
 
 interface Props {
   result: StrategicInsightsResult;
@@ -52,7 +58,7 @@ export default function StrategyBrief({ result }: Props) {
             className="flex-1 rounded-xl border p-3 text-center"
             style={{
               borderColor: "var(--color-verdict-failed)",
-              background: "rgba(163,90,90,0.05)",
+              background: "color-mix(in oklch, var(--color-verdict-failed) 5%, transparent)",
             }}
           >
             <p
@@ -66,7 +72,7 @@ export default function StrategyBrief({ result }: Props) {
                 className="w-2 h-2 rounded-full"
                 style={{
                   background:
-                    CLUSTER_COLORS[result.overused_cluster] ?? "#A35A5A",
+                    CLUSTER_COLORS[result.overused_cluster] ?? "var(--color-cluster-2)",
                 }}
               />
               <span
@@ -84,7 +90,7 @@ export default function StrategyBrief({ result }: Props) {
             className="flex-1 rounded-xl border p-3 text-center"
             style={{
               borderColor: "var(--color-verdict-succeeded)",
-              background: "rgba(90,138,106,0.05)",
+              background: "color-mix(in oklch, var(--color-verdict-succeeded) 5%, transparent)",
             }}
           >
             <p
@@ -98,7 +104,7 @@ export default function StrategyBrief({ result }: Props) {
                 className="w-2 h-2 rounded-full"
                 style={{
                   background:
-                    CLUSTER_COLORS[result.underutilized_cluster] ?? "#5A8A6A",
+                    CLUSTER_COLORS[result.underutilized_cluster] ?? "var(--color-cluster-0)",
                 }}
               />
               <span
@@ -130,7 +136,7 @@ export default function StrategyBrief({ result }: Props) {
           className="text-sm leading-relaxed"
           style={{
             color: "var(--color-ql-dark)",
-            fontFamily: "Georgia, serif",
+            fontFamily: "var(--font-display)",
           }}
         >
           {result.strategic_brief}

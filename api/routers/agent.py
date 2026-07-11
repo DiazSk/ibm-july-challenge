@@ -48,7 +48,12 @@ _CLUSTER_HINT: list[tuple[re.Pattern, int]] = [
     (re.compile(r"\bbomboloni\b", re.IGNORECASE), 4),
     (re.compile(r"\bnutella\b", re.IGNORECASE), 3),
     (re.compile(r"\brasmalai\b|\bkunafa\b|\bbiscuit\s+pudding\b", re.IGNORECASE), 1),
-    (re.compile(r"\bbehind[\s-]+(the[\s-]+)?scenes?\b|\bour\s+story\b", re.IGNORECASE), 2),
+    (
+        re.compile(
+            r"\bbehind[\s-]+(the[\s-]+)?scenes?\b|\bour\s+story\b", re.IGNORECASE
+        ),
+        2,
+    ),
 ]
 _STRIP_META_RE = re.compile(
     r"\b(write|create|generate|make|craft|give|me|a|an|draft|compose|caption|post|copy|for|please|the|my)\b",
@@ -74,30 +79,75 @@ def _detect_caption_intent(user_msg: str) -> dict | None:
     topic = " ".join(topic.split()).strip() or user_msg.strip()
     return {
         "response": None,
-        "tool": {"name": "generate_caption", "params": {"topic": topic, "cluster_id": cluster_id}},
+        "tool": {
+            "name": "generate_caption",
+            "params": {"topic": topic, "cluster_id": cluster_id},
+        },
     }
 
 
-_PROJECT_ROOT  = Path(__file__).resolve().parent.parent.parent
-_PROFILE_PATH  = _PROJECT_ROOT / "data" / "brand_profile.json"
+# ── Inspiration intent pre-filter ─────────────────────────────────────────────
+# Granite 3.1 8B sometimes fails to emit a proper top-level "tool" key for
+# search_inspiration and instead embeds the tool-call JSON as literal text inside
+# "response" (observed ~50% of the time in QA). When that happens action_result
+# stays null, InspirationCards never renders, and the user sees raw broken JSON
+# in the chat. This pre-filter detects unambiguous "research/find ideas" intent
+# and synthesises the tool call directly, the same way _detect_caption_intent
+# already does for captions — bypassing Granite's flaky intent routing entirely.
+
+_INSPIRATION_INTENT_RE = re.compile(
+    r"\b(research|find|search|look\s*up)\b.{0,40}\b(trend|trending|idea|ideas|inspiration|content)\b"
+    r"|\b(give|show)\s+me\b.{0,40}\bideas?\b"
+    r"|\btrending\b.{0,40}\b(content|bakery|post|posts)\b"
+    r"|\binspir(e|ation)\b",
+    re.IGNORECASE,
+)
+_STRIP_INSPIRATION_META_RE = re.compile(
+    r"\b(research|find|search|look|up|give|show|me|need|want|some|trending|trend|ideas?|"
+    r"content|inspiration|for|about|on|and|please|the|my|a|an|of|to|3|three)\b",
+    re.IGNORECASE,
+)
+
+
+def _detect_inspiration_intent(user_msg: str) -> dict | None:
+    """
+    Returns a synthetic search_inspiration tool call when the user clearly wants
+    research/content ideas, bypassing Granite's flaky tool-call JSON emission for
+    this specific tool. Returns None for everything else so Granite handles it
+    normally (captions, brand questions, etc. are unaffected).
+    """
+    if not _INSPIRATION_INTENT_RE.search(user_msg):
+        return None
+    topic = _STRIP_INSPIRATION_META_RE.sub(" ", user_msg)
+    topic = " ".join(topic.split()).strip() or "trending content"
+    return {
+        "response": None,
+        "tool": {"name": "search_inspiration", "params": {"topic": topic}},
+    }
+
+
+_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+_PROFILE_PATH = _PROJECT_ROOT / "data" / "brand_profile.json"
 _CLUSTERS_PATH = _PROJECT_ROOT / "data" / "clusters.json"
-_DB_PATH       = _PROJECT_ROOT / "data" / "workbench.db"
+_DB_PATH = _PROJECT_ROOT / "data" / "workbench.db"
 
 
 # ── Request / Response ────────────────────────────────────────────────────────
 
+
 class AgentChatRequest(BaseModel):
-    messages  : list[dict]  # [{role, content}] — only the latest turn is required
+    messages: list[dict]  # [{role, content}] — only the latest turn is required
     session_id: str
     user_message: str = ""  # convenience: last user message (extracted if missing)
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
+
 def _load_brand_data() -> tuple[dict, dict]:
     """Return (brand_profile, cluster_engagement). Raises HTTPException on failure."""
     try:
-        profile  = json.loads(_PROFILE_PATH.read_text(encoding="utf-8"))
+        profile = json.loads(_PROFILE_PATH.read_text(encoding="utf-8"))
         clusters = json.loads(_CLUSTERS_PATH.read_text(encoding="utf-8"))
         engagement = clusters.get("cluster_engagement") or _DEMO_ENGAGEMENT
         return profile, engagement
@@ -141,32 +191,40 @@ def _dispatch_tool(
     """
     try:
         if tool_name == "generate_caption":
-            topic      = params.get("topic", "")
+            topic = params.get("topic", "")
             cluster_id = int(params.get("cluster_id", 0))
 
-            gen     = get_caption_generator()
-            caps    = gen.generate(
-                product      = topic,
-                occasion     = "Instagram post",
-                desired_feel = "on-brand and engaging",
-                cluster_id   = cluster_id,
+            gen = get_caption_generator()
+            caps = gen.generate(
+                product=topic,
+                occasion="Instagram post",
+                desired_feel="on-brand and engaging",
+                cluster_id=cluster_id,
             )
             best = caps[0]["caption"] if caps else "Could not generate a caption."
             return (
                 f"Generated caption:\n\n{best}",
-                {"type": "caption", "data": {"caption": best, "cluster_id": cluster_id}},
+                {
+                    "type": "caption",
+                    "data": {"caption": best, "cluster_id": cluster_id},
+                },
             )
 
         elif tool_name == "analyze_post":
-            caption     = params.get("caption", "")
-            post_type   = params.get("post_type", "Reel")
+            caption = params.get("caption", "")
+            post_type = params.get("post_type", "Reel")
             if post_type not in ("Reel", "Carousel", "Static"):
                 post_type = "Reel"
 
             result = get_why_engine().analyze(
-                caption  = caption,
-                post_type= post_type,
-                views=0, reach=0, likes=0, comments=0, shares=0, saves=0,
+                caption=caption,
+                post_type=post_type,
+                views=0,
+                reach=0,
+                likes=0,
+                comments=0,
+                shares=0,
+                saves=0,
             )
             summary = (
                 f"Verdict: {result.get('verdict_label', '—')}\n"
@@ -181,9 +239,11 @@ def _dispatch_tool(
             niche = brand_profile.get("brand_bio", "artisan bakery")[:40]
 
             snippets = search_creators(topic, niche)
-            ideas    = get_inspiration_synthesizer().synthesize(snippets, topic, brand_profile)
+            ideas = get_inspiration_synthesizer().synthesize(
+                snippets, topic, brand_profile
+            )
             ideas_text = "\n".join(
-                f"{i+1}. {idea.get('title','')}: {idea.get('what_to_post','')}"
+                f"{i + 1}. {idea.get('title', '')}: {idea.get('what_to_post', '')}"
                 for i, idea in enumerate(ideas)
             )
             return (
@@ -197,7 +257,7 @@ def _dispatch_tool(
             if asset_type:
                 rows = conn.execute(
                     "SELECT * FROM workbench_assets WHERE asset_type = ? ORDER BY created_at DESC LIMIT 10",
-                    (asset_type,)
+                    (asset_type,),
                 ).fetchall()
             else:
                 rows = conn.execute(
@@ -206,25 +266,31 @@ def _dispatch_tool(
             conn.close()
 
             if not rows:
-                return "No saved assets found.", {"type": "workbench_items", "data": {"items": []}}
+                return "No saved assets found.", {
+                    "type": "workbench_items",
+                    "data": {"items": []},
+                }
 
             items = []
             lines = []
             for row in rows:
-                d     = dict(row)
+                d = dict(row)
                 content_preview = str(d.get("content", ""))[:80]
-                lines.append(f"- [{d['asset_type']}] {content_preview} ({d['created_at'][:10]})")
+                lines.append(
+                    f"- [{d['asset_type']}] {content_preview} ({d['created_at'][:10]})"
+                )
                 items.append(d)
             return (
-                f"Saved assets:\n" + "\n".join(lines),
+                "Saved assets:\n" + "\n".join(lines),
                 {"type": "workbench_items", "data": {"items": items}},
             )
 
         elif tool_name == "save_to_workbench":
             import uuid
-            content    = params.get("content", "")
+
+            content = params.get("content", "")
             asset_type = params.get("asset_type", "caption")
-            asset_id   = str(uuid.uuid4())
+            asset_id = str(uuid.uuid4())
             conn = _get_wb_conn()
             conn.execute(
                 "INSERT INTO workbench_assets (id, asset_type, content, source_tab) VALUES (?, ?, ?, ?)",
@@ -245,6 +311,7 @@ def _dispatch_tool(
 
 
 # ── Endpoint ──────────────────────────────────────────────────────────────────
+
 
 @router.post("/chat")
 def agent_chat(req: AgentChatRequest) -> dict:
@@ -271,19 +338,27 @@ def agent_chat(req: AgentChatRequest) -> dict:
     messages_for_call = history + [{"role": "user", "content": user_msg}]
 
     # ── Call 1: Intent routing ────────────────────────────────────────────
-    call1 = _detect_caption_intent(user_msg) or agent.chat(messages_for_call)
-    tool  = call1.get("tool")
+    call1 = (
+        _detect_caption_intent(user_msg)
+        or _detect_inspiration_intent(user_msg)
+        or agent.chat(messages_for_call)
+    )
+    tool = call1.get("tool")
     resp1 = call1.get("response")
 
     if not tool or not isinstance(tool, dict):
         # Direct answer — no tool needed
         final_response = resp1 or "I'm not sure how to answer that. Could you rephrase?"
-        append_message(req.session_id, "user",      user_msg)
+        append_message(req.session_id, "user", user_msg)
         append_message(req.session_id, "assistant", final_response)
-        return {"response": final_response, "action_result": None, "session_id": req.session_id}
+        return {
+            "response": final_response,
+            "action_result": None,
+            "session_id": req.session_id,
+        }
 
     # ── Tool dispatch ─────────────────────────────────────────────────────
-    tool_name   = tool.get("name", "")
+    tool_name = tool.get("name", "")
     tool_params = tool.get("params", {})
 
     tool_result_text, action_result = _dispatch_tool(
@@ -293,22 +368,25 @@ def agent_chat(req: AgentChatRequest) -> dict:
     # ── Call 2: Synthesize tool result ────────────────────────────────────
     messages_for_call2 = messages_for_call + [
         {"role": "assistant", "content": f"[Tool: {tool_name}]\n{tool_result_text}"},
-        {"role": "user",      "content": (
-            "Using only the tool result above, give a brief conversational response "
-            "to my original request. 2–3 sentences, spoken aloud style."
-        )},
+        {
+            "role": "user",
+            "content": (
+                "Using only the tool result above, give a brief conversational response "
+                "to my original request. 2–3 sentences, spoken aloud style."
+            ),
+        },
     ]
     call2 = agent.chat(messages_for_call2)
     final_response = call2.get("response") or tool_result_text.split("\n")[0]
 
     # Update session history
-    append_message(req.session_id, "user",      user_msg)
+    append_message(req.session_id, "user", user_msg)
     append_message(req.session_id, "assistant", final_response)
 
     return {
-        "response"     : final_response,
+        "response": final_response,
         "action_result": action_result,
-        "session_id"   : req.session_id,
+        "session_id": req.session_id,
     }
 
 

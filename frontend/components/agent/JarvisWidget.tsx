@@ -75,7 +75,7 @@ function CaptionCard({
     <div className="rounded-xl border mt-2 p-3 flex flex-col gap-2"
       style={{ borderColor: "var(--color-ql-border)", background: "var(--color-ql-gap)" }}>
       <p className="text-xs leading-relaxed"
-        style={{ fontFamily: "Georgia, serif", color: "var(--color-ql-dark)" }}>
+        style={{ fontFamily: "var(--font-display)", color: "var(--color-ql-dark)" }}>
         &ldquo;{caption}&rdquo;
       </p>
       <div className="flex gap-2">
@@ -117,7 +117,7 @@ function InspirationCards({ data }: { data: ActionResult["data"] }) {
           </p>
           {idea.caption_hook && (
             <p className="text-[11px] italic"
-              style={{ fontFamily: "Georgia, serif", color: "var(--color-ql-muted)" }}>
+              style={{ fontFamily: "var(--font-display)", color: "var(--color-ql-muted)" }}>
               &ldquo;{idea.caption_hook}&rdquo;
             </p>
           )}
@@ -178,7 +178,7 @@ function MessageBubble({
             : "var(--color-ql-card)",
           color: isUser ? "var(--color-ql-bg)" : "var(--color-ql-dark)",
           border: isUser ? "none" : "1px solid var(--color-ql-border)",
-          fontFamily: isUser ? "inherit" : "Georgia, serif",
+          fontFamily: isUser ? "inherit" : "var(--font-display)",
         }}
       >
         {msg.content}
@@ -358,7 +358,7 @@ export default function JarvisWidget() {
   // ── Caption injection ───────────────────────────────────────────────────
   function handleUseCaption(caption: string) {
     localStorage.setItem("ss_create_product", caption);
-    router.push("/create");
+    router.push("/app/create");
     setIsOpen(false);
   }
 
@@ -409,7 +409,7 @@ export default function JarvisWidget() {
           {messages.length > 0 && (
             <span
               className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold"
-              style={{ background: "var(--color-ql-accent)", color: "#fff" }}
+              style={{ background: "var(--color-ql-accent)", color: "var(--color-ql-bg)" }}
             >
               {messages.filter(m => m.role === "assistant").length}
             </span>
@@ -437,7 +437,7 @@ export default function JarvisWidget() {
           style={{ borderColor: "var(--color-ql-border)" }}
         >
           <div>
-            <p className="text-sm font-medium" style={{ fontFamily: "Georgia, serif", color: "var(--color-ql-dark)" }}>
+            <p className="text-sm font-medium" style={{ fontFamily: "var(--font-display)", color: "var(--color-ql-dark)" }}>
               JARVIS
             </p>
             <p className="text-[10px] uppercase tracking-[0.12em]" style={{ color: "var(--color-ql-muted)" }}>
@@ -469,7 +469,7 @@ export default function JarvisWidget() {
         <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
           {messages.length === 0 && (
             <div className="flex-1 flex flex-col items-center justify-center gap-2 text-center">
-              <p className="text-sm" style={{ fontFamily: "Georgia, serif", color: "var(--color-ql-dark)" }}>
+              <p className="text-sm" style={{ fontFamily: "var(--font-display)", color: "var(--color-ql-dark)" }}>
                 Ask me anything about your brand.
               </p>
               <p className="text-[11px]" style={{ color: "var(--color-ql-muted)" }}>

@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { getVoiceTimeline, getStrategicInsights, getBoostAdvisor } from "@/lib/api";
 import VoiceTimelineChart from "@/components/discover/VoiceTimelineChart";
@@ -12,7 +13,7 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
   return (
     <h2
       className="text-base mb-1"
-      style={{ fontFamily: "Georgia, serif", color: "var(--color-ql-dark)" }}
+      style={{ fontFamily: "var(--font-display)", color: "var(--color-ql-dark)" }}
     >
       {children}
     </h2>
@@ -38,7 +39,7 @@ function ErrorBlock({ message }: { message: string }) {
       className="rounded-xl border p-4"
       style={{
         borderColor: "var(--color-verdict-failed)",
-        background: "rgba(163,90,90,0.05)",
+        background: "color-mix(in oklch, var(--color-verdict-failed) 5%, transparent)",
       }}
     >
       <p className="text-xs" style={{ color: "var(--color-verdict-failed)" }}>
@@ -65,7 +66,12 @@ export default function DiscoverPage() {
   });
 
   return (
-    <div className="max-w-3xl mx-auto flex flex-col gap-10">
+    <motion.div
+      className="max-w-3xl mx-auto flex flex-col gap-10"
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
       {/* Voice Timeline */}
       <section>
         <SectionHeading>Voice Timeline</SectionHeading>
@@ -148,6 +154,6 @@ export default function DiscoverPage() {
           </div>
         )}
       </section>
-    </div>
+    </motion.div>
   );
 }

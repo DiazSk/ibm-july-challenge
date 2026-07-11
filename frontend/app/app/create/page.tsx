@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { useQueryClient } from "@tanstack/react-query";
 import BlankPageSolver from "@/components/create/BlankPageSolver";
 import CaptionBrief from "@/components/create/CaptionBrief";
@@ -111,7 +112,12 @@ export default function CreatePage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <motion.div
+      className="max-w-2xl mx-auto"
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
       <BlankPageSolver onApply={handleBlankPageApply} />
 
       <CaptionBrief
@@ -145,6 +151,6 @@ export default function CreatePage() {
       <div className="mt-8">
         <ScriptStudio />
       </div>
-    </div>
+    </motion.div>
   );
 }

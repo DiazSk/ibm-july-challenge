@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { motion } from "framer-motion";
 import WhyEngineForm from "@/components/analyze/WhyEngineForm";
 import DiagnosisPanel from "@/components/analyze/DiagnosisPanel";
 import RecoveryBrief from "@/components/analyze/RecoveryBrief";
@@ -47,7 +48,12 @@ export default function AnalyzePage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <motion.div
+      className="max-w-2xl mx-auto"
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
       <div className="flex justify-end mb-2">
         <button
           onClick={handleClearForm}
@@ -76,6 +82,6 @@ export default function AnalyzePage() {
 
       {result && <DiagnosisPanel result={result} />}
       {result && <RecoveryBrief result={result} clusterId={form.cluster_id} />}
-    </div>
+    </motion.div>
   );
 }

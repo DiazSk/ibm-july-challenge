@@ -61,6 +61,34 @@ _PROMPT = PromptTemplate(
 )
 
 
+def _repair_missing_commas(text: str) -> str:
+    """
+    Granite occasionally omits the comma between two key-value pairs, e.g.:
+        "prompt": "...mood."
+        "style_notes": "..."
+    Insert a comma wherever a closing quote is followed only by whitespace and
+    then another quoted key + colon (i.e. no comma already present).
+    """
+    return re.sub(r'"(\s+)"([A-Za-z_][A-Za-z0-9_ ]*)"\s*:', r'",\1"\2":', text)
+
+
+def _extract_fields_by_regex(raw: str) -> dict | None:
+    """
+    Last-resort fallback: pull "prompt" and "style_notes" string values directly
+    out of the raw text via regex, ignoring overall JSON validity. Used only when
+    both the direct and comma-repaired json.loads attempts fail, so the UI never
+    has to display a raw, garbled LLM response.
+    """
+    prompt_match = re.search(r'"prompt"\s*:\s*"((?:[^"\\]|\\.)*)"', raw, re.DOTALL)
+    style_match  = re.search(r'"style_notes"\s*:\s*"((?:[^"\\]|\\.)*)"', raw, re.DOTALL)
+    if not prompt_match:
+        return None
+    return {
+        "prompt"     : prompt_match.group(1).strip(),
+        "style_notes": style_match.group(1).strip() if style_match else "",
+    }
+
+
 def _parse_json(raw: str) -> dict:
     text = raw.strip()
     fence = re.search(r"```(?:json)?\s*([\s\S]*?)```", text)
@@ -70,7 +98,14 @@ def _parse_json(raw: str) -> dict:
     end   = text.rfind("}")
     if start != -1 and end != -1:
         text = text[start : end + 1]
-    return json.loads(text)
+
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        pass
+
+    repaired = _repair_missing_commas(text)
+    return json.loads(repaired)
 
 
 class ImagePromptGenerator:
@@ -100,10 +135,16 @@ class ImagePromptGenerator:
         try:
             return _parse_json(raw)
         except (json.JSONDecodeError, ValueError):
-            return {
-                "prompt"      : raw.strip(),
-                "style_notes" : "Raw response (JSON parse failed)",
-            }
+            pass
+
+        extracted = _extract_fields_by_regex(raw)
+        if extracted:
+            return extracted
+
+        return {
+            "prompt"      : raw.strip(),
+            "style_notes" : "Raw response (JSON parse failed)",
+        }
 
 
 # ── Standalone test ───────────────────────────────────────────────────────────

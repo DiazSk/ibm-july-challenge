@@ -159,10 +159,21 @@ class BoostAdvisor:
                 "dont_boost_reason"    : "Lowest average engagement — budget would underperform here.",
             }
 
-        # Attach the full best_post_hook from engagement data in case Granite truncated it
+        # Override cluster names + the full best_post_hook from the authoritative
+        # cluster_engagement data — Granite free-generates these fields and can
+        # (and does) mismatch a cluster_name against the cluster_id it also
+        # produced. The id is what routers/UI key off of, so the name must agree.
         cid_str = str(result.get("boost_cluster_id", ""))
         if cid_str in cluster_engagement:
-            result["boost_post_hook"] = cluster_engagement[cid_str].get("best_post_hook", result.get("boost_post_hook", ""))
+            eng = cluster_engagement[cid_str]
+            result["boost_post_hook"]    = eng.get("best_post_hook", result.get("boost_post_hook", ""))
+            result["boost_cluster_name"] = eng.get("cluster_name", result.get("boost_cluster_name", ""))
+
+        dont_cid_str = str(result.get("dont_boost_cluster_id", ""))
+        if dont_cid_str in cluster_engagement:
+            result["dont_boost_cluster_name"] = cluster_engagement[dont_cid_str].get(
+                "cluster_name", result.get("dont_boost_cluster_name", "")
+            )
 
         return result
 

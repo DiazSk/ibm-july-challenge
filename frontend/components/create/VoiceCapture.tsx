@@ -201,7 +201,7 @@ export default function VoiceCapture({ clusterId, onCaption }: Props) {
               width: 48,
               height: 48,
               background: isListening ? "var(--color-ql-dark)" : "var(--color-ql-accent)",
-              color: "#fff",
+              color: "var(--color-ql-bg)",
               flexShrink: 0,
             }}
           >
@@ -266,7 +266,7 @@ export default function VoiceCapture({ clusterId, onCaption }: Props) {
           >
             <p
               className="text-sm leading-relaxed"
-              style={{ fontFamily: "Georgia, serif", color: "var(--color-ql-dark)" }}
+              style={{ fontFamily: "var(--font-display)", color: "var(--color-ql-dark)" }}
             >
               {result!.refined_caption}
             </p>

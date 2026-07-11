@@ -17,7 +17,13 @@ interface Props {
   loading: boolean;
 }
 
-const CLUSTER_COLORS = ["#5A8A6A", "#8B7355", "#A35A5A", "#5A6A8A", "#6A5A8A"] as const;
+const CLUSTER_COLORS = [
+  "var(--color-cluster-0)",
+  "var(--color-cluster-1)",
+  "var(--color-cluster-2)",
+  "var(--color-cluster-3)",
+  "var(--color-cluster-4)",
+] as const;
 
 function Field({
   label,
@@ -82,7 +88,7 @@ export default function CaptionBrief({
       <div className="flex items-center justify-between mb-4">
         <h3
           className="text-base"
-          style={{ fontFamily: "Georgia, serif", color: "var(--color-ql-dark)" }}
+          style={{ fontFamily: "var(--font-display)", color: "var(--color-ql-dark)" }}
         >
           Caption Brief
         </h3>
@@ -169,7 +175,7 @@ export default function CaptionBrief({
                   <span
                     className="w-2 h-2 rounded-full shrink-0"
                     style={{
-                      background: CLUSTER_COLORS[c.cluster_id] ?? "#8B7355",
+                      background: CLUSTER_COLORS[c.cluster_id] ?? "var(--color-cluster-1)",
                     }}
                   />
                   <span
@@ -196,7 +202,7 @@ export default function CaptionBrief({
           className="w-full py-3 text-sm font-medium rounded-lg transition-colors disabled:opacity-40"
           style={{
             background: "var(--color-ql-dark)",
-            color: "#fff",
+            color: "var(--color-ql-bg)",
           }}
         >
           {loading ? (

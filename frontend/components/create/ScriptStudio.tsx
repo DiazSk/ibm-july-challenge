@@ -9,7 +9,13 @@ import type { ScriptResult } from "@/lib/types";
 type Format = "Reel" | "Carousel" | "Static";
 
 const FORMATS: Format[] = ["Reel", "Carousel", "Static"];
-const CLUSTER_COLORS = ["#5A8A6A", "#8B7355", "#A35A5A", "#5A6A8A", "#6A5A8A"] as const;
+const CLUSTER_COLORS = [
+  "var(--color-cluster-0)",
+  "var(--color-cluster-1)",
+  "var(--color-cluster-2)",
+  "var(--color-cluster-3)",
+  "var(--color-cluster-4)",
+] as const;
 
 const METRIC_FIELDS = [
   { key: "views", label: "Views" },
@@ -82,10 +88,10 @@ function ReelOutput({ script }: { script: ScriptResult }) {
     <div className="flex flex-col gap-3">
       {hook && (
         <div className="rounded-lg px-4 py-3 text-center" style={{ background: "var(--color-ql-dark)" }}>
-          <p className="text-sm font-medium" style={{ color: "#fff", fontFamily: "Georgia, serif" }}>
+          <p className="text-sm font-medium" style={{ color: "var(--color-ql-bg)", fontFamily: "var(--font-display)" }}>
             {hook}
           </p>
-          <p className="text-[10px] mt-1 uppercase tracking-[0.1em]" style={{ color: "rgba(255,255,255,0.5)" }}>
+          <p className="text-[10px] mt-1 uppercase tracking-[0.1em]" style={{ color: "color-mix(in oklch, var(--color-ql-bg) 50%, transparent)" }}>
             Hook
           </p>
         </div>
@@ -135,10 +141,10 @@ function CarouselOutput({ script }: { script: ScriptResult }) {
     <div className="flex flex-col gap-3">
       {hook && (
         <div className="rounded-lg px-4 py-3 text-center" style={{ background: "var(--color-ql-dark)" }}>
-          <p className="text-sm font-medium" style={{ color: "#fff", fontFamily: "Georgia, serif" }}>
+          <p className="text-sm font-medium" style={{ color: "var(--color-ql-bg)", fontFamily: "var(--font-display)" }}>
             {hook}
           </p>
-          <p className="text-[10px] mt-1 uppercase tracking-[0.1em]" style={{ color: "rgba(255,255,255,0.5)" }}>
+          <p className="text-[10px] mt-1 uppercase tracking-[0.1em]" style={{ color: "color-mix(in oklch, var(--color-ql-bg) 50%, transparent)" }}>
             Cover Slide
           </p>
         </div>
@@ -192,8 +198,8 @@ function StaticOutput({ script }: { script: ScriptResult }) {
     <div className="flex flex-col gap-3">
       {headline && (
         <div className="rounded-lg px-4 py-3 text-center" style={{ background: "var(--color-ql-dark)" }}>
-          <p className="text-sm font-medium" style={{ color: "#fff", fontFamily: "Georgia, serif" }}>{headline}</p>
-          <p className="text-[10px] mt-1 uppercase tracking-[0.1em]" style={{ color: "rgba(255,255,255,0.5)" }}>Headline</p>
+          <p className="text-sm font-medium" style={{ color: "var(--color-ql-bg)", fontFamily: "var(--font-display)" }}>{headline}</p>
+          <p className="text-[10px] mt-1 uppercase tracking-[0.1em]" style={{ color: "color-mix(in oklch, var(--color-ql-bg) 50%, transparent)" }}>Headline</p>
         </div>
       )}
       {caption && <ScriptBlock label="Caption" content={caption} />}
@@ -304,10 +310,10 @@ export default function ScriptStudio() {
     >
       <button
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between px-5 py-4 text-left transition-colors hover:bg-[#f7f5f2]"
+        className="w-full flex items-center justify-between px-5 py-4 text-left transition-colors hover:bg-[var(--color-ql-gap)]"
       >
         <div>
-          <p className="text-sm font-medium" style={{ color: "var(--color-ql-dark)", fontFamily: "Georgia, serif" }}>
+          <p className="text-sm font-medium" style={{ color: "var(--color-ql-dark)", fontFamily: "var(--font-display)" }}>
             Script Studio
           </p>
           <p className="text-xs mt-0.5" style={{ color: "var(--color-ql-muted)" }}>
@@ -394,7 +400,7 @@ export default function ScriptStudio() {
                     style={{
                       borderColor: format === f ? "var(--color-ql-dark)" : "var(--color-ql-border)",
                       background: format === f ? "var(--color-ql-dark)" : "transparent",
-                      color: format === f ? "#fff" : "var(--color-ql-muted)",
+                      color: format === f ? "var(--color-ql-bg)" : "var(--color-ql-muted)",
                     }}
                   >
                     {f}
@@ -421,7 +427,7 @@ export default function ScriptStudio() {
                       }}
                     >
                       <span className="w-2 h-2 rounded-full shrink-0"
-                        style={{ background: CLUSTER_COLORS[c.cluster_id] ?? "#8B7355" }} />
+                        style={{ background: CLUSTER_COLORS[c.cluster_id] ?? "var(--color-cluster-1)" }} />
                       <span className="text-xs" style={{ color: "var(--color-ql-dark)" }}>
                         {c.pillar}
                       </span>
@@ -439,7 +445,7 @@ export default function ScriptStudio() {
               onClick={handleGenerate}
               disabled={!refCaption.trim() || loading}
               className="w-full py-3 text-sm font-medium rounded-lg transition-colors disabled:opacity-40"
-              style={{ background: "var(--color-ql-dark)", color: "#fff" }}
+              style={{ background: "var(--color-ql-dark)", color: "var(--color-ql-bg)" }}
             >
               {loading ? <span className="animate-pulse">Generating Script…</span> : "Generate Script"}
             </button>

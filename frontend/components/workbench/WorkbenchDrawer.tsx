@@ -254,7 +254,7 @@ export default function WorkbenchDrawer({ open, onClose }: Props) {
             </p>
             <p
               className="text-sm mt-0.5"
-              style={{ fontFamily: "Georgia, serif", color: "var(--color-ql-dark)" }}
+              style={{ fontFamily: "var(--font-display)", color: "var(--color-ql-dark)" }}
             >
               {assets.length} saved {assets.length === 1 ? "asset" : "assets"}
             </p>

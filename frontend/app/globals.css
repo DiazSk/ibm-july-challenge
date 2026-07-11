@@ -1,81 +1,234 @@
 @import "tailwindcss";
 
-@theme {
-  --color-ql-bg: #F9F7F4;
-  --color-ql-sidebar: #F0EDE8;
-  --color-ql-border: #E0DAD3;
-  --color-ql-dark: #2D2D2D;
-  --color-ql-accent: #8B7355;
-  --color-ql-text: #3D3D3D;
-  --color-ql-muted: #7A6F63;
-  --color-ql-card: #FFFFFF;
-  --color-ql-gap: #FDF8F2;
+/*
+ * Dreamy Cloud palette — sky blue, warm orange, cream, soft cloudy white.
+ * Ported from Brand Muse AI (src/styles.css). Fonts: Instrument Serif (display) +
+ * Work Sans (body), loaded via next/font/google in app/layout.tsx.
+ */
 
-  --color-verdict-succeeded: #5A8A6A;
-  --color-verdict-underperformed: #C4A35A;
-  --color-verdict-failed: #A35A5A;
+:root {
+  --radius: 0.5rem;
 
-  --color-cluster-0: #5A8A6A;
-  --color-cluster-1: #8B7355;
-  --color-cluster-2: #A35A5A;
-  --color-cluster-3: #5A6A8A;
-  --color-cluster-4: #6A5A8A;
+  --ink: oklch(0.18 0.02 250);
+  --gold: oklch(0.72 0.17 55);          /* warm orange (brand accent) */
+  --gold-soft: oklch(0.82 0.11 235);    /* soft sky blue */
+  --parchment: oklch(0.97 0.02 80);     /* cream */
+  --sky: oklch(0.68 0.13 235);          /* sky blue */
+  --success: oklch(0.62 0.13 155);      /* hand-picked green — Dreamy Cloud has no native success hue */
 
-  --font-family-serif: Georgia, "Times New Roman", serif;
-  --font-family-sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --background: oklch(0.985 0.012 235);
+  --foreground: oklch(0.18 0.02 250);
+
+  --card: oklch(0.995 0.006 80);
+  --card-foreground: oklch(0.18 0.02 250);
+
+  --popover: oklch(0.995 0.006 80);
+  --popover-foreground: oklch(0.18 0.02 250);
+
+  --primary: oklch(0.68 0.13 235);
+  --primary-foreground: oklch(0.99 0 0);
+
+  --secondary: oklch(0.94 0.025 235);
+  --secondary-foreground: oklch(0.18 0.02 250);
+
+  --muted: oklch(0.95 0.018 235);
+  --muted-foreground: oklch(0.46 0.03 250);
+
+  --accent: oklch(0.72 0.17 55);
+  --accent-foreground: oklch(0.99 0 0);
+
+  --destructive: oklch(0.62 0.2 25);
+  --destructive-foreground: oklch(0.99 0 0);
+
+  --border: oklch(0.18 0.02 250 / 10%);
+  --input: oklch(0.18 0.02 250 / 14%);
+  --ring: oklch(0.68 0.13 235 / 50%);
+
+  --chart-1: oklch(0.68 0.13 235);
+  --chart-2: oklch(0.72 0.17 55);
+  --chart-3: oklch(0.82 0.11 235);
+  --chart-4: oklch(0.88 0.09 80);
+  --chart-5: oklch(0.55 0.03 250);
+
+  --sidebar: oklch(0.98 0.014 80);
+  --sidebar-foreground: oklch(0.18 0.02 250);
+  --sidebar-primary: oklch(0.68 0.13 235);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.94 0.025 235);
+  --sidebar-accent-foreground: oklch(0.18 0.02 250);
+  --sidebar-border: oklch(0.18 0.02 250 / 8%);
+  --sidebar-ring: oklch(0.68 0.13 235 / 50%);
+
+  --gradient-gold: linear-gradient(135deg, oklch(0.72 0.17 55), oklch(0.82 0.11 55));
+  --gradient-sky: linear-gradient(160deg, oklch(0.95 0.04 235), oklch(0.98 0.02 80));
+  --shadow-editorial: 0 30px 80px -30px oklch(0.55 0.12 235 / 0.25);
+}
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+
+  --font-display: var(--font-instrument-serif), ui-serif, Georgia, serif;
+  --font-sans: var(--font-work-sans), ui-sans-serif, system-ui, sans-serif;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-gold: var(--gold);
+  --color-gold-soft: var(--gold-soft);
+  --color-parchment: var(--parchment);
+  --color-ink: var(--ink);
+  --color-sky: var(--sky);
+  --color-success: var(--success);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* --- legacy token names, remapped so existing components re-skin with zero edits --- */
+  --color-ql-bg: var(--background);
+  --color-ql-sidebar: var(--sidebar);
+  --color-ql-border: var(--border);
+  --color-ql-dark: var(--foreground);
+  --color-ql-accent: var(--gold);
+  --color-ql-text: var(--foreground);
+  --color-ql-muted: var(--muted-foreground);
+  --color-ql-card: var(--card);
+  --color-ql-gap: var(--secondary);
+
+  --color-verdict-succeeded: var(--success);
+  --color-verdict-underperformed: var(--gold);
+  --color-verdict-failed: var(--destructive);
+
+  --color-cluster-0: var(--chart-1);
+  --color-cluster-1: var(--chart-2);
+  --color-cluster-2: var(--chart-3);
+  --color-cluster-3: var(--chart-4);
+  --color-cluster-4: var(--chart-5);
+
+  --font-family-serif: var(--font-display);
+  --font-family-sans: var(--font-sans);
   --font-family-mono: "SF Mono", "Fira Code", "Courier New", monospace;
 }
 
-:root {
-  --background: var(--color-ql-bg);
-  --foreground: var(--color-ql-text);
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html,
+  body {
+    height: 100%;
+  }
+
+  body {
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: var(--background);
+    background-image:
+      radial-gradient(ellipse 80% 60% at 15% -10%, oklch(0.9 0.07 235 / 0.75), transparent 60%),
+      radial-gradient(ellipse 70% 55% at 95% 8%, oklch(0.94 0.08 55 / 0.55), transparent 65%),
+      radial-gradient(ellipse 90% 60% at 50% 110%, oklch(0.92 0.05 80 / 0.6), transparent 60%);
+    background-attachment: fixed;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    color: var(--color-ql-dark);
+    font-weight: 400;
+    letter-spacing: -0.02em;
+  }
+
+  ::selection {
+    background: var(--color-ql-accent);
+    color: #fff;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--color-ql-bg);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-ql-border);
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-ql-muted);
+  }
 }
 
-* {
-  box-sizing: border-box;
+@utility gold-rule {
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--color-gold) 20%,
+    var(--color-gold) 80%,
+    transparent
+  );
 }
 
-html,
-body {
-  height: 100%;
+@utility hairline {
+  border: 1px solid var(--color-border);
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-family-sans);
-  font-size: 14px;
-  line-height: 1.6;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-h1, h2, h3 {
-  font-family: var(--font-family-serif);
-  color: var(--color-ql-dark);
+@utility font-display {
+  font-family: var(--font-display);
   font-weight: 400;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
 }
 
-::selection {
-  background: var(--color-ql-accent);
-  color: #fff;
+@utility text-balance {
+  text-wrap: balance;
 }
 
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--color-ql-bg);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--color-ql-border);
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--color-ql-muted);
+@utility grain {
+  position: relative;
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.06;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.9'/></svg>");
+  }
 }

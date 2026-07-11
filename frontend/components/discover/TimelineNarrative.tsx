@@ -44,7 +44,7 @@ export default function TimelineNarrative({ narrative, keyShift }: Props) {
         </p>
         <p
           className="text-sm leading-relaxed"
-          style={{ color: "var(--color-ql-dark)", fontFamily: "Georgia, serif" }}
+          style={{ color: "var(--color-ql-dark)", fontFamily: "var(--font-display)" }}
         >
           {keyShift}
         </p>

@@ -691,5 +691,67 @@
         "marketing_hook": "That golden turn never gets old 🍩✨\n\nBomboloni,Freshly fried,Italian dessert,soft doughnuts,Homebaker,bakery business,support small business,fresh dessert"
       }
     ]
+  },
+  "cluster_engagement": {
+    "0": {
+      "cluster_name": "Homemade Classics",
+      "post_count": 34,
+      "avg_views": 820,
+      "avg_reach": 690,
+      "avg_likes": 34,
+      "avg_comments": 8,
+      "avg_saves": 12,
+      "engagement_rate": 6.6,
+      "best_post_shortcode": "_a_yzw6QI",
+      "best_post_hook": "100% Homemade eggless donuts, Soft, fresh & chocolate-loaded donuts"
+    },
+    "1": {
+      "cluster_name": "Fusion Specials",
+      "post_count": 22,
+      "avg_views": 1380,
+      "avg_reach": 1150,
+      "avg_likes": 68,
+      "avg_comments": 19,
+      "avg_saves": 41,
+      "engagement_rate": 9.3,
+      "best_post_shortcode": "_aIjsZOtP",
+      "best_post_hook": "One bite of rasmalai cake & all diet plans got cancelled 😌✨"
+    },
+    "2": {
+      "cluster_name": "Behind the Scenes",
+      "post_count": 15,
+      "avg_views": 1020,
+      "avg_reach": 860,
+      "avg_likes": 51,
+      "avg_comments": 24,
+      "avg_saves": 28,
+      "engagement_rate": 10.1,
+      "best_post_shortcode": "_-L3aIOWU",
+      "best_post_hook": "The hustle doesn't sleep, and neither do our cravings"
+    },
+    "3": {
+      "cluster_name": "Nutella Series",
+      "post_count": 15,
+      "avg_views": 1180,
+      "avg_reach": 980,
+      "avg_likes": 58,
+      "avg_comments": 16,
+      "avg_saves": 33,
+      "engagement_rate": 9.1,
+      "best_post_shortcode": "__MsUw5Ec",
+      "best_post_hook": "You came for Bomboloni… but trust me, these Nutella cookies will steal the show"
+    },
+    "4": {
+      "cluster_name": "Bomboloni",
+      "post_count": 27,
+      "avg_views": 1720,
+      "avg_reach": 1430,
+      "avg_likes": 92,
+      "avg_comments": 31,
+      "avg_saves": 67,
+      "engagement_rate": 11.1,
+      "best_post_shortcode": "_7WncaD-Y",
+      "best_post_hook": "There's something about freshly fried Bomboloni, hot coffee & old songs…"
+    }
   }
 }

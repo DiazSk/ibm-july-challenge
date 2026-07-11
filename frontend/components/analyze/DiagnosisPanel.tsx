@@ -11,21 +11,21 @@ const VERDICT_CONFIG: Record<
   { bg: string; border: string; text: string; label: string }
 > = {
   Succeeded: {
-    bg: "rgba(90,138,106,0.08)",
-    border: "#5A8A6A",
-    text: "#5A8A6A",
+    bg: "color-mix(in oklch, var(--color-verdict-succeeded) 8%, transparent)",
+    border: "var(--color-verdict-succeeded)",
+    text: "var(--color-verdict-succeeded)",
     label: "Succeeded",
   },
   Underperformed: {
-    bg: "rgba(196,163,90,0.08)",
-    border: "#C4A35A",
-    text: "#C4A35A",
+    bg: "color-mix(in oklch, var(--color-verdict-underperformed) 8%, transparent)",
+    border: "var(--color-verdict-underperformed)",
+    text: "var(--color-verdict-underperformed)",
     label: "Underperformed",
   },
   Failed: {
-    bg: "rgba(163,90,90,0.08)",
-    border: "#A35A5A",
-    text: "#A35A5A",
+    bg: "color-mix(in oklch, var(--color-verdict-failed) 8%, transparent)",
+    border: "var(--color-verdict-failed)",
+    text: "var(--color-verdict-failed)",
     label: "Failed",
   },
 };
@@ -52,8 +52,17 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
+// The backend decorates verdict_label with symbols (e.g. "✓  Succeeded"), which never
+// exact-matches VERDICT_CONFIG's plain keys — so key off the raw `verdict` field instead.
+function resolveVerdictKey(result: WhyEngineResult): VerdictLabel {
+  const raw = `${result.verdict} ${result.verdict_label}`.toLowerCase();
+  if (raw.includes("succeed")) return "Succeeded";
+  if (raw.includes("fail")) return "Failed";
+  return "Underperformed";
+}
+
 export default function DiagnosisPanel({ result }: Props) {
-  const conf = VERDICT_CONFIG[result.verdict_label] ?? VERDICT_CONFIG.Underperformed;
+  const conf = VERDICT_CONFIG[resolveVerdictKey(result)];
 
   const changeItems = result.change_next_time
     .split(/[\n•–-]+/)
@@ -83,7 +92,7 @@ export default function DiagnosisPanel({ result }: Props) {
           className="text-sm leading-relaxed"
           style={{
             color: "var(--color-ql-dark)",
-            fontFamily: "Georgia, serif",
+            fontFamily: "var(--font-display)",
           }}
         >
           {result.verdict}

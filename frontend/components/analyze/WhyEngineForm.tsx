@@ -39,7 +39,13 @@ function onBlur(e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTM
   e.target.style.borderColor = "var(--color-ql-border)";
 }
 
-const CLUSTER_COLORS = ["#5A8A6A", "#8B7355", "#A35A5A", "#5A6A8A", "#6A5A8A"] as const;
+const CLUSTER_COLORS = [
+  "var(--color-cluster-0)",
+  "var(--color-cluster-1)",
+  "var(--color-cluster-2)",
+  "var(--color-cluster-3)",
+  "var(--color-cluster-4)",
+] as const;
 
 export default function WhyEngineForm({ value, onChange, onSubmit, loading }: Props) {
   const { data: clusters } = useQuery({ queryKey: ["clusters"], queryFn: getClusters });
@@ -63,7 +69,7 @@ export default function WhyEngineForm({ value, onChange, onSubmit, loading }: Pr
     >
       <h3
         className="text-base mb-1"
-        style={{ fontFamily: "Georgia, serif", color: "var(--color-ql-dark)" }}
+        style={{ fontFamily: "var(--font-display)", color: "var(--color-ql-dark)" }}
       >
         Why Engine
       </h3>
@@ -200,7 +206,7 @@ export default function WhyEngineForm({ value, onChange, onSubmit, loading }: Pr
           onClick={onSubmit}
           disabled={!canSubmit || loading}
           className="w-full py-3 text-sm font-medium rounded-lg transition-colors disabled:opacity-40"
-          style={{ background: "var(--color-ql-dark)", color: "#fff" }}
+          style={{ background: "var(--color-ql-dark)", color: "var(--color-ql-bg)" }}
         >
           {loading ? (
             <span className="animate-pulse">Diagnosing…</span>

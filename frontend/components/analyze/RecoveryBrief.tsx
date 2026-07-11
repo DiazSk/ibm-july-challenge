@@ -11,9 +11,9 @@ interface Props {
 }
 
 const FORMAT_BG: Record<string, string> = {
-  Reel: "#7A6550",
-  Carousel: "#4A6A7A",
-  Static: "#5A7A5A",
+  Reel: "var(--color-gold)",
+  Carousel: "var(--sky)",
+  Static: "var(--color-verdict-succeeded)",
 };
 
 export default function RecoveryBrief({ result, clusterId, onSaved }: Props) {
@@ -23,7 +23,7 @@ export default function RecoveryBrief({ result, clusterId, onSaved }: Props) {
 
   if (!brief) return null;
 
-  const formatBg = FORMAT_BG[brief.recommended_format] ?? "#7A6550";
+  const formatBg = FORMAT_BG[brief.recommended_format] ?? "var(--color-gold)";
 
   async function handleSave() {
     if (!brief || saved) return;
@@ -63,7 +63,7 @@ export default function RecoveryBrief({ result, clusterId, onSaved }: Props) {
       <div
         className="px-5 py-3 flex items-center justify-between"
         style={{
-          background: "rgba(122,101,80,0.07)",
+          background: "color-mix(in oklch, var(--color-ql-accent) 7%, transparent)",
           borderBottom: "1px solid var(--color-ql-border)",
         }}
       >
@@ -83,7 +83,7 @@ export default function RecoveryBrief({ result, clusterId, onSaved }: Props) {
         </div>
         <span
           className="text-[10px] font-medium px-2.5 py-1 rounded-lg"
-          style={{ background: formatBg, color: "#fff" }}
+          style={{ background: formatBg, color: "var(--color-ql-bg)" }}
         >
           {brief.recommended_format}
         </span>
@@ -103,7 +103,7 @@ export default function RecoveryBrief({ result, clusterId, onSaved }: Props) {
           </p>
           <p
             className="text-base leading-snug"
-            style={{ fontFamily: "Georgia, serif", color: "var(--color-ql-dark)" }}
+            style={{ fontFamily: "var(--font-display)", color: "var(--color-ql-dark)" }}
           >
             &ldquo;{brief.new_hook}&rdquo;
           </p>
@@ -154,7 +154,7 @@ export default function RecoveryBrief({ result, clusterId, onSaved }: Props) {
           className="w-full py-2.5 rounded-lg text-sm font-medium transition-all disabled:opacity-60"
           style={{
             background: saved ? "transparent" : "var(--color-ql-dark)",
-            color: saved ? "var(--color-ql-accent)" : "#fff",
+            color: saved ? "var(--color-ql-accent)" : "var(--color-ql-bg)",
             border: saved ? "1px solid var(--color-ql-border)" : "none",
           }}
         >
