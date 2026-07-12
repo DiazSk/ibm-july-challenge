@@ -1,6 +1,9 @@
 "use client";
 
-import type { WhyEngineResult, VerdictLabel } from "@/lib/types";
+import { useEffect, useState } from "react";
+import type { WhyEngineResult, VerdictLabel, RepurposeStatus } from "@/lib/types";
+import ConfidenceBadge from "@/components/shared/ConfidenceBadge";
+import { getRepurposeStatus } from "@/lib/api";
 
 interface Props {
   result: WhyEngineResult;
@@ -29,6 +32,66 @@ const VERDICT_CONFIG: Record<
     label: "Failed",
   },
 };
+
+function RepurposeBanner({ jobId }: { jobId: string }) {
+  const [status, setStatus] = useState<RepurposeStatus | null>(null);
+  const [lost, setLost] = useState(false);
+
+  useEffect(() => {
+    let missed = 0;
+    const id = setInterval(async () => {
+      try {
+        const s = await getRepurposeStatus(jobId);
+        setStatus(s);
+        missed = 0;
+        if (s.status === "done" || s.status === "error") clearInterval(id);
+      } catch {
+        missed += 1;
+        if (missed >= 3) {
+          clearInterval(id);
+          setLost(true);
+        }
+      }
+    }, 3000);
+    return () => clearInterval(id);
+  }, [jobId]);
+
+  if (lost) {
+    return (
+      <div className="rounded-xl border p-3.5" style={{ borderColor: "var(--color-ql-border)", background: "var(--color-ql-gap)" }}>
+        <p className="text-xs" style={{ color: "var(--color-ql-muted)" }}>
+          Job may have been interrupted — check Workbench for any formats that completed.
+        </p>
+      </div>
+    );
+  }
+
+  if (!status || status.status === "error") return null;
+
+  return (
+    <div
+      className="rounded-xl border p-3.5"
+      style={{ borderColor: "var(--color-ql-accent)", background: "color-mix(in oklch, var(--color-ql-accent) 6%, transparent)" }}
+    >
+      <p className="text-xs font-medium mb-1" style={{ color: "var(--color-ql-accent)" }}>
+        {status.status === "done"
+          ? "3 formats ready — check Workbench →"
+          : "Great post — auto-generating a Reel, Carousel, and Static version..."}
+      </p>
+      {status.status !== "done" && (
+        <div className="h-1 rounded-full overflow-hidden mt-2" style={{ background: "var(--color-ql-border)" }}>
+          <div
+            className="h-full rounded-full transition-all duration-700"
+            style={{ width: `${status.progress}%`, background: "var(--color-ql-accent)" }}
+          />
+        </div>
+      )}
+      <p className="text-[11px] mt-1.5" style={{ color: "var(--color-ql-muted)" }}>
+        {status.message}
+      </p>
+    </div>
+  );
+}
 
 function Card({ children }: { children: React.ReactNode }) {
   return (
@@ -87,6 +150,9 @@ export default function DiagnosisPanel({ result }: Props) {
           >
             {conf.label}
           </span>
+          {result.confidence && (
+            <ConfidenceBadge score={result.confidence.score} rationale={result.confidence.rationale} />
+          )}
         </div>
         <p
           className="text-sm leading-relaxed"
@@ -98,6 +164,8 @@ export default function DiagnosisPanel({ result }: Props) {
           {result.verdict}
         </p>
       </div>
+
+      {result.repurpose_job_id && <RepurposeBanner jobId={result.repurpose_job_id} />}
 
       {/* Diagnosis */}
       <Card>

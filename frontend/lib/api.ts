@@ -4,6 +4,7 @@ import type {
   MomentAnalysis,
   Direction,
   Caption,
+  CaptionsGenerateResponse,
   ImagePromptResult,
   WhyEngineRequest,
   WhyEngineResult,
@@ -15,6 +16,13 @@ import type {
   OnboardStatus,
   HasProfileResult,
   WorkbenchAsset,
+  RepurposeStatus,
+  ResonanceResult,
+  GuardianReviewResult,
+  DriftCheckResult,
+  TriageBatchResponse,
+  WeeklyBriefStatus,
+  WeeklyBriefPendingNotice,
 } from "./types";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
@@ -34,6 +42,12 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
 // Brand
 export const getBrandProfile = () => apiFetch<BrandProfile>("/api/brand/profile");
 export const getClusters = () => apiFetch<ClustersData>("/api/brand/clusters");
+
+export const checkBrandDrift = (pasted_posts: string[]) =>
+  apiFetch<DriftCheckResult>("/api/brand/drift-check", {
+    method: "POST",
+    body: JSON.stringify({ pasted_posts }),
+  });
 
 // Create
 export const analyzeMoment = (moment_text: string) =>
@@ -55,7 +69,7 @@ export const generateCaptions = (payload: {
   cluster_id: number;
   previous_captions?: string[];
 }) =>
-  apiFetch<Caption[]>("/api/create/captions", {
+  apiFetch<CaptionsGenerateResponse>("/api/create/captions", {
     method: "POST",
     body: JSON.stringify(payload),
   });
@@ -72,12 +86,48 @@ export const generateScript = (payload: import("./types").ScriptRequest) =>
     body: JSON.stringify(payload),
   });
 
+export const runResonanceCheck = (captions: string[]) =>
+  apiFetch<ResonanceResult>("/api/create/resonance-check", {
+    method: "POST",
+    body: JSON.stringify({ captions }),
+  });
+
+export const runGuardianReview = (caption: string, cluster_id: number) =>
+  apiFetch<GuardianReviewResult>("/api/create/guardian-review", {
+    method: "POST",
+    body: JSON.stringify({ caption, cluster_id }),
+  });
+
+// Comment/DM Triage
+export const runTriage = (messages: string[], cluster_id: number = 0) =>
+  apiFetch<TriageBatchResponse>("/api/triage/run", {
+    method: "POST",
+    body: JSON.stringify({ messages, cluster_id }),
+  });
+
+// Weekly Brief Agent
+export const startWeeklyBrief = (n: number = 2) =>
+  apiFetch<{ job_id: string }>("/api/weekly-brief/generate", {
+    method: "POST",
+    body: JSON.stringify({ n }),
+  });
+
+export const getWeeklyBriefStatus = (jobId: string) =>
+  apiFetch<WeeklyBriefStatus>(`/api/weekly-brief/status/${jobId}`);
+
+export const getWeeklyBriefPendingNotice = () =>
+  apiFetch<WeeklyBriefPendingNotice>("/api/weekly-brief/pending-notice");
+
 // Analyze
 export const runWhyEngine = (payload: WhyEngineRequest) =>
   apiFetch<WhyEngineResult>("/api/analyze/why-engine", {
     method: "POST",
     body: JSON.stringify(payload),
   });
+
+// Closed-Loop Repurposing (auto-triggered by why-engine on a "succeeded" verdict)
+export const getRepurposeStatus = (jobId: string) =>
+  apiFetch<RepurposeStatus>(`/api/repurpose/status/${jobId}`);
 
 // Discover
 export const getVoiceTimeline = () =>

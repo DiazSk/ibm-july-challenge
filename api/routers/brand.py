@@ -7,6 +7,9 @@ import json
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
+
+from api.dependencies import get_brand_drift_analyzer, get_sentence_embedder
 
 router = APIRouter()
 
@@ -122,3 +125,42 @@ async def get_clusters():
         }
 
     return result
+
+
+class DriftCheckRequest(BaseModel):
+    pasted_posts: list[str]
+
+
+@router.post("/drift-check")
+def check_brand_drift(req: DriftCheckRequest) -> dict:
+    """
+    Granite Call #19 — BrandDriftAnalyzer.
+    Auto-detects the nearest content pillar for a pasted batch of recent
+    posts (via embedding similarity, no manual cluster picker), then Granite
+    explains specifically how the batch has drifted from that pillar's
+    locked brand voice profile.
+    """
+    posts = [p.strip() for p in req.pasted_posts if p.strip()]
+    if len(posts) < 3:
+        raise HTTPException(status_code=422, detail="paste at least 3 recent posts to compare")
+
+    if not _CLUSTERS_PATH.exists():
+        raise HTTPException(status_code=503, detail="clusters.json not found")
+    clusters_data = json.loads(_CLUSTERS_PATH.read_text(encoding="utf-8"))
+
+    embedder = get_sentence_embedder()
+    from src.generation.brand_drift import detect_nearest_cluster_and_signal
+
+    nearest_cluster_id, similarity_signal = detect_nearest_cluster_and_signal(
+        posts, clusters_data, embedder,
+    )
+    cluster_label = _CLUSTER_ID_LABELS.get(nearest_cluster_id, f"Cluster {nearest_cluster_id}")
+
+    analysis = get_brand_drift_analyzer().analyze_drift(posts, nearest_cluster_id, similarity_signal)
+
+    return {
+        "nearest_cluster_id": nearest_cluster_id,
+        "cluster_label": cluster_label,
+        "similarity_signal": similarity_signal,
+        **analysis,
+    }

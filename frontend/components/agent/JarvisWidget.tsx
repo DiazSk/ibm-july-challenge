@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { agentChat, clearAgentSession, saveAsset } from "@/lib/api";
+import { agentChat, clearAgentSession, saveAsset, getWeeklyBriefPendingNotice } from "@/lib/api";
 import type { ActionResult, InspirationIdea } from "@/lib/types";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -239,6 +239,24 @@ export default function JarvisWidget() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, phase]);
+
+  // Proactive nudge — surface a completed Weekly Brief once, on first mount
+  useEffect(() => {
+    (async () => {
+      try {
+        const notice = await getWeeklyBriefPendingNotice();
+        if (!notice.pending) return;
+        const clusterPhrase = notice.cluster_label ? ` for your ${notice.cluster_label} pillar` : "";
+        const draftWord = notice.n === 1 ? "an idea" : `${notice.n ?? "a few"} ideas`;
+        addMessage({
+          role: "assistant",
+          content: `I put together ${draftWord}${clusterPhrase} this week — open the Workbench to take a look.`,
+        });
+      } catch {
+        // best-effort nudge — silent on failure
+      }
+    })();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── History helpers ─────────────────────────────────────────────────────
   function historyForApi() {

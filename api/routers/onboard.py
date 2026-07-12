@@ -52,6 +52,9 @@ def _clear_caches() -> None:
             get_recovery_brief_generator, get_boost_advisor, get_voice_refiner,
             get_jarvis_agent, get_inspiration_synthesizer,
             get_voice_transcriber, get_voice_synthesizer,
+            get_confidence_scorer, get_persona_simulator, get_resonance_synthesizer,
+            get_weekly_brief_planner, get_brand_guardian, get_brand_drift_analyzer,
+            get_comment_triager,
         )
         for fn in (
             get_caption_generator, get_image_generator, get_why_engine,
@@ -60,6 +63,9 @@ def _clear_caches() -> None:
             get_recovery_brief_generator, get_boost_advisor, get_voice_refiner,
             get_jarvis_agent, get_inspiration_synthesizer,
             get_voice_transcriber, get_voice_synthesizer,
+            get_confidence_scorer, get_persona_simulator, get_resonance_synthesizer,
+            get_weekly_brief_planner, get_brand_guardian, get_brand_drift_analyzer,
+            get_comment_triager,
         ):
             try:
                 fn.cache_clear()

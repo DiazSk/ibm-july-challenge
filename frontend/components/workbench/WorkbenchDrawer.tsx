@@ -17,12 +17,26 @@ const ASSET_LABELS: Record<string, string> = {
   carousel: "Carousel",
   static_script: "Static Post",
   recovery_brief: "Recovery Brief",
+  weekly_brief_draft: "Weekly Brief Draft",
+  guardian_refined_caption: "Guardian-Refined Caption",
+  triage_reply: "Drafted Reply",
 };
+
+const _OUTCOME_ELIGIBLE_TYPES = new Set([
+  "caption",
+  "reel_script",
+  "carousel",
+  "static_script",
+  "guardian_refined_caption",
+  "weekly_brief_draft",
+]);
+
+const _OUTCOME_VALUES = ["succeeded", "underperformed", "failed"] as const;
 
 function getPreviewText(asset: WorkbenchAsset): string {
   if (typeof asset.content === "string") return asset.content;
   const obj = asset.content as Record<string, unknown>;
-  return String(obj.hook ?? obj.caption ?? obj.recovery_script ?? JSON.stringify(obj));
+  return String(obj.hook ?? obj.caption ?? obj.recovery_script ?? obj.drafted_reply ?? JSON.stringify(obj));
 }
 
 function getFullText(asset: WorkbenchAsset): string {
@@ -76,6 +90,35 @@ function getFullText(asset: WorkbenchAsset): string {
     return parts.join("\n\n");
   }
 
+  if (asset.asset_type === "guardian_refined_caption") {
+    const parts: string[] = [];
+    if (obj.caption) parts.push(`Caption:\n${obj.caption}`);
+    if (obj.converged) {
+      parts.push(`Approved after ${obj.rounds_used} round(s)`);
+    } else if (obj.best_so_far) {
+      parts.push(`Best of ${obj.rounds_used} rounds (not fully approved)`);
+    }
+    return parts.join("\n\n");
+  }
+
+  if (asset.asset_type === "triage_reply") {
+    const parts: string[] = [];
+    if (obj.original_message) parts.push(`Original:\n${obj.original_message}`);
+    if (obj.category) parts.push(`Category: ${obj.category}`);
+    if (obj.drafted_reply) parts.push(`Reply:\n${obj.drafted_reply}`);
+    return parts.join("\n\n");
+  }
+
+  if (asset.asset_type === "weekly_brief_draft") {
+    const parts: string[] = [];
+    if (obj.scenario_text) parts.push(`Idea:\n${obj.scenario_text}`);
+    if (obj.rationale) parts.push(`Why this works:\n${obj.rationale}`);
+    if (obj.caption) parts.push(`Caption:\n${obj.caption}`);
+    if (obj.image_prompt) parts.push(`Image Direction:\n${obj.image_prompt}`);
+    if (obj.style_notes) parts.push(`Style Notes:\n${obj.style_notes}`);
+    return parts.join("\n\n");
+  }
+
   return String(obj.hook ?? obj.caption ?? obj.recovery_script ?? JSON.stringify(obj, null, 2));
 }
 
@@ -104,10 +147,12 @@ function AssetCard({
   asset,
   onPin,
   onDelete,
+  onSetOutcome,
 }: {
   asset: WorkbenchAsset;
   onPin: () => void;
   onDelete: () => void;
+  onSetOutcome: (outcome: string) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const fullText = getFullText(asset);
@@ -187,14 +232,30 @@ function AssetCard({
         <CopyButton text={fullText} />
       </div>
 
-      {/* Outcome badge */}
-      {asset.actual_outcome && (
-        <p
-          className="text-[10px] mt-2 uppercase tracking-[0.08em]"
-          style={{ color: "var(--color-ql-muted)", opacity: 0.5 }}
-        >
-          Outcome: {asset.actual_outcome}
-        </p>
+      {/* Outcome pills — real performance feedback the Create tab learns from */}
+      {_OUTCOME_ELIGIBLE_TYPES.has(asset.asset_type) && (
+        <div className="mt-2.5 pt-2.5 flex items-center gap-1.5" style={{ borderTop: "1px solid var(--color-ql-border)" }}>
+          <span className="text-[9px] uppercase tracking-[0.08em]" style={{ color: "var(--color-ql-muted)", opacity: 0.5 }}>
+            Outcome:
+          </span>
+          {_OUTCOME_VALUES.map((v) => {
+            const active = asset.actual_outcome === v;
+            return (
+              <button
+                key={v}
+                onClick={() => onSetOutcome(active ? "" : v)}
+                className="text-[9px] px-1.5 py-0.5 rounded-full border transition-colors"
+                style={{
+                  borderColor: active ? "var(--color-ql-accent)" : "var(--color-ql-border)",
+                  background: active ? "var(--color-ql-accent)" : "transparent",
+                  color: active ? "var(--color-ql-bg)" : "var(--color-ql-muted)",
+                }}
+              >
+                {v}
+              </button>
+            );
+          })}
+        </div>
       )}
     </div>
   );
@@ -217,6 +278,12 @@ export default function WorkbenchDrawer({ open, onClose }: Props) {
   const pinMutation = useMutation({
     mutationFn: ({ id, pinned }: { id: string; pinned: boolean }) =>
       updateAsset(id, { pinned }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["workbench"] }),
+  });
+
+  const outcomeMutation = useMutation({
+    mutationFn: ({ id, actual_outcome }: { id: string; actual_outcome: string }) =>
+      updateAsset(id, { actual_outcome }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["workbench"] }),
   });
 
@@ -302,6 +369,7 @@ export default function WorkbenchDrawer({ open, onClose }: Props) {
               asset={asset}
               onPin={() => pinMutation.mutate({ id: asset.id, pinned: !asset.pinned })}
               onDelete={() => deleteMutation.mutate(asset.id)}
+              onSetOutcome={(outcome) => outcomeMutation.mutate({ id: asset.id, actual_outcome: outcome })}
             />
           ))}
         </div>

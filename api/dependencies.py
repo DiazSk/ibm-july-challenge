@@ -107,3 +107,53 @@ def get_voice_transcriber():
 def get_voice_synthesizer():
     from src.generation.voice_synthesizer import VoiceSynthesizer
     return VoiceSynthesizer()
+
+
+@lru_cache(maxsize=1)
+def get_confidence_scorer():
+    from src.generation.confidence_scorer import ConfidenceScorer
+    return ConfidenceScorer()
+
+
+@lru_cache(maxsize=1)
+def get_persona_simulator():
+    from src.generation.resonance_simulator import PersonaSimulator
+    return PersonaSimulator()
+
+
+@lru_cache(maxsize=1)
+def get_resonance_synthesizer():
+    from src.generation.resonance_simulator import ResonanceSynthesizer
+    return ResonanceSynthesizer()
+
+
+@lru_cache(maxsize=1)
+def get_weekly_brief_planner():
+    from src.generation.weekly_brief import WeeklyBriefPlanner
+    return WeeklyBriefPlanner()
+
+
+@lru_cache(maxsize=1)
+def get_brand_guardian():
+    from src.generation.brand_guardian import BrandGuardian
+    return BrandGuardian()
+
+
+@lru_cache(maxsize=1)
+def get_brand_drift_analyzer():
+    from src.generation.brand_drift import BrandDriftAnalyzer
+    return BrandDriftAnalyzer()
+
+
+@lru_cache(maxsize=1)
+def get_comment_triager():
+    from src.generation.comment_triage import CommentTriager
+    return CommentTriager()
+
+
+@lru_cache(maxsize=1)
+def get_sentence_embedder():
+    # Model weights only — never goes stale, intentionally excluded from
+    # onboard.py's _clear_caches().
+    from sentence_transformers import SentenceTransformer
+    return SentenceTransformer("all-MiniLM-L6-v2")

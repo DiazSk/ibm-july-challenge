@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getBrandProfile, getWorkbenchAssets } from "@/lib/api";
 import WorkbenchDrawer from "@/components/workbench/WorkbenchDrawer";
+import { useWorkbenchDrawer } from "@/lib/workbench-drawer-context";
 
 export default function StudioHeader() {
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  const { open: drawerOpen, setOpen: setDrawerOpen } = useWorkbenchDrawer();
 
   const { data: profile } = useQuery({
     queryKey: ["brand-profile"],

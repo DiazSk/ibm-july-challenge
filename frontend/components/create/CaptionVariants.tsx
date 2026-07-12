@@ -11,6 +11,12 @@ interface Props {
   imageLoading: boolean;
   regenerateLoading: boolean;
   onPin?: (caption: string) => void;
+  onResonanceCheck?: () => void;
+  resonanceLoading?: boolean;
+  winnerIndex?: number | null;
+  onGuardianReview?: (caption: string, idx: number) => void;
+  guardianLoadingIdx?: number | null;
+  usedRealOutcomes?: number;
 }
 
 export default function CaptionVariants({
@@ -21,6 +27,12 @@ export default function CaptionVariants({
   imageLoading,
   regenerateLoading,
   onPin,
+  onResonanceCheck,
+  resonanceLoading,
+  winnerIndex,
+  onGuardianReview,
+  guardianLoadingIdx,
+  usedRealOutcomes,
 }: Props) {
   const [copied, setCopied] = useState<number | null>(null);
   const [pinnedSet, setPinnedSet] = useState<Set<number>>(new Set());
@@ -41,27 +53,58 @@ export default function CaptionVariants({
   return (
     <div className="mt-6">
       <div className="flex items-center justify-between mb-3">
-        <p
-          className="text-[11px] font-medium uppercase tracking-[0.12em]"
-          style={{ color: "var(--color-ql-muted)" }}
-        >
-          Caption Variants
-        </p>
-        <button
-          onClick={onRegenerate}
-          disabled={regenerateLoading}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] rounded-lg border transition-colors disabled:opacity-50"
-          style={{
-            borderColor: "var(--color-ql-border)",
-            color: "var(--color-ql-muted)",
-          }}
-        >
-          {regenerateLoading ? (
-            <span className="animate-pulse">Generating…</span>
-          ) : (
-            "Regenerate"
+        <div className="flex items-center gap-2">
+          <p
+            className="text-[11px] font-medium uppercase tracking-[0.12em]"
+            style={{ color: "var(--color-ql-muted)" }}
+          >
+            Caption Variants
+          </p>
+          {!!usedRealOutcomes && usedRealOutcomes > 0 && (
+            <span
+              className="text-[9px] px-1.5 py-0.5 rounded-full"
+              style={{ background: "var(--color-ql-accent)", color: "var(--color-ql-bg)" }}
+              title="This generation factored in real reported outcomes from your Workbench"
+            >
+              Calibrated using {usedRealOutcomes} real outcome{usedRealOutcomes === 1 ? "" : "s"} so far
+            </span>
           )}
-        </button>
+        </div>
+        <div className="flex gap-2">
+          {onResonanceCheck && (
+            <button
+              onClick={onResonanceCheck}
+              disabled={resonanceLoading}
+              title="Simulate how 3 audience personas would react before you post"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] rounded-lg border transition-colors disabled:opacity-50"
+              style={{
+                borderColor: "var(--color-ql-accent)",
+                color: "var(--color-ql-accent)",
+              }}
+            >
+              {resonanceLoading ? (
+                <span className="animate-pulse">Consulting three personas…</span>
+              ) : (
+                "Run Resonance Check"
+              )}
+            </button>
+          )}
+          <button
+            onClick={onRegenerate}
+            disabled={regenerateLoading}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] rounded-lg border transition-colors disabled:opacity-50"
+            style={{
+              borderColor: "var(--color-ql-border)",
+              color: "var(--color-ql-muted)",
+            }}
+          >
+            {regenerateLoading ? (
+              <span className="animate-pulse">Generating…</span>
+            ) : (
+              "Regenerate"
+            )}
+          </button>
+        </div>
       </div>
       <div className="flex flex-col gap-3">
         {captions.map((c, i) => (
@@ -69,16 +112,26 @@ export default function CaptionVariants({
             key={i}
             className="rounded-xl border p-4"
             style={{
-              borderColor: "var(--color-ql-border)",
+              borderColor: winnerIndex === i ? "var(--color-ql-accent)" : "var(--color-ql-border)",
               background: "var(--color-ql-card)",
             }}
           >
             <div className="flex items-start justify-between gap-3">
-              <span
-                className="text-[10px] font-medium uppercase tracking-[0.1em] shrink-0 mt-0.5"
-                style={{ color: "var(--color-ql-accent)" }}
-              >
-                V{i + 1}
+              <span className="flex items-center gap-2 shrink-0 mt-0.5">
+                <span
+                  className="text-[10px] font-medium uppercase tracking-[0.1em]"
+                  style={{ color: "var(--color-ql-accent)" }}
+                >
+                  V{i + 1}
+                </span>
+                {winnerIndex === i && (
+                  <span
+                    className="text-[9px] font-medium uppercase tracking-[0.08em] px-1.5 py-0.5 rounded-full"
+                    style={{ background: "var(--color-ql-accent)", color: "var(--color-ql-bg)" }}
+                  >
+                    Panel&apos;s Pick
+                  </span>
+                )}
               </span>
               <p
                 className="flex-1 text-sm leading-relaxed whitespace-pre-wrap"
@@ -139,6 +192,24 @@ export default function CaptionVariants({
               >
                 {imageLoading ? "Generating…" : "→ Image Direction"}
               </button>
+              {onGuardianReview && (
+                <button
+                  onClick={() => onGuardianReview(c.caption, i)}
+                  disabled={guardianLoadingIdx !== null && guardianLoadingIdx !== undefined}
+                  title="Put this caption through an adversarial brand-voice review"
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] rounded-lg border transition-colors disabled:opacity-50"
+                  style={{
+                    borderColor: "var(--color-ql-border)",
+                    color: "var(--color-ql-muted)",
+                  }}
+                >
+                  {guardianLoadingIdx === i ? (
+                    <span className="animate-pulse">On trial…</span>
+                  ) : (
+                    "Put on Trial"
+                  )}
+                </button>
+              )}
             </div>
           </div>
         ))}

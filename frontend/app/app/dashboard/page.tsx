@@ -1,15 +1,19 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   getBrandProfile,
   getClusters,
   getWorkbenchAssets,
   getStrategicInsights,
+  startWeeklyBrief,
+  getWeeklyBriefStatus,
 } from "@/lib/api";
-import type { WorkbenchAsset } from "@/lib/types";
+import type { WorkbenchAsset, WeeklyBriefStatus } from "@/lib/types";
+import { useWorkbenchDrawer } from "@/lib/workbench-drawer-context";
 
 const CLUSTER_COLORS = [
   "var(--color-cluster-0)",
@@ -26,12 +30,15 @@ const ASSET_LABELS: Record<string, string> = {
   carousel: "Carousel",
   static_script: "Static Post",
   recovery_brief: "Recovery Brief",
+  weekly_brief_draft: "Weekly Brief Draft",
+  guardian_refined_caption: "Guardian-Refined Caption",
+  triage_reply: "Drafted Reply",
 };
 
 function previewText(asset: WorkbenchAsset): string {
   if (typeof asset.content === "string") return asset.content;
   const obj = asset.content as Record<string, unknown>;
-  return String(obj.hook ?? obj.caption ?? obj.headline ?? obj.new_hook ?? "Saved asset");
+  return String(obj.hook ?? obj.caption ?? obj.headline ?? obj.new_hook ?? obj.drafted_reply ?? "Saved asset");
 }
 
 function timeAgo(iso: string): string {
@@ -65,6 +72,9 @@ function KpiCard({ label, value }: { label: string; value: string | number }) {
 }
 
 export default function DashboardPage() {
+  const queryClient = useQueryClient();
+  const { setOpen: setDrawerOpen } = useWorkbenchDrawer();
+
   const { data: profile } = useQuery({ queryKey: ["brand-profile"], queryFn: getBrandProfile });
   const { data: clusters } = useQuery({ queryKey: ["clusters"], queryFn: getClusters });
   const { data: assets = [] } = useQuery({
@@ -75,6 +85,53 @@ export default function DashboardPage() {
     queryKey: ["strategic-insights"],
     queryFn: getStrategicInsights,
   });
+
+  const [wbJobId, setWbJobId] = useState<string | null>(null);
+  const [wbStatus, setWbStatus] = useState<WeeklyBriefStatus | null>(null);
+  const [wbLost, setWbLost] = useState(false);
+  const [wbStarting, setWbStarting] = useState(false);
+
+  useEffect(() => {
+    if (!wbJobId || wbLost) return;
+    if (wbStatus?.status === "done" || wbStatus?.status === "error") return;
+
+    let failCount = 0;
+    const id = setInterval(async () => {
+      try {
+        const s = await getWeeklyBriefStatus(wbJobId);
+        setWbStatus(s);
+        failCount = 0;
+        if (s.status === "done") {
+          clearInterval(id);
+          queryClient.invalidateQueries({ queryKey: ["workbench"] });
+        } else if (s.status === "error") {
+          clearInterval(id);
+        }
+      } catch {
+        failCount += 1;
+        if (failCount >= 3) {
+          clearInterval(id);
+          setWbLost(true);
+        }
+      }
+    }, 3000);
+
+    return () => clearInterval(id);
+  }, [wbJobId, wbStatus?.status, wbLost, queryClient]);
+
+  async function handleStartWeeklyBrief() {
+    setWbStarting(true);
+    try {
+      const { job_id } = await startWeeklyBrief(2);
+      setWbJobId(job_id);
+      setWbStatus({ status: "queued", progress: 0, message: "Starting…" });
+      setWbLost(false);
+    } catch {
+      // leave idle; button remains clickable to retry
+    } finally {
+      setWbStarting(false);
+    }
+  }
 
   const clusterList = clusters
     ? Object.values(clusters).sort((a, b) => a.cluster_id - b.cluster_id)
@@ -138,6 +195,84 @@ export default function DashboardPage() {
           </Link>
         </div>
       )}
+
+      {/* Weekly Brief Agent — proactive content planning for underused pillars */}
+      <div
+        className="rounded-xl border p-5"
+        style={{
+          borderColor: "var(--color-ql-accent)",
+          background: "color-mix(in oklch, var(--color-ql-accent) 6%, transparent)",
+        }}
+      >
+        <p
+          className="text-[10px] font-medium uppercase tracking-[0.15em] mb-2"
+          style={{ color: "var(--color-ql-accent)" }}
+        >
+          Weekly Brief Agent
+        </p>
+
+        {!wbJobId && (
+          <>
+            <p className="text-sm leading-relaxed mb-3" style={{ color: "var(--color-ql-dark)" }}>
+              Let Granite scout your most underused content pillar and draft a few ready-to-post ideas for this week.
+            </p>
+            <button
+              onClick={handleStartWeeklyBrief}
+              disabled={wbStarting}
+              className="text-[11px] font-medium px-3 py-1.5 rounded-lg border"
+              style={{
+                borderColor: "var(--color-ql-accent)",
+                color: "var(--color-ql-accent)",
+                opacity: wbStarting ? 0.6 : 1,
+              }}
+            >
+              {wbStarting ? "Starting…" : "Generate This Week's Brief"}
+            </button>
+          </>
+        )}
+
+        {wbJobId && wbLost && (
+          <p className="text-sm leading-relaxed" style={{ color: "var(--color-ql-dark)" }}>
+            Job may have been interrupted — check Workbench for any completed drafts.
+          </p>
+        )}
+
+        {wbJobId && !wbLost && wbStatus && wbStatus.status !== "done" && wbStatus.status !== "error" && (
+          <div>
+            <p className="text-sm mb-2" style={{ color: "var(--color-ql-dark)" }}>
+              {wbStatus.message}
+            </p>
+            <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "var(--color-ql-gap)" }}>
+              <div
+                className="h-full rounded-full transition-all"
+                style={{ width: `${wbStatus.progress}%`, background: "var(--color-ql-accent)" }}
+              />
+            </div>
+          </div>
+        )}
+
+        {wbJobId && !wbLost && wbStatus?.status === "error" && (
+          <p className="text-sm" style={{ color: "var(--color-ql-dark)" }}>
+            Something went wrong generating the brief. Check Workbench, or try again.
+          </p>
+        )}
+
+        {wbJobId && !wbLost && wbStatus?.status === "done" && (
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <p className="text-sm" style={{ color: "var(--color-ql-dark)" }}>
+              {wbStatus.n ?? "A few"} draft{wbStatus.n === 1 ? "" : "s"} ready
+              {wbStatus.cluster_label ? ` for ${wbStatus.cluster_label}` : ""}.
+            </p>
+            <button
+              onClick={() => setDrawerOpen(true)}
+              className="text-[11px] font-medium"
+              style={{ color: "var(--color-ql-accent)" }}
+            >
+              Review drafts →
+            </button>
+          </div>
+        )}
+      </div>
 
       <div className="grid md:grid-cols-2 gap-6">
         {/* Content pillars */}

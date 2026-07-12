@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { getBrandProfile, getClusters } from "@/lib/api";
+import DriftWatchdogPanel from "@/components/brand/DriftWatchdogPanel";
 
 const CLUSTER_COLORS = [
   "var(--color-cluster-0)",
@@ -186,6 +187,8 @@ export default function BrandVoicePage() {
           ))}
         </div>
       </div>
+
+      <DriftWatchdogPanel />
     </motion.div>
   );
 }

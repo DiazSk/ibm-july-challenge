@@ -43,6 +43,11 @@ export interface Caption {
   reasoning: string;
 }
 
+export interface CaptionsGenerateResponse {
+  captions: Caption[];
+  used_real_outcomes: number;
+}
+
 export interface ImagePromptResult {
   prompt: string;
   style_notes: string;
@@ -78,6 +83,110 @@ export interface WhyEngineResult {
     recovery_script: string;
     reasoning: string;
   };
+  confidence?: { score: number; rationale: string };
+  repurpose_job_id?: string;
+}
+
+export interface RepurposeStatus {
+  status: "queued" | "running" | "done" | "error";
+  progress: number;
+  message: string;
+  batch_id?: string;
+}
+
+// Resonance Simulator
+export interface PersonaReaction {
+  persona: string;
+  predicted_resonance: number;
+  emotional_polarity: string;
+  critique_per_caption: string[];
+}
+export interface ResonanceSynthesis {
+  winner_index: number;
+  predicted_resonance_score: number;
+  reasoning: string;
+  top_actionable_fix: string;
+}
+export interface ResonanceResult {
+  persona_reactions: PersonaReaction[];
+  synthesis: ResonanceSynthesis;
+}
+
+// Brand Guardian Courtroom
+export interface GuardianCritique {
+  verdict: "approve" | "needs_revision";
+  issues: string[];
+  severity: "none" | "minor" | "major";
+  reasoning: string;
+}
+export interface GuardianRound {
+  round: number;
+  caption: string;
+  critique: GuardianCritique;
+}
+export interface GuardianReviewResult {
+  final_caption: string;
+  converged: boolean;
+  rounds_used: number;
+  best_so_far: boolean;
+  history: GuardianRound[];
+}
+
+// Brand Drift Watchdog
+export interface DriftSimilaritySignal {
+  mean_similarity: number;
+  sample_size_used: number;
+  direction: "similar" | "diverging" | "very_different";
+}
+export interface DriftCheckResult {
+  nearest_cluster_id: number;
+  cluster_label: string;
+  similarity_signal: DriftSimilaritySignal;
+  drift_detected: boolean;
+  drift_summary: string;
+  specific_changes: string[];
+  still_on_brand: string[];
+  severity: "none" | "mild" | "significant";
+}
+
+// Comment/DM Triage
+export interface TriageResult {
+  message_index: number;
+  original_message: string;
+  category: "order_inquiry" | "compliment" | "complaint" | "spam" | "uncertain";
+  drafted_reply: string;
+  reasoning: string;
+}
+export interface TriageBatchResponse {
+  results: TriageResult[];
+  total: number;
+}
+
+// Weekly Brief Agent
+export interface WeeklyBriefStatus {
+  status: "queued" | "running" | "done" | "error";
+  progress: number;
+  message: string;
+  batch_id?: string;
+  n?: number;
+  cluster_label?: string;
+  notified?: boolean;
+}
+export interface WeeklyBriefDraft {
+  batch_id: string;
+  scenario_index: number;
+  scenario_text: string;
+  rationale: string;
+  caption: string;
+  image_prompt: string;
+  style_notes: string;
+}
+export interface WeeklyBriefPendingNotice {
+  pending: boolean;
+  job_id?: string;
+  batch_id?: string;
+  n?: number;
+  cluster_label?: string;
 }
 
 // Workbench
@@ -209,6 +318,7 @@ export interface BoostAdvisorResult {
   dont_boost_cluster_id: number;
   dont_boost_cluster_name: string;
   dont_boost_reason: string;
+  confidence?: { score: number; rationale: string };
 }
 
 // Voice loop

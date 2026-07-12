@@ -1,6 +1,7 @@
 "use client";
 
 import type { BoostAdvisorResult } from "@/lib/types";
+import ConfidenceBadge from "@/components/shared/ConfidenceBadge";
 
 const CLUSTER_COLORS: Record<number, string> = {
   0: "var(--color-cluster-0)",
@@ -42,6 +43,9 @@ export default function BoostAdvisor({ result }: Props) {
           >
             C{result.boost_cluster_id} · {result.boost_cluster_name}
           </span>
+          {result.confidence && (
+            <ConfidenceBadge score={result.confidence.score} rationale={result.confidence.rationale} />
+          )}
         </div>
 
         {/* Best post hook */}

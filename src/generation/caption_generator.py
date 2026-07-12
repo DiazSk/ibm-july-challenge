@@ -41,7 +41,7 @@ Content brief:
   Occasion : {occasion}
   Feel     : {desired_feel}
 
-Write 3 distinct Instagram caption variants. Each must:
+{performance_signal_block}Write 3 distinct Instagram caption variants. Each must:
 - Match the brand voice profile above
 - Stay under 150 words
 - Not use any of the avoided terms
@@ -72,7 +72,7 @@ _PROMPT = PromptTemplate(
     input_variables=[
         "brand_name", "content_pillar", "tone_descriptors", "recurring_words",
         "signature_phrases", "emoji_style", "structural_signature", "avoided_terms",
-        "product", "occasion", "desired_feel", "exclusion_block",
+        "product", "occasion", "desired_feel", "exclusion_block", "performance_signal_block",
     ],
     template=_TEMPLATE,
 )
@@ -137,11 +137,16 @@ class CaptionGenerator:
         desired_feel: str,
         cluster_id: int = 0,
         previous_captions: list[str] | None = None,
+        performance_context: str | None = None,
     ) -> list[dict]:
         """
         Returns a list of 3 dicts: [{caption, reasoning}, ...].
         Falls back to cluster 0 if the requested cluster_id is not found.
         Pass previous_captions to guarantee the new batch differs from prior ones.
+        Pass performance_context (a short summary of real reported outcomes for
+        this cluster) to calibrate generation against actual past performance —
+        omit it (default None) for byte-identical output to callers that don't
+        pass it.
         """
         cluster = next(
             (c for c in self._profile["cluster_profiles"] if c["cluster_id"] == cluster_id),
@@ -164,6 +169,13 @@ class CaptionGenerator:
         llm = OllamaLLM(model=self._llm.model, temperature=temperature, num_predict=900)
         chain = _PROMPT | llm
 
+        performance_signal_block = (
+            f"Real performance feedback from this creator's own recent posts in "
+            f"this pillar (use to calibrate tone/approach, not to copy verbatim):\n"
+            f"{performance_context}\n\n"
+            if performance_context else ""
+        )
+
         raw = chain.invoke({
             "brand_name"          : self._profile["brand_name"],
             "content_pillar"      : p.get("content_pillar", "product_showcase"),
@@ -177,6 +189,7 @@ class CaptionGenerator:
             "occasion"            : occasion,
             "desired_feel"        : desired_feel or "on-brand and engaging",
             "exclusion_block"     : exclusion_block,
+            "performance_signal_block": performance_signal_block,
         })
 
         try:

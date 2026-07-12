@@ -6,11 +6,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import BlankPageSolver from "@/components/create/BlankPageSolver";
 import CaptionBrief from "@/components/create/CaptionBrief";
 import CaptionVariants from "@/components/create/CaptionVariants";
+import ResonancePanel from "@/components/create/ResonancePanel";
+import GuardianPanel from "@/components/create/GuardianPanel";
 import ImageDirectionCard from "@/components/create/ImageDirectionCard";
 import ScriptStudio from "@/components/create/ScriptStudio";
-import { generateCaptions, generateImagePrompt, saveAsset } from "@/lib/api";
+import { generateCaptions, generateImagePrompt, saveAsset, runResonanceCheck, runGuardianReview } from "@/lib/api";
 import { useLocalStorage } from "@/lib/useLocalStorage";
-import type { Caption, ImagePromptResult } from "@/lib/types";
+import type { Caption, ImagePromptResult, ResonanceResult, GuardianReviewResult } from "@/lib/types";
 
 export default function CreatePage() {
   const queryClient = useQueryClient();
@@ -28,6 +30,11 @@ export default function CreatePage() {
   const [allPreviousCaptions, setAllPreviousCaptions] = useState<string[]>([]);
   const [imageResult, setImageResult] = useState<ImagePromptResult | null>(null);
   const [imageLoading, setImageLoading] = useState(false);
+  const [resonanceResult, setResonanceResult] = useState<ResonanceResult | null>(null);
+  const [resonanceLoading, setResonanceLoading] = useState(false);
+  const [guardianResult, setGuardianResult] = useState<GuardianReviewResult | null>(null);
+  const [guardianLoadingIdx, setGuardianLoadingIdx] = useState<number | null>(null);
+  const [usedRealOutcomes, setUsedRealOutcomes] = useState(0);
 
   function handleClearBrief() {
     clearProduct();
@@ -37,6 +44,9 @@ export default function CreatePage() {
     setCaptions([]);
     setAllPreviousCaptions([]);
     setImageResult(null);
+    setResonanceResult(null);
+    setGuardianResult(null);
+    setUsedRealOutcomes(0);
   }
 
   function handleBlankPageApply(feel: string, cId: number) {
@@ -48,6 +58,8 @@ export default function CreatePage() {
     setCaptionLoading(true);
     setCaptions([]);
     setImageResult(null);
+    setResonanceResult(null);
+    setGuardianResult(null);
     try {
       const result = await generateCaptions({
         product,
@@ -55,8 +67,9 @@ export default function CreatePage() {
         desired_feel: desiredFeel,
         cluster_id: clusterId,
       });
-      setCaptions(result);
-      setAllPreviousCaptions(result.map((c) => c.caption));
+      setCaptions(result.captions);
+      setUsedRealOutcomes(result.used_real_outcomes);
+      setAllPreviousCaptions(result.captions.map((c) => c.caption));
     } catch {
       // silent — user can retry
     } finally {
@@ -67,6 +80,8 @@ export default function CreatePage() {
   async function handleRegenerate() {
     setRegenerateLoading(true);
     setImageResult(null);
+    setResonanceResult(null);
+    setGuardianResult(null);
     try {
       const result = await generateCaptions({
         product,
@@ -75,8 +90,9 @@ export default function CreatePage() {
         cluster_id: clusterId,
         previous_captions: allPreviousCaptions,
       });
-      setCaptions(result);
-      setAllPreviousCaptions((prev) => [...prev, ...result.map((c) => c.caption)]);
+      setCaptions(result.captions);
+      setUsedRealOutcomes(result.used_real_outcomes);
+      setAllPreviousCaptions((prev) => [...prev, ...result.captions.map((c) => c.caption)]);
     } catch {
       // silent
     } finally {
@@ -94,6 +110,51 @@ export default function CreatePage() {
       // silent
     } finally {
       setImageLoading(false);
+    }
+  }
+
+  async function handleResonanceCheck() {
+    setResonanceLoading(true);
+    setResonanceResult(null);
+    try {
+      const result = await runResonanceCheck(captions.map((c) => c.caption));
+      setResonanceResult(result);
+    } catch {
+      // silent — user can retry
+    } finally {
+      setResonanceLoading(false);
+    }
+  }
+
+  async function handleGuardianReview(caption: string, idx: number) {
+    setGuardianLoadingIdx(idx);
+    setGuardianResult(null);
+    try {
+      const result = await runGuardianReview(caption, clusterId);
+      setGuardianResult(result);
+    } catch {
+      // silent — user can retry
+    } finally {
+      setGuardianLoadingIdx(null);
+    }
+  }
+
+  async function handleSaveGuardianResult(result: GuardianReviewResult) {
+    try {
+      await saveAsset({
+        asset_type: "guardian_refined_caption",
+        content: {
+          caption: result.final_caption,
+          rounds_used: result.rounds_used,
+          converged: result.converged,
+          best_so_far: result.best_so_far,
+        },
+        cluster_id: clusterId,
+        source_tab: "guardian_review",
+      });
+      queryClient.invalidateQueries({ queryKey: ["workbench"] });
+    } catch {
+      // silent
     }
   }
 
@@ -143,7 +204,19 @@ export default function CreatePage() {
           imageLoading={imageLoading}
           regenerateLoading={regenerateLoading}
           onPin={handlePin}
+          onResonanceCheck={handleResonanceCheck}
+          resonanceLoading={resonanceLoading}
+          winnerIndex={resonanceResult?.synthesis.winner_index ?? null}
+          onGuardianReview={handleGuardianReview}
+          guardianLoadingIdx={guardianLoadingIdx}
+          usedRealOutcomes={usedRealOutcomes}
         />
+      )}
+
+      {resonanceResult && <ResonancePanel result={resonanceResult} />}
+
+      {guardianResult && (
+        <GuardianPanel result={guardianResult} onUse={() => handleSaveGuardianResult(guardianResult)} />
       )}
 
       {imageResult && <ImageDirectionCard result={imageResult} />}

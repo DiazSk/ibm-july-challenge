@@ -12,6 +12,7 @@ const NAV = [
   { href: "/app/create", label: "Generate", exact: false, icon: SparkIcon },
   { href: "/app/analyze", label: "Diagnose", exact: false, icon: PulseIcon },
   { href: "/app/discover", label: "Strategy", exact: false, icon: MapIcon },
+  { href: "/app/triage", label: "Inbox Triage", exact: false, icon: InboxIcon },
 ] as const;
 
 export default function StudioSidebar() {
@@ -122,6 +123,14 @@ function MapIcon({ className = "", style }: { className?: string; style?: React.
   return (
     <svg viewBox="0 0 20 20" className={className} style={style} fill="none" stroke="currentColor" strokeWidth="1.6">
       <path d="M2 5l5-2 6 2 5-2v12l-5 2-6-2-5 2z M7 3v14 M13 5v14" />
+    </svg>
+  );
+}
+function InboxIcon({ className = "", style }: { className?: string; style?: React.CSSProperties }) {
+  return (
+    <svg viewBox="0 0 20 20" className={className} style={style} fill="none" stroke="currentColor" strokeWidth="1.6">
+      <path d="M2 11l3-7h10l3 7v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5z" strokeLinejoin="round" />
+      <path d="M2 11h4.5l1 2h5l1-2H18" strokeLinejoin="round" />
     </svg>
   );
 }

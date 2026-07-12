@@ -17,7 +17,12 @@ from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
 
-from api.dependencies import get_voice_timeline, get_strategic_insights, get_boost_advisor
+from api.dependencies import (
+    get_voice_timeline,
+    get_strategic_insights,
+    get_boost_advisor,
+    get_confidence_scorer,
+)
 
 router = APIRouter()
 
@@ -195,6 +200,17 @@ def _compute_boost_advisor() -> dict:
 
     advisor = get_boost_advisor()
     result  = advisor.generate(scores, cluster_engagement, profile)
+
+    try:
+        context_summary = (
+            f"Boost recommendation for {result.get('boost_cluster_name', '')} "
+            f"vs avoiding {result.get('dont_boost_cluster_name', '')}"
+        )
+        output_summary = result.get("reasoning", "")
+        result["confidence"] = get_confidence_scorer().score(context_summary, output_summary)
+    except Exception:
+        pass  # non-fatal — confidence badge just won't render if this fails
+
     return result
 
 
