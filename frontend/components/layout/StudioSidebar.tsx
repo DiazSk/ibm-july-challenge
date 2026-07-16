@@ -7,12 +7,13 @@ import { getBrandProfile } from "@/lib/api";
 import { BrandMark } from "@/components/site-chrome";
 
 const NAV = [
-  { href: "/app/dashboard", label: "Dashboard", exact: true, icon: DashboardIcon },
-  { href: "/app/brand", label: "Brand voice", exact: false, icon: VoiceIcon },
-  { href: "/app/create", label: "Generate", exact: false, icon: SparkIcon },
-  { href: "/app/analyze", label: "Diagnose", exact: false, icon: PulseIcon },
-  { href: "/app/discover", label: "Strategy", exact: false, icon: MapIcon },
-  { href: "/app/triage", label: "Inbox Triage", exact: false, icon: InboxIcon },
+  { href: "/app/dashboard", label: "Dashboard",   exact: true,  icon: DashboardIcon },
+  { href: "/app/brand",     label: "Brand voice",  exact: false, icon: VoiceIcon },
+  { href: "/app/create",    label: "Generate",     exact: false, icon: SparkIcon },
+  { href: "/app/analyze",   label: "Diagnose",     exact: false, icon: PulseIcon },
+  { href: "/app/discover",  label: "Strategy",     exact: false, icon: MapIcon },
+  { href: "/app/agents",    label: "Agents",       exact: false, icon: AgentsIcon },
+  { href: "/app/triage",    label: "Inbox Triage", exact: false, icon: InboxIcon },
 ] as const;
 
 export default function StudioSidebar() {
@@ -131,6 +132,16 @@ function InboxIcon({ className = "", style }: { className?: string; style?: Reac
     <svg viewBox="0 0 20 20" className={className} style={style} fill="none" stroke="currentColor" strokeWidth="1.6">
       <path d="M2 11l3-7h10l3 7v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5z" strokeLinejoin="round" />
       <path d="M2 11h4.5l1 2h5l1-2H18" strokeLinejoin="round" />
+    </svg>
+  );
+}
+function AgentsIcon({ className = "", style }: { className?: string; style?: React.CSSProperties }) {
+  return (
+    <svg viewBox="0 0 20 20" className={className} style={style} fill="none" stroke="currentColor" strokeWidth="1.6">
+      <circle cx="7" cy="7" r="3" />
+      <circle cx="13" cy="7" r="3" />
+      <circle cx="10" cy="14" r="3" />
+      <path d="M7 10v1M13 10v1M10 10v1" strokeLinecap="round" />
     </svg>
   );
 }

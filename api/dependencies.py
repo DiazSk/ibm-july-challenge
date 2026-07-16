@@ -157,3 +157,16 @@ def get_sentence_embedder():
     # onboard.py's _clear_caches().
     from sentence_transformers import SentenceTransformer
     return SentenceTransformer("all-MiniLM-L6-v2")
+
+
+@lru_cache(maxsize=1)
+def get_memory_store():
+    from src.memory.store import AgentMemoryStore
+    return AgentMemoryStore()
+
+
+@lru_cache(maxsize=1)
+def get_orchestrator():
+    from src.agents.orchestrator import StyleSyncOrchestrator
+    memory = get_memory_store()
+    return StyleSyncOrchestrator(memory=memory)

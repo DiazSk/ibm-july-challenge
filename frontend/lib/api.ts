@@ -23,6 +23,9 @@ import type {
   TriageBatchResponse,
   WeeklyBriefStatus,
   WeeklyBriefPendingNotice,
+  OrchestrateRequest,
+  OrchestrateResponse,
+  MemoryStatusResponse,
 } from "./types";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
@@ -222,6 +225,16 @@ export async function deleteAsset(id: string): Promise<void> {
     throw new Error(`${res.status} ${text}`);
   }
 }
+
+// Multi-Agent Orchestrator
+export const runOrchestration = (req: OrchestrateRequest) =>
+  apiFetch<OrchestrateResponse>("/api/orchestrate", {
+    method: "POST",
+    body: JSON.stringify(req),
+  });
+
+export const getMemoryStatus = () =>
+  apiFetch<MemoryStatusResponse>("/api/orchestrate/memory-status");
 
 export async function uploadExport(
   file      : File,

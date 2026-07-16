@@ -6,6 +6,7 @@ scraped_dataset/
 
 # Data
 data/cleaned/
+data/chroma/
 
 # __pycache__
 __pycache__/

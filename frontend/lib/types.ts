@@ -327,6 +327,54 @@ export interface VoiceRefineResult {
   reasoning: string;
 }
 
+// Multi-Agent Orchestrator
+export interface OrchestrateRequest {
+  task_type: "single_caption" | "full_campaign" | "post_mortem" | "trend_briefing" | "community_triage";
+  payload: Record<string, unknown>;
+}
+
+export interface CriticHistoryEntry {
+  cycle:      number;
+  error_type: "ai_slop" | "off_brand_vocab" | "wrong_platform" | "factual_gap" | "approved";
+  flagged:    string;
+  fix:        string;
+}
+
+export interface CampaignBrief {
+  product:   string;
+  occasion:  string;
+  platform:  "instagram" | "tiktok" | "linkedin";
+  threshold: 70 | 80 | 90;
+  useTrends: boolean;
+}
+
+export interface OrchestrateResponse {
+  task_type:          string;
+  topology:           string;
+  results:            Record<string, unknown>;
+  agents_used:        string[];
+  cycles:             number;
+  memory_written:     boolean;
+  human_review_flag:  boolean;
+  convergence_reason?: "goal_met" | "plateau" | "factual_gap" | "max_cycles";
+  success:            boolean;
+  error_message?:     string | null;
+}
+
+export interface MemoryStatusResponse {
+  semantic:   number;
+  episodic:   number;
+  procedural: number;
+}
+
+export interface TrendBriefing {
+  micro_trends:     { trend: string; relevance: string; urgency: "high" | "medium" | "low" }[];
+  content_hooks:    string[];
+  suggested_angles: { angle: string; cluster: string; format: string; why_now: string }[];
+  briefing_summary: string;
+  sources_searched: number;
+}
+
 // JARVIS agent
 export type ActionResultType =
   | "caption"
