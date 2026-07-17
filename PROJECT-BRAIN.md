@@ -1,7 +1,7 @@
 # StyleSync — PROJECT BRAIN
 
 > Complete context dump for resuming work on any machine.  
-> Last updated: 2026-07-11. Covers the entire project from day 0 to current state.
+> Last updated: 2026-07-16. Covers the entire project from day 0 to current state.
 
 ---
 
@@ -30,7 +30,7 @@
 - Brand voice is derived from observed behavior (100+ posts), not user self-description
 - Post-failure diagnosis explains *why* — not just what the metrics say
 - Strategy signal identifies underutilized vs over-invested content territory
-- 14 coordinated Granite invocations, zero third-party AI at inference
+- 22 coordinated Granite invocations, zero third-party AI at inference
 - All audio, data, and inference stays local — the demo works in a room with no internet
 
 ---
@@ -159,6 +159,54 @@ Full end-to-end QA (frontend UI → backend API → Granite generation) against 
 - **Backend fix B2 (Medium)** — `image_prompt_generator.py` occasionally received malformed JSON from Granite (missing comma) and fell back to dumping the raw garbled LLM output into the UI. Added a 3-layer parse strategy: direct `json.loads` → comma-repair regex retry → last-resort regex field extraction. Verified against the exact malformed text captured during QA.
 - **Backend fix B3 (Medium)** — `boost_advisor.py`'s `boost_cluster_id`/`boost_cluster_name` (and `dont_boost_*`) could disagree, since Granite free-generates the name independently of the ID it also produces. The code already overrode `boost_post_hook` from the authoritative `cluster_engagement` dict by ID but wasn't doing the same for the name fields — extended that existing pattern to also correct both name fields. Deterministic fix (not probabilistic like B1) — verified correct across a cache-cleared fresh Granite generation.
 
+### Epoch 16 — Multi-Agent Architecture (2026-07-14)
+
+**Major addition:** a full 7-agent layer on top of the existing `src/generation/` modules, coordinated by an adaptive-topology orchestrator.
+
+New files:
+- `src/memory/store.py` — `AgentMemoryStore` (ChromaDB, 3 collections: semantic brand voice, episodic past outcomes, procedural platform rules)
+- `src/agents/base.py` — `AgentTask`, `AgentResult`, `BaseAgent.safe_run()` (try/except wrapper, structured output contract)
+- `src/agents/brand_voice_agent.py` — `BrandVoiceAgent` (detect_drift, enforce_vocabulary)
+- `src/agents/copywriting_agent.py` — `CopywritingAgent` (generate_caption, rewrite_caption, reformat_caption)
+- `src/agents/critic_agent.py` — `CriticAgent` (Granite #21 — classifies errors as `ai_slop`, `off_brand_vocab`, `wrong_platform`, `factual_gap`, `approved`)
+- `src/agents/analytics_agent.py` — `AnalyticsAgent` (why_engine, pre_score, strategic_insights)
+- `src/agents/community_agent.py` — `CommunityAgent` (triage_comments)
+- `src/agents/visual_agent.py` — `VisualAgent` (generate_image_prompt)
+- `src/agents/trend_agent.py` — `TrendAgent` (Granite #22 — trend_briefing synthesis)
+- `src/agents/orchestrator.py` — `StyleSyncOrchestrator` (adaptive topology: parallel / hierarchical / sequential / flat)
+- `api/routers/orchestrate.py` — `POST /api/orchestrate`, `GET /api/orchestrate/memory-status`
+- `frontend/app/app/agents/page.tsx` — Agent Studio page (7 agent cards, Trend Briefing, Run Full Campaign, Community Triage, memory status strip)
+
+Topology map:
+- `single_caption` → parallel: BrandVoice + Copywriting run concurrently
+- `full_campaign` → hierarchical: Copy → Critic loop → Visual + Analytics
+- `post_mortem` → sequential: Analytics → Community
+- `trend_briefing` → parallel: Trend + Analytics run concurrently
+- `community_triage` → flat: Community alone
+
+### Epoch 17 — Goal-Directed Agent Loop / Phase 2 (2026-07-16)
+
+**Problem:** the Epoch 16 orchestrator was a sophisticated pipeline — critic loop exited after 2 cycles regardless of output quality, confidence scorer only ran after the loop ended (too late to influence termination), and "Run Full Campaign" fired with a hardcoded payload. Not genuinely agentic.
+
+**What changed (4 files):**
+
+1. `src/agents/orchestrator.py`:
+   - `_MAX_CRITIC_CYCLES = 2` → `_MAX_SAFE_CYCLES = 8` + `_PLATEAU_WINDOW = 3`
+   - `convergence_reason: str = "max_cycles"` added to `OrchestratorResult` (`goal_met | plateau | factual_gap | max_cycles`)
+   - `_quick_score()` helper: inline `AnalyticsAgent.pre_score()` call during the loop
+   - `_rewrite_new_angle()` helper: called when critic approves but confidence < threshold (sensory-detail rewrite direction)
+   - `_run_full_campaign` rewritten: convergence loop exits on `approved AND score ≥ threshold`; plateau detection (Δ ≤ 2 for 3 cycles → `human_review_flag = True`); `trend_context` from frontend injected into `desired_feel` before first copy call
+   - `confidence_trajectory: list[int]` accumulated per cycle and returned in results
+
+2. `api/routers/orchestrate.py`: `convergence_reason` field added to `OrchestrateResponse`
+
+3. `frontend/lib/types.ts`: `CampaignBrief` interface added; `convergence_reason` added to `OrchestrateResponse`
+
+4. `frontend/app/app/agents/page.tsx`:
+   - `CampaignBriefModal` component: product/occasion, platform radio (Instagram/TikTok/LinkedIn), quality gate radio (70/80/90), trend hooks checkbox (auto-enabled if a trend briefing exists)
+   - `ConvergenceBadge` component: maps reason to colored pill (goal_met=green, plateau=amber, factual_gap=red, max_cycles=slate)
+   - Confidence path displayed as `61 → 74 → 88`
+
 ---
 
 ## 4. Current Architecture
@@ -171,10 +219,14 @@ ibm-july-challenge/
 │   └── routers/
 │       ├── brand.py              GET /brand/profile, /brand/clusters
 │       ├── create.py             POST analyze-moment, directions, captions, image-prompt, script
-│       ├── analyze.py            POST why-engine (chains Recovery Brief automatically)
+│       ├── analyze.py            POST why-engine, resonance, guardian, drift
 │       ├── discover.py           GET voice-timeline, strategic-insights, boost-advisor
 │       ├── workbench.py          CRUD /workbench/assets (SQLite)
 │       ├── onboard.py            POST start, upload; GET status, has-profile; POST reset-demo
+│       ├── repurpose.py          POST /repurpose, GET /repurpose/status/{batch_id}
+│       ├── weekly_brief.py       POST /weekly-brief/start; GET status, drafts, pending-notice
+│       ├── triage.py             POST /triage/batch
+│       ├── orchestrate.py        POST /orchestrate; GET /orchestrate/memory-status
 │       ├── agent.py              POST /agent/chat, GET /agent/session/{id}
 │       └── voice.py              POST /voice/transcribe, /voice/synthesize
 │
@@ -184,7 +236,7 @@ ibm-july-challenge/
 │   │   ├── cluster.py            K-Means clustering (sentence-transformers)
 │   │   └── profile_extractor.py  Brand Profile Extractor (Granite #1)
 │   ├── generation/
-│   │   ├── caption_generator.py  Granite #2
+│   │   ├── caption_generator.py  Granite #2 (+ performance_context calibration kwarg)
 │   │   ├── image_prompt_generator.py  Granite #3
 │   │   ├── why_engine.py         Granite #4
 │   │   ├── voice_timeline.py     Granite #5
@@ -195,8 +247,26 @@ ibm-july-challenge/
 │   │   ├── boost_advisor.py      Granite #11
 │   │   ├── voice_refiner.py      Granite #12 (legacy VoiceCapture, still present)
 │   │   ├── jarvis_agent.py       Granite #13 (JarvisAgent) + #14 (InspirationSynthesizer)
+│   │   ├── confidence_scorer.py  Granite #15
+│   │   ├── resonance_simulator.py Granite #16
+│   │   ├── weekly_brief.py       Granite #17
+│   │   ├── brand_guardian.py     Granite #18
+│   │   ├── brand_drift.py        Granite #19
+│   │   ├── comment_triage.py     Granite #20
 │   │   ├── voice_transcriber.py  faster-whisper STT (NOT Granite — local model)
 │   │   └── voice_synthesizer.py  Kokoro TTS (NOT Granite — local model)
+│   ├── agents/
+│   │   ├── base.py               AgentTask, AgentResult, BaseAgent (safe_run contract)
+│   │   ├── brand_voice_agent.py  BrandVoiceAgent (detect_drift, enforce_vocabulary)
+│   │   ├── copywriting_agent.py  CopywritingAgent (generate/rewrite/reformat caption)
+│   │   ├── critic_agent.py       CriticAgent — Granite #21 (error classifier)
+│   │   ├── analytics_agent.py    AnalyticsAgent (why_engine, pre_score, strategic_insights)
+│   │   ├── community_agent.py    CommunityAgent (triage_comments)
+│   │   ├── visual_agent.py       VisualAgent (generate_image_prompt)
+│   │   ├── trend_agent.py        TrendAgent — Granite #22 (trend_briefing synthesis)
+│   │   └── orchestrator.py       StyleSyncOrchestrator (adaptive topology)
+│   ├── memory/
+│   │   └── store.py              AgentMemoryStore (ChromaDB — semantic/episodic/procedural)
 │   └── tools/web_search.py       DuckDuckGo wrapper for JARVIS inspiration tool
 │
 ├── frontend/                     Next.js 16 App Router
@@ -220,7 +290,9 @@ ibm-july-challenge/
 │   │       │                          signature phrases, avoid list, pillar signature cards
 │   │       ├── create/page.tsx           "/app/create" — Create tab
 │   │       ├── analyze/page.tsx           "/app/analyze" — Analyze tab
-│   │       └── discover/page.tsx           "/app/discover" — Discover tab
+│   │       ├── discover/page.tsx           "/app/discover" — Discover tab
+│   │       ├── agents/page.tsx             "/app/agents" — Agent Studio
+│   │       └── triage/page.tsx             "/app/triage" — Comment/DM Triage
 │   ├── components/
 │   │   ├── site-chrome.tsx        BrandMark, SiteNav, SiteFooter (marketing chrome)
 │   │   ├── pillar-ring.tsx        Hero animated ring — driven by real @hot_cakesbakes data
@@ -275,6 +347,14 @@ ibm-july-challenge/
 | 12 | `VoiceRefiner` | `src/generation/voice_refiner.py` | Legacy VoiceCapture (still wired to `/api/create/voice-refine`) |
 | 13 | `JarvisAgent` | `src/generation/jarvis_agent.py` | JARVIS widget — every conversation turn |
 | 14 | `InspirationSynthesizer` | `src/generation/jarvis_agent.py` | JARVIS widget — when `search_inspiration` tool called |
+| 15 | `ConfidenceScorer` | `src/generation/confidence_scorer.py` | Analyze tab — auto-chained after Why Engine and Boost Advisor |
+| 16 | `ResonanceSimulator` (×3 persona + synthesis) | `src/generation/resonance_simulator.py` | Analyze tab — Resonance Simulator panel |
+| 17 | `WeeklyBriefAgent` | `src/generation/weekly_brief.py` | Dashboard — Weekly Brief background job |
+| 18 | `BrandGuardian` | `src/generation/brand_guardian.py` | Analyze tab — Brand Guardian Courtroom |
+| 19 | `BrandDriftWatchdog` | `src/generation/brand_drift.py` | Analyze tab — Brand Drift Watchdog |
+| 20 | `CommentTriage` | `src/generation/comment_triage.py` | Triage tab — Comment/DM batch classification |
+| 21 | `CriticAgent` | `src/agents/critic_agent.py` | Agent Studio — error type classifier inside convergence loop |
+| 22 | `TrendAgent` | `src/agents/trend_agent.py` | Agent Studio — trend briefing synthesis |
 
 All use `OllamaLLM(model="granite3.1-dense:8b")` via LangChain. Temperature varies by task (0.4–0.7).
 
@@ -472,6 +552,28 @@ DELETE /api/agent/session/{id}
 # Voice pipeline
 POST /api/voice/transcribe        multipart: audio=<blob>  → {transcript}
 POST /api/voice/synthesize        {text, voice?}           → audio/wav bytes
+
+# Analyze — new features (post-QA)
+POST /api/analyze/resonance       {captions: str[], cluster_id}
+POST /api/analyze/guardian        {caption, cluster_id}
+POST /api/analyze/drift           {pasted_posts: str[], cluster_id?}
+
+# Weekly Brief Agent
+POST /api/weekly-brief/start      {n?: int}
+GET  /api/weekly-brief/status/{job_id}
+GET  /api/weekly-brief/drafts/{batch_id}
+GET  /api/weekly-brief/pending-notice
+
+# Closed-Loop Repurposing
+POST /api/repurpose               {caption, cluster_id, post_type}
+GET  /api/repurpose/status/{batch_id}
+
+# Comment/DM Triage
+POST /api/triage/batch            {messages: str[], cluster_id?}
+
+# Multi-Agent Orchestrator
+POST /api/orchestrate             {task_type, payload}
+GET  /api/orchestrate/memory-status
 ```
 
 ---
@@ -531,24 +633,29 @@ Typography: **Instrument Serif** (display/headings, JARVIS panel headers, captio
 
 ---
 
-## 12. Current Status (as of 2026-07-11)
+## 12. Current Status (as of 2026-07-16)
 
 ### Fully working
-- [x] All 14 Granite invocations wired and returning structured output
-- [x] Full UI port to "Dreamy Cloud" design system (Epoch 14) — marketing site (`/`) + studio (`/app/*`), zero backend changes
-- [x] Next.js frontend — Dashboard, Brand Voice, Create, Analyze, Discover, Workbench all functional, all on real data
+- [x] All 22 Granite invocations wired and returning structured output
+- [x] Full UI port to "Dreamy Cloud" design system (Epoch 14) — marketing site (`/`) + studio (`/app/*`)
+- [x] Next.js frontend — Dashboard, Brand Voice, Create, Analyze, Discover, Agents, Triage, Workbench all functional
 - [x] Onboarding — both handle-scrape and ZIP-export paths
 - [x] JARVIS floating widget — text + voice (push-to-talk)
 - [x] Voice pipeline — faster-whisper STT + Kokoro TTS — all bugs resolved (PCM_16 WAV, misaki patch, audio sync)
-- [x] JARVIS caption tool routing — `_detect_caption_intent` pre-filter ensures CaptionCard always renders
-- [x] JARVIS inspiration tool routing — `_detect_inspiration_intent` pre-filter (Epoch 15) ensures InspirationCards always renders, no raw JSON leak
-- [x] JARVIS text + audio synchronized — text bubble and voice start at the same moment
-- [x] Content Workbench — SQLite CRUD, pin, outcome tracking
+- [x] JARVIS caption + inspiration tool routing — both pre-filters wired, no raw JSON leak
+- [x] Content Workbench — SQLite CRUD, pin, outcome tracking, outcome-pill toggle for calibration
+- [x] Closed-Loop Repurposing — auto-triggers on succeeded verdict, 3-format background job
+- [x] Resonance Simulator — 3 data-grounded persona panel + synthesis call
+- [x] Weekly Brief Agent — background job, proactive JARVIS nudge on next open
+- [x] Brand Guardian Courtroom — adversarial critique→refine, 2-round cap, best-of-2 outcome
+- [x] Brand Drift Watchdog — embedding similarity + Granite explanation; 2 real bugs found and fixed during QA
+- [x] Comment/DM Triage — `/app/triage` page, up to 20 messages, 4-category classifier, brand-voice replies
+- [x] Closed-loop performance learning — outcome tagging in Workbench calibrates future CaptionGenerator
+- [x] Multi-agent orchestrator — adaptive topology, `src/agents/` + `src/memory/` (ChromaDB), `/app/agents`
+- [x] Goal-directed convergence loop — exits on quality gate (`approved AND score ≥ threshold`), plateau detection, `factual_gap` hard stop; confidence trajectory + ConvergenceBadge in Agent Studio UI
+- [x] Campaign Brief modal — creator specifies product, platform, quality gate (70/80/90), trend hook toggle
 - [x] Demo data for @hot_cakesbakes (brand_profile + clusters + engagement fallback)
 - [x] TypeScript build: clean (`npm run build` passes with zero errors)
-- [x] `_clear_caches()` in onboard.py invalidates all 14 singletons incl. voice models
-- [x] Full voice loop tested end-to-end on Windows (browser → MediaRecorder → Whisper → Granite → Kokoro → Audio)
-- [x] Full end-to-end QA pass (Epoch 15) — see `QA-REPORT.md` — 5 bugs found and fixed, rigorously re-tested (multiple trials each, since 2 of the 3 backend bugs were LLM-generation-dependent and intermittent)
 
 ### Requires Ollama locally (not included in repo)
 - Ollama binary — download from ollama.com
@@ -675,8 +782,9 @@ Or: `POST /api/onboard/reset-demo`
 | Content strategy | No | No | No | Yes (Strategic Insights) |
 | Boost Advisor | No | No | No | Yes (Granite #11) |
 | Voice agent | No | Partial | No | Yes (JARVIS — Granite #13 + #14) |
+| Multi-agent orchestration | No | No | No | Yes — goal-directed convergence loop, 7 specialized agents, adaptive topology |
 | Privacy | Requires scraping | Cloud API | Cloud API | Fully local |
-| IBM Granite | No | No | No | 14 invocations |
+| IBM Granite | No | No | No | 22 invocations |
 
 ---
 
@@ -686,6 +794,10 @@ Or: `POST /api/onboard/reset-demo`
 |------|--------------|
 | Change Granite model | Every class in `src/generation/` — `OllamaLLM(model=...)` |
 | Add a new Granite feature | 1. `src/generation/new_feature.py` 2. `api/dependencies.py` (singleton) 3. `api/routers/*.py` (endpoint) 4. `api/routers/onboard.py` (`_clear_caches`) 5. `frontend/lib/types.ts` + `api.ts` 6. New component |
+| Add a new agent | 1. `src/agents/new_agent.py` (extend `BaseAgent`) 2. Wire into `StyleSyncOrchestrator.__init__` and relevant `_run_*` method 3. Add new `task_type` to `TOPOLOGY_MAP` if needed |
+| Edit ChromaDB memory | `src/memory/store.py` — `AgentMemoryStore.upsert_*()` methods, collection names |
+| Edit agent convergence logic | `src/agents/orchestrator.py` — `_run_full_campaign`, `_quick_score`, `_rewrite_new_angle` |
+| Edit Campaign Brief modal | `frontend/app/app/agents/page.tsx` — `CampaignBriefModal` component |
 | Change JARVIS voice | `src/generation/voice_synthesizer.py` → `__init__(voice="am_echo")` — change to any Kokoro voice |
 | Add JARVIS tool | `src/generation/jarvis_agent.py` → update system prompt tools list + `api/routers/agent.py` → add dispatch branch |
 | Change demo data | `data/demo_brand_profile.json` + `data/demo_clusters.json` |

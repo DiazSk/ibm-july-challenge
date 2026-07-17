@@ -1,8 +1,8 @@
 # StyleSync
 
-AI Art Direction for Instagram Creators — built on IBM Granite 3.1 8B.
+AI Art Direction and Multi-Agent Creative Platform — built on IBM Granite 3.1 8B.
 
-StyleSync analyzes an Instagram account's posting history and turns it into a living brand voice profile. It then uses that profile to generate on-brand captions, image direction prompts, content scripts, and post-mortem diagnoses — all running locally, with no cloud API required during inference.
+StyleSync analyzes an Instagram account's posting history and turns it into a living brand voice profile. It then uses that profile for on-brand caption generation, image direction, content scripts, post-mortem diagnosis, and a goal-directed multi-agent campaign system — all running locally, with no cloud API required during inference.
 
 Built for the IBM July Challenge.
 
@@ -13,9 +13,11 @@ Built for the IBM July Challenge.
 | Tab | What you get |
 |-----|-------------|
 | **Create** | Blank Page Solver → 3 creative directions → Caption Brief → 3 caption variants + image prompt → Script Studio (Reel / Carousel / Static) → Save to Workbench |
-| **Analyze** | Paste a post + its Instagram Insights metrics → Why Engine diagnosis → Recovery Brief (automatically generated on underperforms/failures) → Save to Workbench |
-| **Discover** | Voice Timeline chart (9-month content distribution) + Strategic Insights (volume vs. richness mismatches + strategy brief) |
-| **Workbench** | Persistent SQLite scratchpad — saved captions, scripts, and recovery briefs survive across sessions; star, review, and outcome-track your saved assets |
+| **Analyze** | Paste a post + metrics → Why Engine diagnosis → Recovery Brief → Resonance Simulator (3 persona panel) → Brand Guardian Courtroom (adversarial refine loop) → Brand Drift Watchdog |
+| **Discover** | Voice Timeline chart + Strategic Insights + Boost Advisor + Weekly Brief Agent (background-queued drafts straight to Workbench) |
+| **Agents** | Agent Studio — goal-directed multi-agent campaign system: Campaign Brief modal → Orchestrator routes Copy → Critic convergence loop (exits on quality gate, not cycle count) → Visual + Analytics; also Trend Briefing and Community Triage tasks |
+| **Triage** | Paste up to 20 comments or DMs → Granite classifies (order inquiry / compliment / complaint / spam) → drafts brand-voice replies for each |
+| **Workbench** | Persistent SQLite scratchpad — saved captions, scripts, recovery briefs, and agent outputs survive across sessions; star, review, and outcome-track assets to calibrate future generation |
 
 ---
 
@@ -63,9 +65,9 @@ For detailed setup, onboarding your own Instagram account, and verification step
 
 ## Stack
 
-**Backend:** FastAPI · Ollama (IBM Granite 3.1 8B) · LangChain · sentence-transformers · scikit-learn · SQLite · Instaloader  
+**Backend:** FastAPI · Ollama (IBM Granite 3.1 8B) · LangChain · ChromaDB · sentence-transformers · scikit-learn · SQLite · Instaloader  
 **Frontend:** Next.js 16 · React 19 · TypeScript · Tailwind CSS · React Query  
-**Model:** `granite3.1-dense:8b` — 10 coordinated Granite invocations, zero third-party AI dependencies, all local
+**Model:** `granite3.1-dense:8b` — 22 coordinated Granite invocations, zero third-party AI dependencies, all local
 
 ---
 
@@ -92,12 +94,35 @@ POST /api/create/image-prompt
 POST /api/create/script
 
 POST /api/analyze/why-engine
+POST /api/analyze/resonance
+POST /api/analyze/guardian
+POST /api/analyze/drift
 
 GET  /api/discover/voice-timeline
 GET  /api/discover/strategic-insights
+GET  /api/discover/boost-advisor
+
+POST /api/weekly-brief/start
+GET  /api/weekly-brief/status/{job_id}
+GET  /api/weekly-brief/drafts/{batch_id}
+GET  /api/weekly-brief/pending-notice
+
+POST /api/repurpose
+GET  /api/repurpose/status/{batch_id}
+
+POST /api/triage/batch
+
+POST /api/orchestrate
+GET  /api/orchestrate/memory-status
 
 POST   /api/workbench/assets
 GET    /api/workbench/assets
 PATCH  /api/workbench/assets/{id}
 DELETE /api/workbench/assets/{id}
+
+POST /api/agent/chat
+GET  /api/agent/session/{id}
+
+POST /api/voice/transcribe
+POST /api/voice/synthesize
 ```

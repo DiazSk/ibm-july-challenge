@@ -11,55 +11,59 @@ Grounded in deep research on the AI-content-tool competitive landscape (Flick, P
 
 ---
 
-## Building now
+## Built — Phase 1 (core features)
 
 ### 1. Confidence-Scored Outputs
-**Pain point:** every competitor tool outputs confident-sounding text regardless of actual quality; users can't tell what to trust or double-check.
-**Differentiation:** directly implements the one well-verified piece of agent-design research (unclear confidence signals is a named failure mode) — a legitimately uncommon feature in this space.
-**Workflow:** a lightweight Granite self-critique pass runs after Why Engine and Boost Advisor generate their output, scoring how confident the assessment is and why, surfaced as a visible badge.
-**Feasibility:** quick win. Cheap (`num_predict=150`), non-fatal (wrapped in try/except, never blocks the primary response), reuses the exact chained-secondary-call pattern already proven by the Recovery Brief auto-chain.
-**Caveat:** small local models are not well-calibrated numeric scorers — UI copy frames the score as directional ("Verify before publishing"), not a precise percentage claim.
+**Pain point:** every competitor tool outputs confident-sounding text regardless of actual quality; users can't tell what to trust or double-check.  
+A lightweight Granite self-critique pass runs after Why Engine and Boost Advisor generate their output, scoring confidence and surfacing a visible badge. Score is framed as directional ("Verify before publishing"), not a precise percentage claim.
 
 ### 2. Closed-Loop Repurposing Orchestrator
-**Pain point:** when a post succeeds, the founder has to manually go repurpose it into other formats (Reel, Carousel, static) — real, tedious admin work with no help from any tool in the reviewed competitive set.
-**Differentiation:** none of Flick/Predis/Jasper close this loop autonomously; the platform *acts* on a success signal rather than just reporting it.
-**Workflow:** Why Engine detects `verdict == "succeeded"` → automatically (no button click) fans out to the existing Script Generator 3 times (Reel/Carousel/Static formats) as a background job → drafts land directly in the Workbench, ready to review.
-**Feasibility:** quick win — cheapest of the four, since it needs **zero new Granite classes**, entirely reusing the existing `ScriptGenerator`. Only new work is orchestration (a background job) and the auto-trigger condition.
-**Cut for scope:** a "Twitter/X-style thread" format was considered but dropped — `ScriptGenerator`'s prompt template only supports Reel/Carousel/Static today, and adding a 4th format is out of scope for the timeline.
+**Pain point:** when a post succeeds, the founder has to manually repurpose it into other formats.  
+Why Engine detects `verdict == "succeeded"` → automatically fans out to the existing Script Generator 3 times (Reel/Carousel/Static) as a background job → drafts land directly in the Workbench.
 
 ### 3. Resonance Simulator
-**Pain point:** "post and pray" — creators have no way to pre-test a caption before publishing; the only diagnosis tool (Why Engine) is entirely after-the-fact.
-**Differentiation:** three critic personas are grounded in the creator's own real `cluster_engagement` data (a "Devotee" persona built from the highest-engagement cluster's actual patterns, a "Skeptic" from the lowest, etc.) rather than generic archetypes — ties the differentiator to StyleSync's one truly unique asset (its own historical clustering), which no competitor can copy since none of them do that clustering step.
-**Workflow:** draft captions → 3 persona-critic Granite calls (each reacting to all 3 captions at once) → a synthesis call aggregates into a "predicted resonance" pick + one concrete actionable fix (e.g. "move the hook earlier — the Casual Scroller persona dropped off after sentence one").
-**Feasibility:** quick win, best live-demo moment — 4 Granite calls total (~75-95s), reuses the exact multi-persona-then-synthesize pattern already proven safe in this codebase.
-**Caveat:** "predicted resonance" is framed in UI copy as a relative/directional signal, not a scientifically calibrated prediction — 8B models are not reliable numeric self-assessors. Also: don't assume the 3 persona calls actually execute in parallel — Ollama's real concurrency behavior on this hardware is unverified, so this is built as sequential calls with explicit "consulting three personas..." loading copy.
+**Pain point:** "post and pray" — creators have no pre-publish test.  
+Three critic personas grounded in the creator's own real cluster engagement data react to caption variants; a synthesis call aggregates into a "predicted resonance" pick + one concrete actionable fix. Framed as a directional signal, not a calibrated prediction.
 
 ### 4. Weekly Brief Agent (+ proactive JARVIS hook)
-**Pain point:** founders don't have time to plan; they open the app to a blank page every time, and have no visibility into emerging trends outside their own feed.
-**Differentiation:** proactive, not reactive — produces finished draft posts in the Workbench autonomously, overnight/in the background, rather than a single reactive answer to a single question (which is all Instagram's own Edits AI assistant will do). JARVIS proactively greets the founder with "I found something" the next time they open it, instead of always waiting to be asked — a genuinely agentic UX pattern, not just a chat window.
-**Workflow:** background job pulls the Strategic Insights' underutilized-but-rich cluster → runs a web search for relevant trends → chains through the existing Blank Page Solver → Caption → Image Direction pipeline for 2-3 draft scenarios → lands them in the Workbench → flags a one-time "pending notice" that JARVIS surfaces proactively on next open.
-**Feasibility:** stretch — the biggest of the four, the only one needing its own background-job infrastructure, a new Workbench asset type, and new Dashboard UI. Built last so if time runs out, the three cheaper/safer features still ship complete.
-**Cut for scope:** the original idea included continuous background monitoring on a recurring schedule and full-page web scraping (BeautifulSoup/ScrapeGraph) for deeper trend signal. Both cut: there is no scheduler (APScheduler/Celery/cron) anywhere in this codebase — building real recurring execution is new infrastructure, not a config flag — so this is on-demand-triggered instead, and full-page scraping is fragile/risky against social platforms and unnecessary given the existing, reliable DuckDuckGo snippet search already wired into JARVIS.
+**Pain point:** founders don't have time to plan; they open the app to a blank page every time.  
+Background job scouts the underutilized content pillar, chains through Blank Page Solver → Caption → Image Direction pipeline for 2-3 draft scenarios, writes them to the Workbench, and flags a proactive JARVIS nudge on next open ("I found something").
 
 ---
 
-## Roadmap / future work (not building now)
+## Built — Phase 2 (formerly roadmap)
 
-### 5. Brand Guardian Courtroom (adversarial draft → critique → refine loop)
-**Pain point:** single-pass generation is prone to generic, "obviously-AI" language that audiences actively reject.
-**Why it's not being built now:** genuinely the most exciting idea reviewed — watching an AI draft, get told it's not good enough, and rewrite itself live is the clearest "this is really agentic" demo moment available. Cut only for real, well-understood risk: iterative critique/refine loops with an 8B local model don't reliably converge (a critique can flag a *different* issue in round 2 even after round 1's issue is fixed, since the judgment itself is somewhat noisy), and it stacks the most latency of any feature reviewed (each round = 2 more Granite calls). If time allows after the 4 features above, revisit with a hard 2-round cap and "return best-so-far" as a first-class outcome, applied to refining one already-generated caption rather than drafting from scratch.
+These four features were listed as "Roadmap / future work" in the original plan. All four shipped.
+
+### 5. Brand Guardian Courtroom
+Adversarial critique→refine loop on one already-generated caption. Hard-capped at 2 rounds with "best-so-far" as a first-class outcome (by design — an 8B critic can flag a different issue in round 2, so best-of-2 is the honest framing, not a failure to converge).
 
 ### 6. Brand Drift Watchdog
-**Pain point:** brand voice erodes slowly over months without anyone noticing until engagement drops.
-**Why differentiated:** nobody in the reviewed competitive set does voice-drift detection over time — they're all generation-forward, not monitoring-forward.
-**Workflow sketch:** paste/re-scrape recent posts → compare against the locked brand profile → Granite explains *specifically* what's drifted, not just a generic diagnosis.
-**Feasibility:** stretch — reuses existing profile-extraction/embedding infrastructure, so it's a real stretch, not a wild one.
+Paste recent posts → auto-detects the nearest content pillar via embedding similarity → Granite explains specifically what's drifted and what's still on-brand. Detects voice erosion before engagement drops.
 
 ### 7. Comment/DM Triage + Draft Replies
-**Pain point:** the actual, lived pain point for a business like a home bakery — people DM to place orders and founders lose sales because they can't reply fast enough. None of the competitor tools reviewed touch inbound messages at all.
-**Workflow sketch:** paste a batch of comments/DMs → Granite classifies (order inquiry / compliment / complaint / spam) → drafts a brand-voice reply for each → founder approves/edits/sends.
-**Honest limitation:** no live Instagram DM API access without platform approval — the real build is a "paste your messages" batch tool, not live automation. Worth saying plainly rather than overclaiming live integration.
+Paste up to 20 comments/DMs → Granite classifies (order inquiry / compliment / complaint / spam) → drafts a brand-voice reply for each. New `/app/triage` studio tab. Mandatory banner: no live Instagram DM API — this is a "paste your messages" batch tool, not live automation.
 
 ### 8. Closed-loop performance → generation learning
-**Distinct from Feature 2 (Closed-Loop Repurposing) above** — that one immediately fans out a *successful* post into more formats. This one is the more ambitious idea: real post-performance data (once reported back) automatically feeds into and adjusts *future* generation prompts, so the system gets better at your voice over time instead of just repeating whatever the initial brand profile said.
-**Why it's roadmap, not build-now:** needs new persistent state design threading performance signal into every future generation call — the hardest one to get right in the remaining time, and the best "what's next" pitch for a follow-up version.
+Real post-performance outcomes (tagged in the Workbench) calibrate future caption generation for that content pillar. A "Calibrated using N real outcomes" badge appears on the Create tab when outcomes exist for the selected pillar. Uses existing `CaptionGenerator` (zero new Granite invocations) with a new `performance_context` kwarg.
+
+---
+
+## Built — Phase 3 (multi-agent architecture)
+
+### 9. Goal-Directed Multi-Agent Orchestrator
+**Pain point:** single-pass generation has no quality guarantee; the creator can't specify what "good enough" means before running.
+
+A full 7-agent architecture (`BrandVoiceAgent`, `CopywritingAgent`, `CriticAgent`, `AnalyticsAgent`, `CommunityAgent`, `VisualAgent`, `TrendAgent`) coordinated by a `StyleSyncOrchestrator` with adaptive topology selection (parallel / hierarchical / sequential / flat depending on task type).
+
+The key Phase 3 addition is **goal-directed termination**: instead of exiting after a fixed cycle count, the campaign loop exits when `critic.approved AND confidence ≥ threshold`. The creator specifies the quality gate (70/80/90) and product details in a Campaign Brief modal before running. The loop also detects plateaus (score Δ ≤ 2 over 3 consecutive cycles → flag for human review) and handles factual gaps as a hard stop.
+
+**Convergence outcomes surfaced in the UI:**
+- `goal_met` — confidence threshold cleared
+- `plateau` — quality stalled, human review suggested
+- `factual_gap` — agent flagged something it can't verify
+- `max_cycles` — safety ceiling (8) reached
+
+**Trend-to-copy handoff:** when a trend briefing exists, its top hooks are injected into the `desired_feel` field before the first copywriting call, closing the loop between Discover-tab trend research and Agent Studio campaign generation.
+
+**ChromaDB memory:** three collections (semantic brand voice, episodic past outcomes, procedural platform rules) persist across runs and inform agent behavior.

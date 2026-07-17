@@ -19,3 +19,6 @@ __pycache__/
 
 # Node modules
 node_modules/
+
+# Graphify
+graphify-out/

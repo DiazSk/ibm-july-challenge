@@ -135,6 +135,31 @@ Four more features — previously deliberately deferred as "roadmap / future wor
 
 **Regression pass after all 4 features:** re-checked Create, Analyze, Discover, and Dashboard — all load and render correctly with zero console errors. `npm run build` clean (15 routes including the new `/app/triage`, TypeScript passes).
 
+## 9. Multi-agent architecture + goal-directed loop (Epochs 16–17) — not yet formally QA'd
+
+The multi-agent system (`src/agents/`, `src/memory/`, `api/routers/orchestrate.py`, `/app/agents` page) and the Phase 2 goal-directed convergence loop were built after the §7/§8 verification passes above. They have not yet been put through a structured end-to-end QA session equivalent to §1–§8.
+
+**What is known to work (verified during implementation):**
+- Agent Studio page renders correctly in the browser (7 agent cards, sidebar nav item, memory status strip)
+- Campaign Brief modal opens, all fields render, Cancel dismisses correctly
+- Orchestrate API endpoint (`POST /api/orchestrate`) returns a valid `OrchestrateResponse` shape including `convergence_reason`
+- `GET /api/orchestrate/memory-status` returns ChromaDB collection counts
+- `ConvergenceBadge` and confidence trajectory display correctly in the result card
+
+**What is not yet verified end-to-end:**
+- Full campaign run with Ollama live (goal-directed loop cycling through critic corrections and reaching `goal_met`)
+- Plateau detection path (Δ ≤ 2 for 3 cycles → `human_review_flag = True`)
+- `factual_gap` hard-stop path
+- Trend context injection (passing `trend_context` from a prior trend briefing into a campaign run)
+- ChromaDB episodic memory write and read-back across runs
+- Agent Studio Trend Briefing task and Community Triage task end-to-end
+
+**Risk level:** medium. The convergence loop is a rewrite of `_run_full_campaign`; the existing single-caption, post-mortem, and trend-briefing topologies are largely untouched thin wrappers around the already-QA'd `src/generation/` modules. The highest-risk new code is the cycle loop itself, plateau detection, and `_quick_score()` inline call.
+
+**Recommendation before demo:** run at least one full campaign through Agent Studio with Ollama live, confirm the result card shows a `convergence_reason`, and verify the confidence trajectory is non-empty. A threshold of 70 is the most likely to converge quickly on an 8B model.
+
+---
+
 ## Recommendation
 
-**Ready to demo.** Remaining non-blocking items: **Script Studio latency (~2 min)** is inherent to Ollama/hardware — plan your talking points around it or pre-warm Ollama right before presenting. The Weekly Brief Agent (n=2) takes ~4.5 minutes end-to-end — kick it off early in a demo so it's ready to reveal later. The Brand Guardian Courtroom's critique pass is genuinely harsh by design (it rarely approves on round 0 even for on-brand captions) — the "best of 2 rounds" framing is the honest, intended outcome, not a bug; don't be surprised if it doesn't converge to "Approved" during a live demo.
+**Ready to demo** for all features through §8. The multi-agent Agent Studio (§9) requires one live validation run before demoing. Remaining non-blocking items: **Script Studio latency (~2 min)** is inherent to Ollama/hardware — plan your talking points around it or pre-warm Ollama right before presenting. The Weekly Brief Agent (n=2) takes ~4.5 minutes end-to-end — kick it off early in a demo so it's ready to reveal later. The Brand Guardian Courtroom's critique pass is genuinely harsh by design (it rarely approves on round 0 even for on-brand captions) — the "best of 2 rounds" framing is the honest, intended outcome, not a bug; don't be surprised if it doesn't converge to "Approved" during a live demo.
