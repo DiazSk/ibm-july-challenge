@@ -53,10 +53,12 @@ Messages to triage (respond to ALL {count}, in this exact order):
 For each message:
 1. Classify it as exactly one of: order_inquiry, compliment, complaint, spam
 2. If NOT spam, draft a short, warm, on-brand reply. NEVER invent order
-   details, prices, availability, or promises not stated in the message —
-   if specifics are needed, the reply should ask the customer to DM details
-   or say "check availability with us," not fabricate an answer.
-3. If spam, leave drafted_reply as an empty string.
+   details, prices, availability, or promises not stated in the message. If
+   specifics are needed, the reply should ask the customer to DM details or
+   say "check availability with us," not fabricate an answer.
+3. NEVER use em-dashes or en-dashes in a reply. Use commas, periods, or
+   separate sentences. Em-dashes make a reply look AI-written.
+4. If spam, leave drafted_reply as an empty string.
 
 Return ONLY a valid JSON array with exactly {count} objects, in the same \
 order as the messages above — no preamble, no markdown fences:
@@ -81,6 +83,15 @@ _PROMPT = PromptTemplate(
 
 def _repair_missing_commas(text: str) -> str:
     return re.sub(r'"(\s+)"([A-Za-z_][A-Za-z0-9_ ]*)"\s*:', r'",\1"\2":', text)
+
+
+def _strip_dashes(text: str) -> str:
+    """Remove em/en dashes — they read as AI-generated. Replace with a comma."""
+    t = text.replace("—", ", ").replace("–", ", ")
+    t = re.sub(r"\s+,", ",", t)     # " ," -> ","
+    t = re.sub(r",\s*,+", ",", t)   # ",," -> ","
+    t = re.sub(r"[ \t]{2,}", " ", t)
+    return t.strip()
 
 
 def _parse_array(raw: str, expected_len: int) -> list[dict]:
@@ -162,9 +173,10 @@ class CommentTriager:
             category = item.get("category", "uncertain")
             if category not in _VALID_CATEGORIES:
                 category = "uncertain"
+            reply = str(item.get("drafted_reply", "")) if category != "spam" else ""
             results.append({
                 "category": category,
-                "drafted_reply": str(item.get("drafted_reply", "")) if category != "spam" else "",
+                "drafted_reply": _strip_dashes(reply),
                 "reasoning": str(item.get("reasoning", "")),
             })
         return results
@@ -214,3 +226,10 @@ if __name__ == "__main__":
         print(r["original_message"].encode("ascii", "replace").decode())
         if r["drafted_reply"]:
             print(f"Reply: {r['drafted_reply']}".encode("ascii", "replace").decode())
+
+    # No em/en dashes may survive into a drafted reply (they read as AI-written).
+    assert all("—" not in r["drafted_reply"] and "–" not in r["drafted_reply"] for r in results), \
+        "em/en dash leaked into a drafted reply"
+    # _strip_dashes unit check (no network)
+    assert _strip_dashes("Fresh — and soft") == "Fresh, and soft", _strip_dashes("Fresh — and soft")
+    print("\nOK — no em-dashes in any drafted reply.")
