@@ -59,7 +59,7 @@ class CopywritingAgent(BaseAgent):
         if not self._memory:
             return None
         records = self._memory.search_episodic(
-            query=product or "caption performance", cluster_id=cluster_id, n=5
+            query=product or "caption performance", cluster_id=cluster_id, n_results=5
         )
         if not records:
             return None

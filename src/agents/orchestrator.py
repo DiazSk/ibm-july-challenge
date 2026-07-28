@@ -23,6 +23,7 @@ Critic routing loop (inside full_campaign):
 from __future__ import annotations
 
 import threading
+from collections.abc import Callable
 from dataclasses import dataclass, field
 
 from src.agents.base import AgentTask, AgentResult, OLLAMA_MODEL
@@ -106,6 +107,179 @@ class StyleSyncOrchestrator:
         )
         agents_used.append("CopywritingAgent")
         return fix.output.get("caption", draft)
+
+    # ── Public tools (used by WeeklyAutopilot as an agent toolbelt) ─────────────
+
+    def assess_gaps(self) -> dict:
+        """Strategic cluster analysis: which content pillars are over/under-used."""
+        r = self._analytics.safe_run(AgentTask("strategic_insights", {}))
+        return r.output if r.success else {}
+
+    def get_trends(self, niche: str = "bakery homemade desserts") -> dict:
+        """Live web-trend briefing (micro-trends, hooks, suggested angles)."""
+        r = self._trend.safe_run(AgentTask("trend_briefing", {"niche": niche}))
+        return r.output if r.success else {}
+
+    def recall_performance(self, cluster_id: int = 0) -> list[str]:
+        """Recent real post outcomes from episodic memory, as short text lines."""
+        if not self._memory:
+            return []
+        try:
+            ctx = self._memory.build_copywriting_context(
+                "past post performance outcome", cluster_id=cluster_id
+            )
+        except Exception:
+            return []
+        lines: list[str] = []
+        for h in ctx.get("performance_context", [])[:5]:
+            text = getattr(h, "text", None) or (h.get("text") if isinstance(h, dict) else None)
+            if text:
+                lines.append(str(text)[:160])
+        return lines
+
+    def produce_post(
+        self,
+        payload: dict,
+        trace: Callable[[dict], None] | None = None,
+    ) -> dict:
+        """
+        Full produce-and-refine pipeline for ONE post: draft → convergence loop
+        (Critic + typed routing) → final score + Visual in parallel.
+
+        `payload` keys: product, occasion, desired_feel, cluster_id, platform,
+        confidence_threshold. `trace` is an optional callback fired with a dict
+        per step so a caller can stream the agent's reasoning live.
+
+        Returns a dict (no memory write — the caller decides): draft, all_captions,
+        critic_history, confidence, image_prompt, confidence_trajectory,
+        convergence_reason, human_review_flag, cycles, agents_used.
+        """
+        emit = trace or (lambda _e: None)
+        agents_used: list[str] = []
+        cluster_id = payload.get("cluster_id", 0)
+        platform = payload.get("platform", "instagram")
+        confidence_threshold = int(payload.get("confidence_threshold", 75))
+
+        copy_result = self._copywriting.safe_run(AgentTask("generate_caption", payload))
+        agents_used.append("CopywritingAgent")
+        captions = copy_result.output.get("captions", [{}])
+        draft = captions[0].get("caption", "") if captions else ""
+        emit({"label": "Drafted caption", "detail": draft[:120]})
+
+        cycles = 0
+        human_review_flag = False
+        critic_history: list[dict] = []
+        confidence_scores: list[int] = []
+        convergence_reason = "max_cycles"
+
+        while cycles < _MAX_SAFE_CYCLES and draft:
+            critic_result = self._critic.safe_run(
+                AgentTask("critique", {"caption": draft, "cluster_id": cluster_id})
+            )
+            agents_used.append("CriticAgent")
+            error_type = critic_result.error_type or "approved"
+            critic_history.append({
+                "cycle": cycles + 1,
+                "error_type": error_type,
+                "flagged": critic_result.output.get("flagged_phrase", ""),
+                "fix": critic_result.output.get("fix_direction", ""),
+            })
+            emit({"label": f"Critic: {error_type}", "detail": critic_result.output.get("flagged_phrase", "")})
+
+            if error_type == "approved":
+                score = self._quick_score(draft, cluster_id)
+                confidence_scores.append(score)
+                emit({"label": f"Scored {score}/100", "detail": f"gate {confidence_threshold}"})
+                if score >= confidence_threshold:
+                    convergence_reason = "goal_met"
+                    break
+                draft = self._rewrite_new_angle(draft, cluster_id, agents_used)
+                emit({"label": "Below gate — new angle", "detail": draft[:120]})
+
+            elif error_type == "factual_gap":
+                convergence_reason = "factual_gap"
+                human_review_flag = True
+                break
+
+            elif error_type == "ai_slop":
+                fix = self._copywriting.safe_run(AgentTask("rewrite_caption", {
+                    "caption": draft,
+                    "fix_direction": critic_result.output.get("fix_direction", ""),
+                    "cluster_id": cluster_id,
+                }))
+                agents_used.append("CopywritingAgent")
+                draft = fix.output.get("caption", draft)
+                confidence_scores.append(self._quick_score(draft, cluster_id))
+                emit({"label": "Refined (ai_slop)", "detail": draft[:120]})
+
+            elif error_type == "off_brand_vocab":
+                fix = self._brand_voice.safe_run(AgentTask("enforce_vocabulary", {
+                    "caption": draft,
+                    "cluster_id": cluster_id,
+                    "issues": critic_result.output.get("guardian_critique", {}).get("issues", []),
+                }))
+                agents_used.append("BrandVoiceAgent")
+                draft = fix.output.get("refined_caption", draft)
+                confidence_scores.append(self._quick_score(draft, cluster_id))
+                emit({"label": "Refined (off_brand_vocab)", "detail": draft[:120]})
+
+            elif error_type == "wrong_platform":
+                fix = self._copywriting.safe_run(AgentTask("reformat_caption", {
+                    "caption": draft,
+                    "platform": platform,
+                    "cluster_id": cluster_id,
+                }))
+                agents_used.append("CopywritingAgent")
+                draft = fix.output.get("caption", draft)
+                confidence_scores.append(self._quick_score(draft, cluster_id))
+                emit({"label": "Refined (wrong_platform)", "detail": draft[:120]})
+
+            if len(confidence_scores) >= _PLATEAU_WINDOW:
+                recent = confidence_scores[-_PLATEAU_WINDOW:]
+                if max(recent) - min(recent) <= 2:
+                    convergence_reason = "plateau"
+                    human_review_flag = True
+                    break
+
+            cycles += 1
+
+        final_score_result: AgentResult | None = None
+        visual_result: AgentResult | None = None
+
+        def run_score():
+            nonlocal final_score_result
+            final_score_result = self._analytics.safe_run(
+                AgentTask("pre_score", {"caption": draft, "cluster_id": cluster_id})
+            )
+
+        def run_visual():
+            nonlocal visual_result
+            visual_result = self._visual.safe_run(
+                AgentTask("generate_image_prompt", {"caption": draft, "cluster_id": cluster_id})
+            )
+
+        t1 = threading.Thread(target=run_score)
+        t2 = threading.Thread(target=run_visual)
+        t1.start(); t2.start(); t1.join(); t2.join()
+
+        if final_score_result and final_score_result.success:
+            agents_used.append("AnalyticsAgent")
+        if visual_result and visual_result.success:
+            agents_used.append("VisualAgent")
+        emit({"label": "Image direction ready", "detail": (visual_result.output.get("prompt", "")[:120] if visual_result and visual_result.success else "")})
+
+        return {
+            "draft": draft,
+            "all_captions": captions,
+            "critic_history": critic_history,
+            "confidence": final_score_result.output if final_score_result else {},
+            "image_prompt": visual_result.output if visual_result else {},
+            "confidence_trajectory": confidence_scores,
+            "convergence_reason": convergence_reason,
+            "human_review_flag": human_review_flag,
+            "cycles": cycles,
+            "agents_used": agents_used,
+        }
 
     def run(self, task_type: str, payload: dict) -> OrchestratorResult:
         topology = TOPOLOGY_MAP.get(task_type, "flat")
@@ -210,140 +384,14 @@ class StyleSyncOrchestrator:
             base = enriched.get("desired_feel", "")
             enriched["desired_feel"] = f"{base}. Trending now: {hooks}".strip(". ")
 
-        # Step 1 — Initial draft
-        copy_result = self._copywriting.safe_run(
-            AgentTask("generate_caption", enriched)
-        )
-        agents_used.append("CopywritingAgent")
-        captions = copy_result.output.get("captions", [{}])
-        draft = captions[0].get("caption", "") if captions else ""
+        # Full produce-and-refine pipeline for this single post.
+        enriched["cluster_id"] = cluster_id
+        enriched["platform"] = platform
+        enriched["confidence_threshold"] = confidence_threshold
+        post = self.produce_post(enriched)
+        agents_used.extend(post["agents_used"])
 
-        cycles: int = 0
-        human_review_flag: bool = False
-        critic_history: list[dict] = []
-        confidence_scores: list[int] = []
-        convergence_reason: str = "max_cycles"
-
-        # Step 2 — Convergence loop
-        while cycles < _MAX_SAFE_CYCLES and draft:
-            critic_result = self._critic.safe_run(
-                AgentTask("critique", {"caption": draft, "cluster_id": cluster_id})
-            )
-            agents_used.append("CriticAgent")
-            error_type = critic_result.error_type or "approved"
-            critic_history.append(
-                {
-                    "cycle": cycles + 1,
-                    "error_type": error_type,
-                    "flagged": critic_result.output.get("flagged_phrase", ""),
-                    "fix": critic_result.output.get("fix_direction", ""),
-                }
-            )
-
-            if error_type == "approved":
-                score = self._quick_score(draft, cluster_id)
-                confidence_scores.append(score)
-                if score >= confidence_threshold:
-                    convergence_reason = "goal_met"
-                    break
-                # Approved but below quality gate — try a different angle
-                draft = self._rewrite_new_angle(draft, cluster_id, agents_used)
-
-            elif error_type == "factual_gap":
-                convergence_reason = "factual_gap"
-                human_review_flag = True
-                break
-
-            elif error_type == "ai_slop":
-                fix = self._copywriting.safe_run(
-                    AgentTask(
-                        "rewrite_caption",
-                        {
-                            "caption": draft,
-                            "fix_direction": critic_result.output.get(
-                                "fix_direction", ""
-                            ),
-                            "cluster_id": cluster_id,
-                        },
-                    )
-                )
-                agents_used.append("CopywritingAgent")
-                draft = fix.output.get("caption", draft)
-                confidence_scores.append(self._quick_score(draft, cluster_id))
-
-            elif error_type == "off_brand_vocab":
-                fix = self._brand_voice.safe_run(
-                    AgentTask(
-                        "enforce_vocabulary",
-                        {
-                            "caption": draft,
-                            "cluster_id": cluster_id,
-                            "issues": critic_result.output.get(
-                                "guardian_critique", {}
-                            ).get("issues", []),
-                        },
-                    )
-                )
-                agents_used.append("BrandVoiceAgent")
-                draft = fix.output.get("refined_caption", draft)
-                confidence_scores.append(self._quick_score(draft, cluster_id))
-
-            elif error_type == "wrong_platform":
-                fix = self._copywriting.safe_run(
-                    AgentTask(
-                        "reformat_caption",
-                        {
-                            "caption": draft,
-                            "platform": platform,
-                            "cluster_id": cluster_id,
-                        },
-                    )
-                )
-                agents_used.append("CopywritingAgent")
-                draft = fix.output.get("caption", draft)
-                confidence_scores.append(self._quick_score(draft, cluster_id))
-
-            # Plateau detection — Δscore ≤ 2 for PLATEAU_WINDOW consecutive cycles
-            if len(confidence_scores) >= _PLATEAU_WINDOW:
-                recent = confidence_scores[-_PLATEAU_WINDOW:]
-                if max(recent) - min(recent) <= 2:
-                    convergence_reason = "plateau"
-                    human_review_flag = True
-                    break
-
-            cycles += 1
-
-        # Step 3 — Final score + Visual in parallel
-        final_score_result: AgentResult | None = None
-        visual_result: AgentResult | None = None
-
-        def run_score():
-            nonlocal final_score_result
-            final_score_result = self._analytics.safe_run(
-                AgentTask("pre_score", {"caption": draft, "cluster_id": cluster_id})
-            )
-
-        def run_visual():
-            nonlocal visual_result
-            visual_result = self._visual.safe_run(
-                AgentTask(
-                    "generate_image_prompt",
-                    {"caption": draft, "cluster_id": cluster_id},
-                )
-            )
-
-        t1 = threading.Thread(target=run_score)
-        t2 = threading.Thread(target=run_visual)
-        t1.start()
-        t2.start()
-        t1.join()
-        t2.join()
-
-        if final_score_result and final_score_result.success:
-            agents_used.append("AnalyticsAgent")
-        if visual_result and visual_result.success:
-            agents_used.append("VisualAgent")
-
+        draft = post["draft"]
         memory_written = False
         if self._memory and draft:
             self._memory.upsert_episode(draft, cluster_id, "pending")
@@ -353,18 +401,18 @@ class StyleSyncOrchestrator:
             task_type="full_campaign",
             topology=topology,
             agents_used=agents_used,
-            cycles=cycles,
+            cycles=post["cycles"],
             memory_written=memory_written,
-            human_review_flag=human_review_flag,
-            convergence_reason=convergence_reason,
+            human_review_flag=post["human_review_flag"],
+            convergence_reason=post["convergence_reason"],
             results={
                 "draft": draft,
-                "all_captions": captions,
-                "critic_history": critic_history,
-                "confidence": final_score_result.output if final_score_result else {},
-                "image_prompt": visual_result.output if visual_result else {},
-                "confidence_trajectory": confidence_scores,
-                "convergence_reason": convergence_reason,
+                "all_captions": post["all_captions"],
+                "critic_history": post["critic_history"],
+                "confidence": post["confidence"],
+                "image_prompt": post["image_prompt"],
+                "confidence_trajectory": post["confidence_trajectory"],
+                "convergence_reason": post["convergence_reason"],
             },
         )
 

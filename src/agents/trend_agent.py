@@ -164,7 +164,7 @@ class TrendAgent(BaseAgent):
         # Step 2 — Pull recently used angles from episodic memory to avoid repetition
         used_angles_block = "None recorded yet."
         if self._memory:
-            past = self._memory.search_episodic("content angle trend", n=5)
+            past = self._memory.search_episodic("content angle trend", n_results=5)
             if past:
                 used_angles_block = "\n".join(
                     f"- {r['text'][:120]}" for r in past
