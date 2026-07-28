@@ -126,6 +126,14 @@ export default function BoostAdvisor({ result }: Props) {
           {result.dont_boost_reason}
         </p>
       </div>
+
+      {result.engagement_is_synthetic && (
+        <p className="text-[10px] leading-relaxed" style={{ color: "var(--color-ql-muted)" }}>
+          Note: Instagram&apos;s official export ships captions only, so the engagement
+          figures behind this recommendation are illustrative sample values, not your
+          real metrics. Connect a richer data source to replace them.
+        </p>
+      )}
     </div>
   );
 }

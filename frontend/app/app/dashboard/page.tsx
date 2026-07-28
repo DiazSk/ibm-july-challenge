@@ -11,9 +11,22 @@ import {
   getStrategicInsights,
   startWeeklyBrief,
   getWeeklyBriefStatus,
+  getConnectStatus,
+  syncInstagram,
+  getInsightsOverview,
 } from "@/lib/api";
 import type { WorkbenchAsset, WeeklyBriefStatus } from "@/lib/types";
 import { useWorkbenchDrawer } from "@/lib/workbench-drawer-context";
+import EngagementByPillarChart from "@/components/dashboard/EngagementByPillarChart";
+import BestDayChart from "@/components/dashboard/BestDayChart";
+import TopPostsList from "@/components/dashboard/TopPostsList";
+import AskJarvisChips from "@/components/dashboard/AskJarvisChips";
+
+function compactNum(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+  return String(n);
+}
 
 const CLUSTER_COLORS = [
   "var(--color-cluster-0)",
@@ -38,7 +51,7 @@ const ASSET_LABELS: Record<string, string> = {
 function previewText(asset: WorkbenchAsset): string {
   if (typeof asset.content === "string") return asset.content;
   const obj = asset.content as Record<string, unknown>;
-  return String(obj.hook ?? obj.caption ?? obj.headline ?? obj.new_hook ?? obj.drafted_reply ?? "Saved asset");
+  return String(obj.hook ?? obj.caption ?? obj.headline ?? obj.new_hook ?? obj.drafted_reply ?? obj.scenario_text ?? "Saved asset");
 }
 
 function timeAgo(iso: string): string {
@@ -85,6 +98,51 @@ export default function DashboardPage() {
     queryKey: ["strategic-insights"],
     queryFn: getStrategicInsights,
   });
+  const { data: connStatus } = useQuery({ queryKey: ["connect-status"], queryFn: getConnectStatus });
+  const { data: overview } = useQuery({ queryKey: ["insights-overview"], queryFn: getInsightsOverview });
+  const hasInsights = !!overview && overview.kpis.posts_counted > 0;
+
+  // Manual "Sync from Instagram" — full rebuild. sync_account only writes a new
+  // last_sync when the pipeline finishes, so a change there is the done signal.
+  const [syncing, setSyncing] = useState(false);
+  const [syncNote, setSyncNote] = useState("");
+
+  async function handleSync() {
+    setSyncing(true);
+    setSyncNote("Fetching your latest posts and rebuilding — this takes a few minutes.");
+    const before = connStatus?.last_sync ?? null;
+    try {
+      await syncInstagram(true);
+    } catch {
+      setSyncing(false);
+      setSyncNote("Couldn't start the sync. Try again.");
+      return;
+    }
+    const started = Date.now();
+    const id = setInterval(async () => {
+      // Give up after ~15 min (a failed background sync never advances last_sync).
+      if (Date.now() - started > 15 * 60_000) {
+        clearInterval(id);
+        setSyncing(false);
+        setSyncNote("Taking longer than expected — refresh in a bit to see the update.");
+        return;
+      }
+      try {
+        const s = await getConnectStatus();
+        if (s.last_sync && s.last_sync !== before) {
+          clearInterval(id);
+          setSyncing(false);
+          setSyncNote("Up to date.");
+          queryClient.invalidateQueries({ queryKey: ["brand-profile"] });
+          queryClient.invalidateQueries({ queryKey: ["clusters"] });
+          queryClient.invalidateQueries({ queryKey: ["strategic-insights"] });
+          queryClient.invalidateQueries({ queryKey: ["connect-status"] });
+        }
+      } catch {
+        // transient network error — keep polling
+      }
+    }, 4000);
+  }
 
   const [wbJobId, setWbJobId] = useState<string | null>(null);
   const [wbStatus, setWbStatus] = useState<WeeklyBriefStatus | null>(null);
@@ -149,16 +207,40 @@ export default function DashboardPage() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <div>
-        <p
-          className="text-[10px] font-medium uppercase tracking-[0.18em] mb-1"
-          style={{ color: "var(--color-ql-accent)" }}
-        >
-          Dashboard
-        </p>
-        <h1 className="text-2xl" style={{ fontFamily: "var(--font-display)", color: "var(--color-ql-dark)" }}>
-          {profile?.brand_name ?? "Your brand"}
-        </h1>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p
+            className="text-[10px] font-medium uppercase tracking-[0.18em] mb-1"
+            style={{ color: "var(--color-ql-accent)" }}
+          >
+            Dashboard
+          </p>
+          <h1 className="text-2xl" style={{ fontFamily: "var(--font-display)", color: "var(--color-ql-dark)" }}>
+            {profile?.brand_name ?? "Your brand"}
+          </h1>
+        </div>
+
+        {connStatus?.connected && (
+          <div className="text-right">
+            <button
+              onClick={handleSync}
+              disabled={syncing}
+              className="text-[11px] font-medium px-3 py-1.5 rounded-lg border transition-colors"
+              style={{
+                borderColor: "var(--color-ql-accent)",
+                color: "var(--color-ql-accent)",
+                opacity: syncing ? 0.6 : 1,
+              }}
+            >
+              {syncing ? "Syncing…" : "↻ Sync from Instagram"}
+            </button>
+            {(syncNote || connStatus.last_sync) && (
+              <p className="mt-1.5 text-[10px] max-w-[15rem]" style={{ color: "var(--color-ql-muted)" }}>
+                {syncNote || (connStatus.last_sync ? `Last synced ${timeAgo(connStatus.last_sync)}` : "")}
+              </p>
+            )}
+          </div>
+        )}
       </div>
 
       {/* KPI row — only real/derived numbers, nothing fabricated */}
@@ -167,6 +249,83 @@ export default function DashboardPage() {
         <KpiCard label="Content Pillars" value={clusterList.length || "—"} />
         <KpiCard label="Saved Assets" value={assets.length} />
       </div>
+
+      {/* ── Insights (real ingested Instagram metrics) ───────────────────── */}
+      {hasInsights && overview && (
+        <div className="flex flex-col gap-6">
+          <div>
+            <p
+              className="text-[10px] font-medium uppercase tracking-[0.18em] mb-3"
+              style={{ color: "var(--color-ql-accent)" }}
+            >
+              Performance Insights
+            </p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <KpiCard label="Total Reach" value={compactNum(overview.kpis.total_reach)} />
+              <KpiCard label="Total Views" value={compactNum(overview.kpis.total_views)} />
+              <KpiCard label="Avg Engagement" value={`${overview.kpis.avg_engagement_rate}%`} />
+              <KpiCard label="Total Saves" value={compactNum(overview.kpis.total_saves)} />
+            </div>
+          </div>
+
+          {/* Ask-Jarvis prompt chips */}
+          <div>
+            <p className="text-[11px] mb-2" style={{ color: "var(--color-ql-muted)" }}>
+              Ask JARVIS about your numbers:
+            </p>
+            <AskJarvisChips />
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Top posts */}
+            <section
+              className="rounded-xl border p-5"
+              style={{ borderColor: "var(--color-ql-border)", background: "var(--color-ql-card)" }}
+            >
+              <p
+                className="text-[10px] font-medium uppercase tracking-[0.12em] mb-4"
+                style={{ color: "var(--color-ql-muted)" }}
+              >
+                Top Posts
+              </p>
+              <TopPostsList posts={overview.top_posts} />
+            </section>
+
+            {/* Engagement by pillar */}
+            <section
+              className="rounded-xl border p-5"
+              style={{ borderColor: "var(--color-ql-border)", background: "var(--color-ql-card)" }}
+            >
+              <p
+                className="text-[10px] font-medium uppercase tracking-[0.12em] mb-4"
+                style={{ color: "var(--color-ql-muted)" }}
+              >
+                Engagement by Pillar
+              </p>
+              <EngagementByPillarChart data={overview.by_pillar} />
+            </section>
+          </div>
+
+          {/* Best time to post */}
+          <section
+            className="rounded-xl border p-5"
+            style={{ borderColor: "var(--color-ql-border)", background: "var(--color-ql-card)" }}
+          >
+            <div className="flex items-baseline justify-between mb-4 gap-3 flex-wrap">
+              <p
+                className="text-[10px] font-medium uppercase tracking-[0.12em]"
+                style={{ color: "var(--color-ql-muted)" }}
+              >
+                Best Day to Post
+              </p>
+              <p className="text-[11px]" style={{ color: "var(--color-ql-muted)" }}>
+                {profile?.timezone ?? "UTC"}
+              </p>
+            </div>
+            <BestDayChart cells={overview.best_times} timeZone={profile?.timezone ?? "UTC"} />
+          </section>
+        </div>
+      )}
 
       {/* Strategic brief — real synthesized recommendation, not fabricated copy */}
       {insights?.strategic_brief && (

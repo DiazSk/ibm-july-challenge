@@ -126,6 +126,49 @@ def _detect_inspiration_intent(user_msg: str) -> dict | None:
     }
 
 
+# ── Autopilot intent pre-filter ───────────────────────────────────────────────
+# "Plan my week / run autopilot" → hand off to the autonomous Autopilot agent.
+# Pre-filtered (like caption/inspiration) because it's an unambiguous, high-value
+# command we don't want Granite's flaky tool-routing to miss.
+
+_AUTOPILOT_INTENT_RE = re.compile(
+    r"\b(run|start|launch)\s+autopilot\b"
+    r"|\bautopilot\b"
+    r"|\bplan\s+(my|the|this)\s+(week|content|posts?|batch)\b"
+    r"|\bplan\s+my\s+week\b",
+    re.IGNORECASE,
+)
+_STRIP_AUTOPILOT_META_RE = re.compile(
+    r"\b(run|start|launch|autopilot|plan|my|the|this|week|content|posts?|batch|for|me|please|and|produce)\b",
+    re.IGNORECASE,
+)
+
+
+def _detect_autopilot_intent(user_msg: str) -> dict | None:
+    """Synthesize a plan_week tool call when the user asks to plan their week / run autopilot."""
+    if not _AUTOPILOT_INTENT_RE.search(user_msg):
+        return None
+    steer = " ".join(_STRIP_AUTOPILOT_META_RE.sub(" ", user_msg).split()).strip()
+    return {"response": None, "tool": {"name": "plan_week", "params": {"steer": steer}}}
+
+
+# ── Diagnose-and-fix intent (JARVIS-as-orchestrator: post-mortem → recovery) ───
+_FIX_INTENT_RE = re.compile(
+    r"\b(fix|recover|save|salvage|rescue)\s+(it|this|that|my|the)\b"
+    r"|\bwhy\b.{0,60}\b(flop|flopp\w*|fail\w*|underperform\w*|bomb\w*|tank\w*)\b.{0,40}\bfix\b"
+    r"|\b(diagnose|figure out why)\b.{0,40}\bfix\b",
+    re.IGNORECASE,
+)
+
+
+def _detect_fix_intent(user_msg: str) -> dict | None:
+    """Synthesize a diagnose_and_fix tool call when the user asks to fix/recover a flop.
+    Caption is left empty — the Recovery agent falls back to the latest flop."""
+    if not _FIX_INTENT_RE.search(user_msg):
+        return None
+    return {"response": None, "tool": {"name": "diagnose_and_fix", "params": {"caption": ""}}}
+
+
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 _PROFILE_PATH = _PROJECT_ROOT / "data" / "brand_profile.json"
 _CLUSTERS_PATH = _PROJECT_ROOT / "data" / "clusters.json"
@@ -303,6 +346,40 @@ def _dispatch_tool(
                 {"type": "saved", "data": {"id": asset_id}},
             )
 
+        elif tool_name == "plan_week":
+            from api.routers.agent_run import start_autopilot_job
+
+            steer = params.get("steer", "") or ""
+            job_id = start_autopilot_job(steer=steer, target_count=3)
+            focus = f" focusing on {steer}" if steer else ""
+            return (
+                f"Started Autopilot{focus} — it's autonomously planning and producing "
+                f"this week's posts now. The creator can watch it think on the Agents page.",
+                {"type": "autopilot_started", "data": {"job_id": job_id, "steer": steer}},
+            )
+
+        elif tool_name == "diagnose_and_fix":
+            from api.routers.recovery import latest_unrecovered_flop, start_recovery_job
+
+            caption = (params.get("caption") or "").strip()
+            cluster_id = int(params.get("cluster_id", 0) or 0)
+            cluster_label = None
+            if not caption:
+                flop = latest_unrecovered_flop()
+                if flop is None:
+                    return (
+                        "I couldn't find an underperforming post to fix — tag one in the "
+                        "Workbench, or paste the caption you want me to recover.",
+                        None,
+                    )
+                caption, cluster_id, cluster_label = flop
+            start_recovery_job(caption, cluster_id, cluster_label)
+            return (
+                "On it — I'm diagnosing why that one underperformed and writing a recovery "
+                "version. I'll drop it in your Workbench when it's ready.",
+                {"type": "recovery_started", "data": {"original_caption": caption[:160]}},
+            )
+
         else:
             return f"Unknown tool: {tool_name}", None
 
@@ -339,7 +416,9 @@ def agent_chat(req: AgentChatRequest) -> dict:
 
     # ── Call 1: Intent routing ────────────────────────────────────────────
     call1 = (
-        _detect_caption_intent(user_msg)
+        _detect_autopilot_intent(user_msg)
+        or _detect_fix_intent(user_msg)
+        or _detect_caption_intent(user_msg)
         or _detect_inspiration_intent(user_msg)
         or agent.chat(messages_for_call)
     )

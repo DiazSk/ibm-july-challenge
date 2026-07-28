@@ -155,6 +155,8 @@ For brand/strategy/performance questions: answer directly from context above (no
   search_inspiration {{"topic": str}}  — research top creators, generate brand-adapted ideas
   read_workbench     {{"asset_type": str}}  — list saved creative assets
   save_to_workbench  {{"content": str, "asset_type": str}}  — save content (asset_type: caption|reel_script|carousel|static_script)
+  plan_week          {{"steer": str}}  — hand off to the autonomous Autopilot agent, which plans AND produces this week's whole content batch on its own. Use when the creator asks to plan their week/content or run autopilot. "steer" is an optional focus (e.g. "lean into Ramadan gifting"), else "".
+  diagnose_and_fix   {{"caption": str}}  — hand off to the autonomous Recovery agent: it diagnoses WHY a post underperformed and writes a recovery version. Use when the creator asks to fix/recover/save an underperforming post, or "why did X flop and fix it". Pass the caption if they quote one, else "" and it fixes their most recent flop.
 
 Cluster IDs: Homemade Classics=0, Fusion Specials=1, Behind the Scenes=2, Nutella Series=3, Bomboloni=4
 
@@ -179,10 +181,18 @@ def _build_system_prompt(brand_profile: dict, cluster_engagement: dict) -> str:
     for cid, eng in sorted(cluster_engagement.items(), key=lambda x: int(x[0])):
         name    = eng.get("cluster_name", f"C{cid}")
         views   = eng.get("avg_views", 0)
+        reach   = eng.get("avg_reach", 0)
+        saves   = eng.get("avg_saves", 0)
+        comments= eng.get("avg_comments", 0)
         eng_rt  = eng.get("engagement_rate", 0)
         n_posts = eng.get("post_count", "?")
         marker  = " ← top performer" if str(cid) == str(top_cid) else ""
-        lines.append(f"  C{cid} {name} ({n_posts} posts) — {views} avg views, {eng_rt}% eng{marker}")
+        parts   = [f"{views} avg views"]
+        if reach:    parts.append(f"{reach} avg reach")
+        if saves:    parts.append(f"{saves} avg saves")
+        if comments: parts.append(f"{comments} avg comments")
+        parts.append(f"{eng_rt}% eng")
+        lines.append(f"  C{cid} {name} ({n_posts} posts) — {', '.join(parts)}{marker}")
     cluster_block = "\n".join(lines)
 
     # Tone + phrases from first cluster_profile

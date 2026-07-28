@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Info } from "lucide-react";
 import type { ImagePromptResult } from "@/lib/types";
 
 interface Props {
@@ -28,12 +29,17 @@ export default function ImageDirectionCard({ result }: Props) {
           borderColor: "var(--color-ql-border)",
         }}
       >
-        <span
-          className="text-[10px] font-medium uppercase tracking-[0.15em]"
-          style={{ color: "var(--color-ql-muted)" }}
-        >
-          Image Direction
-        </span>
+        <div className="flex items-center gap-1.5">
+          <span
+            className="text-[10px] font-medium uppercase tracking-[0.15em]"
+            style={{ color: "var(--color-ql-muted)" }}
+          >
+            Image Direction
+          </span>
+          <span title="Turns a caption into a ready-to-shoot image prompt plus style notes, grounded in your brand's visual language.">
+            <Info size={14} style={{ color: "var(--color-ql-muted)" }} />
+          </span>
+        </div>
         <button
           onClick={copy}
           className="text-[11px] transition-colors"

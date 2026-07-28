@@ -1,7 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { getClusters } from "@/lib/api";
+import { getClusters, describeImage } from "@/lib/api";
 import type { WhyEngineRequest } from "@/lib/types";
 
 interface Props {
@@ -57,6 +58,24 @@ export default function WhyEngineForm({ value, onChange, onSubmit, loading }: Pr
     onChange({ ...value, [k]: v });
   }
 
+  const [describing, setDescribing] = useState(false);
+  const [visionError, setVisionError] = useState<string | null>(null);
+
+  async function onImagePicked(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setDescribing(true);
+    setVisionError(null);
+    try {
+      const { visual_description } = await describeImage(file);
+      set("visual_description", visual_description);
+    } catch (err) {
+      setVisionError(err instanceof Error ? err.message : "Vision model failed");
+    } finally {
+      setDescribing(false);
+    }
+  }
+
   const canSubmit = value.caption.trim() && value.views > 0;
 
   return (
@@ -91,7 +110,34 @@ export default function WhyEngineForm({ value, onChange, onSubmit, loading }: Pr
           />
         </Field>
 
-        <div className="grid grid-cols-2 gap-3">
+        <Field label="Post Image / Reel — optional (lets the model see it)">
+          <input
+            type="file"
+            accept="image/*,video/*"
+            onChange={onImagePicked}
+            disabled={describing}
+            className="block w-full text-xs file:mr-3 file:rounded-md file:border-0 file:px-3 file:py-2 file:text-xs file:font-medium disabled:opacity-40"
+            style={{ color: "var(--color-ql-muted)" }}
+          />
+          {describing && (
+            <p className="text-xs mt-1.5 animate-pulse" style={{ color: "var(--color-ql-muted)" }}>
+              Looking at your post…
+            </p>
+          )}
+          {visionError && (
+            <p className="text-xs mt-1.5" style={{ color: "var(--color-cluster-4)" }}>
+              {visionError}
+            </p>
+          )}
+          {value.visual_description && !describing && (
+            <p className="text-xs mt-1.5 whitespace-pre-wrap rounded-md p-2"
+               style={{ color: "var(--color-ql-text)", background: "var(--color-ql-gap)" }}>
+              {value.visual_description}
+            </p>
+          )}
+        </Field>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Field label="Post Type">
             <select
               value={value.post_type}

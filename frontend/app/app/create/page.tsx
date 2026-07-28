@@ -8,11 +8,12 @@ import CaptionBrief from "@/components/create/CaptionBrief";
 import CaptionVariants from "@/components/create/CaptionVariants";
 import ResonancePanel from "@/components/create/ResonancePanel";
 import GuardianPanel from "@/components/create/GuardianPanel";
+import DriftHeadToHead from "@/components/create/DriftHeadToHead";
 import ImageDirectionCard from "@/components/create/ImageDirectionCard";
 import ScriptStudio from "@/components/create/ScriptStudio";
-import { generateCaptions, generateImagePrompt, saveAsset, runResonanceCheck, runGuardianReview } from "@/lib/api";
+import { generateCaptions, generateImagePrompt, saveAsset, runResonanceCheck, runGuardianReview, runDriftCompare } from "@/lib/api";
 import { useLocalStorage } from "@/lib/useLocalStorage";
-import type { Caption, ImagePromptResult, ResonanceResult, GuardianReviewResult } from "@/lib/types";
+import type { Caption, ImagePromptResult, ResonanceResult, GuardianReviewResult, DriftCompareResult } from "@/lib/types";
 
 export default function CreatePage() {
   const queryClient = useQueryClient();
@@ -35,6 +36,8 @@ export default function CreatePage() {
   const [guardianResult, setGuardianResult] = useState<GuardianReviewResult | null>(null);
   const [guardianLoadingIdx, setGuardianLoadingIdx] = useState<number | null>(null);
   const [usedRealOutcomes, setUsedRealOutcomes] = useState(0);
+  const [driftResult, setDriftResult] = useState<DriftCompareResult | null>(null);
+  const [driftLoading, setDriftLoading] = useState(false);
 
   function handleClearBrief() {
     clearProduct();
@@ -47,6 +50,7 @@ export default function CreatePage() {
     setResonanceResult(null);
     setGuardianResult(null);
     setUsedRealOutcomes(0);
+    setDriftResult(null);
   }
 
   function handleBlankPageApply(feel: string, cId: number) {
@@ -158,6 +162,24 @@ export default function CreatePage() {
     }
   }
 
+  async function handleDriftCompare() {
+    setDriftLoading(true);
+    setDriftResult(null);
+    try {
+      const result = await runDriftCompare({
+        product,
+        occasion,
+        desired_feel: desiredFeel,
+        cluster_id: clusterId,
+      });
+      setDriftResult(result);
+    } catch {
+      // silent — user can retry
+    } finally {
+      setDriftLoading(false);
+    }
+  }
+
   async function handlePin(caption: string) {
     try {
       await saveAsset({
@@ -212,6 +234,13 @@ export default function CreatePage() {
           usedRealOutcomes={usedRealOutcomes}
         />
       )}
+
+      <DriftHeadToHead
+        result={driftResult}
+        loading={driftLoading}
+        disabled={!product.trim() || !occasion.trim()}
+        onRun={handleDriftCompare}
+      />
 
       {resonanceResult && <ResonancePanel result={resonanceResult} />}
 

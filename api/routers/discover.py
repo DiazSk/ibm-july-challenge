@@ -23,6 +23,7 @@ from api.dependencies import (
     get_boost_advisor,
     get_confidence_scorer,
 )
+from src.data.pillars import all_pillar_labels
 
 router = APIRouter()
 
@@ -32,13 +33,6 @@ _CLUSTERS_PATH = _PROJECT_ROOT / "data" / "clusters.json"
 
 _ALL_CLUSTER_COLS = ["C0", "C1", "C2", "C3", "C4"]
 
-_CLUSTER_ID_LABELS = {
-    0: "Homemade Classics",
-    1: "Fusion Specials",
-    2: "Behind the Scenes",
-    3: "Nutella Series",
-    4: "Bomboloni",
-}
 
 # Synthesised engagement figures for clusters where real metrics are unavailable
 # (Instagram official export provides captions only, not views/saves/comments).
@@ -127,7 +121,7 @@ def _compute_voice_timeline() -> dict:
 
     narrative_result = vt.narrate_evolution(raw_counts, profile)
 
-    pillar_labels = {f"C{cid}": label for cid, label in _CLUSTER_ID_LABELS.items()}
+    pillar_labels = {f"C{cid}": label for cid, label in all_pillar_labels().items()}
 
     return {
         "monthly_pct"  : monthly_pct,
@@ -193,13 +187,18 @@ def _compute_boost_advisor() -> dict:
     clusters = json.loads(_CLUSTERS_PATH.read_text(encoding="utf-8"))
 
     # Instagram official export has no engagement metrics; fall back to demo values
-    cluster_engagement = clusters.get("cluster_engagement") or _DEMO_ENGAGEMENT
+    real_engagement = clusters.get("cluster_engagement")
+    cluster_engagement = real_engagement or _DEMO_ENGAGEMENT
 
     si     = get_strategic_insights()
     scores = si.compute_richness_scores(profile, clusters)
 
     advisor = get_boost_advisor()
     result  = advisor.generate(scores, cluster_engagement, profile)
+    # Be honest about where the numbers came from — Instagram's official export
+    # ships captions only, so engagement is illustrative unless a richer source
+    # supplied real metrics.
+    result["engagement_is_synthetic"] = not real_engagement
 
     try:
         context_summary = (

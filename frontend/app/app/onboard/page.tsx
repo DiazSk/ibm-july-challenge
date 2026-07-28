@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { startOnboard, uploadExport, getOnboardStatus } from "@/lib/api";
+import { startOnboard, uploadExport, getOnboardStatus, connectInstagramUrl } from "@/lib/api";
 import type { OnboardStatus } from "@/lib/types";
 
 type Screen = "choice" | "progress";
@@ -225,6 +225,18 @@ export default function OnboardPage() {
         <p className="text-sm mb-8" style={{ color: "var(--color-ql-muted)" }}>
           For Instagram creators who want their captions, scripts, and strategy
           to feel unmistakably them.
+        </p>
+
+        {/* Connect Instagram — real-time, official API (recommended) */}
+        <button
+          onClick={() => { window.location.href = connectInstagramUrl(); }}
+          className="w-full py-3.5 text-sm font-medium rounded-xl transition-colors mb-3"
+          style={{ background: "var(--color-ql-accent)", color: "var(--color-ql-bg)" }}
+        >
+          Connect Instagram (real-time) →
+        </button>
+        <p className="text-[11px] mb-6 text-center" style={{ color: "var(--color-ql-muted)" }}>
+          Live sync via the official Instagram API — no export wait, always up to date.
         </p>
 
         {/* Demo account button */}

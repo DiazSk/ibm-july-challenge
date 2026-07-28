@@ -2,68 +2,52 @@
 
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
-import { getVoiceTimeline, getStrategicInsights, getBoostAdvisor } from "@/lib/api";
-import VoiceTimelineChart from "@/components/discover/VoiceTimelineChart";
-import TimelineNarrative from "@/components/discover/TimelineNarrative";
-import StrategicInsightsChart from "@/components/discover/StrategicInsightsChart";
-import StrategyBrief from "@/components/discover/StrategyBrief";
-import BoostAdvisorCard from "@/components/discover/BoostAdvisor";
+import { getStrategyOverview, getStrategyDiagnoses, getStrategyBrief } from "@/lib/api";
+import AlgoScorecard from "@/components/discover/AlgoScorecard";
+import PerformanceTimeline from "@/components/discover/PerformanceTimeline";
+import WhatWorkedPanel from "@/components/discover/WhatWorkedPanel";
+import PlaybookPanel from "@/components/discover/PlaybookPanel";
 
 function SectionHeading({ children }: { children: React.ReactNode }) {
   return (
-    <h2
-      className="text-base mb-1"
-      style={{ fontFamily: "var(--font-display)", color: "var(--color-ql-dark)" }}
-    >
+    <h2 className="text-base mb-1" style={{ fontFamily: "var(--font-display)", color: "var(--color-ql-dark)" }}>
       {children}
     </h2>
   );
 }
 
+function Card({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="rounded-xl border p-5" style={{ borderColor: "var(--color-ql-border)", background: "var(--color-ql-card)" }}>
+      {children}
+    </div>
+  );
+}
+
 function LoadingBlock() {
   return (
-    <div
-      className="rounded-xl border p-6 flex items-center justify-center"
-      style={{ borderColor: "var(--color-ql-border)", background: "var(--color-ql-card)" }}
-    >
-      <p className="text-xs animate-pulse" style={{ color: "var(--color-ql-muted)" }}>
-        Granite is computing…
-      </p>
+    <div className="rounded-xl border p-6 flex items-center justify-center" style={{ borderColor: "var(--color-ql-border)", background: "var(--color-ql-card)" }}>
+      <p className="text-xs animate-pulse" style={{ color: "var(--color-ql-muted)" }}>Computing…</p>
     </div>
   );
 }
 
 function ErrorBlock({ message }: { message: string }) {
   return (
-    <div
-      className="rounded-xl border p-4"
-      style={{
-        borderColor: "var(--color-verdict-failed)",
-        background: "color-mix(in oklch, var(--color-verdict-failed) 5%, transparent)",
-      }}
-    >
-      <p className="text-xs" style={{ color: "var(--color-verdict-failed)" }}>
-        {message}
-      </p>
+    <div className="rounded-xl border p-4" style={{ borderColor: "var(--color-verdict-failed)", background: "color-mix(in oklch, var(--color-verdict-failed) 5%, transparent)" }}>
+      <p className="text-xs" style={{ color: "var(--color-verdict-failed)" }}>{message}</p>
     </div>
   );
 }
 
 export default function DiscoverPage() {
-  const timeline = useQuery({
-    queryKey: ["voice-timeline"],
-    queryFn: getVoiceTimeline,
-  });
+  // Fast, deterministic — the page's core value loads instantly.
+  const overview = useQuery({ queryKey: ["strategy-overview"], queryFn: getStrategyOverview });
+  // Slow Granite — progressive enhancement, never blocks the sections above.
+  const diagnoses = useQuery({ queryKey: ["strategy-diagnoses"], queryFn: getStrategyDiagnoses });
+  const brief = useQuery({ queryKey: ["strategy-brief"], queryFn: getStrategyBrief });
 
-  const insights = useQuery({
-    queryKey: ["strategic-insights"],
-    queryFn: getStrategicInsights,
-  });
-
-  const boostAdvisor = useQuery({
-    queryKey: ["boost-advisor"],
-    queryFn: getBoostAdvisor,
-  });
+  const ov = overview.data;
 
   return (
     <motion.div
@@ -72,88 +56,72 @@ export default function DiscoverPage() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      {/* Voice Timeline */}
-      <section>
-        <SectionHeading>Voice Timeline</SectionHeading>
-        <p className="text-xs mb-4" style={{ color: "var(--color-ql-muted)" }}>
-          How HotCakes Bakes&apos; creative voice has evolved across content pillars over 9 months.
+      <div>
+        <h1 className="text-xl mb-1" style={{ fontFamily: "var(--font-display)", color: "var(--color-ql-dark)" }}>
+          Strategy
+        </h1>
+        <p className="text-xs" style={{ color: "var(--color-ql-muted)" }}>
+          What actually worked, and what to do next — scored on the signals Instagram really ranks on.
         </p>
+      </div>
 
-        {timeline.isLoading && <LoadingBlock />}
-        {timeline.isError && (
-          <ErrorBlock message="Could not load Voice Timeline — is the FastAPI server running?" />
-        )}
-        {timeline.data && (
-          <div
-            className="rounded-xl border p-5"
-            style={{
-              borderColor: "var(--color-ql-border)",
-              background: "var(--color-ql-card)",
-            }}
-          >
-            <VoiceTimelineChart data={timeline.data.monthly_pct} pillarLabels={timeline.data.pillar_labels} />
-            <TimelineNarrative
-              narrative={timeline.data.narrative}
-              keyShift={timeline.data.key_shift}
-            />
-          </div>
-        )}
-      </section>
+      {overview.isLoading && <LoadingBlock />}
+      {overview.isError && <ErrorBlock message="Could not load Strategy — is the FastAPI server running?" />}
 
-      {/* Strategic Insights */}
-      <section>
-        <SectionHeading>Strategic Insights</SectionHeading>
-        <p className="text-xs mb-4" style={{ color: "var(--color-ql-muted)" }}>
-          Volume vs. brand richness across content pillars — where to invest, where to pull back.
-        </p>
-
-        {insights.isLoading && <LoadingBlock />}
-        {insights.isError && (
-          <ErrorBlock message="Could not load Strategic Insights — is the FastAPI server running?" />
-        )}
-        {insights.data && (
-          <div
-            className="rounded-xl border p-5"
-            style={{
-              borderColor: "var(--color-ql-border)",
-              background: "var(--color-ql-card)",
-            }}
-          >
-            <StrategicInsightsChart scores={insights.data.scores} />
-            <StrategyBrief result={insights.data} />
-          </div>
-        )}
-      </section>
-
-      {/* Boost Advisor */}
-      <section>
-        <SectionHeading>Boost Advisor</SectionHeading>
-        <p className="text-xs mb-4" style={{ color: "var(--color-ql-muted)" }}>
-          Instagram tells you <em>that</em> you can boost — StyleSync tells you <em>which post</em> to put money behind and why.
-        </p>
-
-        {boostAdvisor.isLoading && <LoadingBlock />}
-        {boostAdvisor.isError && (
-          <ErrorBlock message="Could not load Boost Advisor — is the FastAPI server running?" />
-        )}
-        {boostAdvisor.data && (
-          <div
-            className="rounded-xl border p-5"
-            style={{
-              borderColor: "var(--color-ql-border)",
-              background: "var(--color-ql-card)",
-            }}
-          >
-            <p
-              className="text-[11px] uppercase tracking-[0.1em] font-medium"
-              style={{ color: "var(--color-ql-muted)" }}
-            >
-              Granite #11 · Engagement-weighted recommendation
+      {ov && (
+        <>
+          {/* Algorithm scorecard */}
+          <section>
+            <SectionHeading>Your algorithm scorecard</SectionHeading>
+            <p className="text-xs mb-4" style={{ color: "var(--color-ql-muted)" }}>
+              Sends- and saves-per-reach are what move reach — not likes. Across {ov.scorecard.posts_counted} posts.
             </p>
-            <BoostAdvisorCard result={boostAdvisor.data} />
-          </div>
-        )}
-      </section>
+            <AlgoScorecard scorecard={ov.scorecard} />
+          </section>
+
+          {/* Performance over time */}
+          <section>
+            <SectionHeading>Performance over time</SectionHeading>
+            <p className="text-xs mb-4" style={{ color: "var(--color-ql-muted)" }}>
+              One line, one metric at a time. Green marks your best month, red your weakest.
+            </p>
+            <Card><PerformanceTimeline data={ov.timeline} /></Card>
+          </section>
+
+          {/* What worked vs. what didn't */}
+          <section>
+            <SectionHeading>What worked, what didn&apos;t</SectionHeading>
+            <p className="text-xs mb-4" style={{ color: "var(--color-ql-muted)" }}>
+              Your two most instructive posts, diagnosed by the Why Engine against your own brand voice.
+            </p>
+            {diagnoses.isError ? (
+              <WhatWorkedPanel winner={ov.what_worked.winner} loser={ov.what_worked.loser} loading={false} />
+            ) : (
+              <WhatWorkedPanel
+                winner={ov.what_worked.winner}
+                loser={ov.what_worked.loser}
+                winnerDiagnosis={diagnoses.data?.winner_diagnosis}
+                loserDiagnosis={diagnoses.data?.loser_diagnosis}
+                loading={diagnoses.isLoading}
+              />
+            )}
+          </section>
+
+          {/* Playbook */}
+          <section>
+            <SectionHeading>Your playbook</SectionHeading>
+            <p className="text-xs mb-4" style={{ color: "var(--color-ql-muted)" }}>
+              Result-proven moves — each grounded in your numbers and a real ranking principle. Doubling down on
+              your recognizable, high-performing pillars is how a consistent voice compounds reach.
+            </p>
+            <PlaybookPanel
+              moves={ov.moves}
+              brief={brief.data}
+              briefLoading={brief.isLoading}
+            />
+          </section>
+        </>
+      )}
     </motion.div>
   );
 }

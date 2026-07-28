@@ -1,12 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { WhyEngineResult, VerdictLabel, RepurposeStatus } from "@/lib/types";
+import type { WhyEngineResult, PostDiagnosis, VerdictLabel, RepurposeStatus } from "@/lib/types";
 import ConfidenceBadge from "@/components/shared/ConfidenceBadge";
 import { getRepurposeStatus } from "@/lib/api";
 
 interface Props {
-  result: WhyEngineResult;
+  /**
+   * Accepts a full WhyEngineResult (manual form) or a per-post PostDiagnosis
+   * from the Diagnose list, which has no recovery_brief/confidence/repurpose id.
+   */
+  result: WhyEngineResult | PostDiagnosis;
 }
 
 const VERDICT_CONFIG: Record<
@@ -117,7 +121,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 // The backend decorates verdict_label with symbols (e.g. "✓  Succeeded"), which never
 // exact-matches VERDICT_CONFIG's plain keys — so key off the raw `verdict` field instead.
-function resolveVerdictKey(result: WhyEngineResult): VerdictLabel {
+function resolveVerdictKey(result: WhyEngineResult | PostDiagnosis): VerdictLabel {
   const raw = `${result.verdict} ${result.verdict_label}`.toLowerCase();
   if (raw.includes("succeed")) return "Succeeded";
   if (raw.includes("fail")) return "Failed";
@@ -126,6 +130,8 @@ function resolveVerdictKey(result: WhyEngineResult): VerdictLabel {
 
 export default function DiagnosisPanel({ result }: Props) {
   const conf = VERDICT_CONFIG[resolveVerdictKey(result)];
+  // Present only on the manual-form result, absent on a per-post diagnosis.
+  const extras = result as Partial<WhyEngineResult>;
 
   const changeItems = result.change_next_time
     .split(/[\n•–-]+/)
@@ -150,8 +156,8 @@ export default function DiagnosisPanel({ result }: Props) {
           >
             {conf.label}
           </span>
-          {result.confidence && (
-            <ConfidenceBadge score={result.confidence.score} rationale={result.confidence.rationale} />
+          {extras.confidence && (
+            <ConfidenceBadge score={extras.confidence.score} rationale={extras.confidence.rationale} />
           )}
         </div>
         <p
@@ -165,7 +171,7 @@ export default function DiagnosisPanel({ result }: Props) {
         </p>
       </div>
 
-      {result.repurpose_job_id && <RepurposeBanner jobId={result.repurpose_job_id} />}
+      {extras.repurpose_job_id && <RepurposeBanner jobId={extras.repurpose_job_id} />}
 
       {/* Diagnosis */}
       <Card>

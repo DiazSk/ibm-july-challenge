@@ -2,6 +2,8 @@
 export interface BrandProfile {
   brand_name: string;
   handle: string;
+  timezone: string;   // IANA name — the audience's zone, not the viewer's
+
   content_pillars: string[];
   tone_descriptors: string[];
   signature_phrases: string[];
@@ -65,6 +67,7 @@ export interface WhyEngineRequest {
   saves: number;
   avg_watch_time_secs?: number;
   cluster_id: number;
+  visual_description?: string;   // from POST /api/analyze/describe-image
 }
 
 export type VerdictLabel = "Succeeded" | "Underperformed" | "Failed";
@@ -149,6 +152,94 @@ export interface DriftCheckResult {
   severity: "none" | "mild" | "significant";
 }
 
+// Autopilot — autonomous weekly content agent (Agents page)
+export interface AgentTraceEntry {
+  phase: string;   // start | think | act | done
+  label: string;
+  detail?: string;
+  post?: number;
+}
+
+export interface AutopilotPost {
+  index: number;
+  cluster_id: number;
+  pillar: string;
+  angle: string;
+  rationale: string;
+  caption: string;
+  confidence: number | null;
+  convergence_reason: string;
+  image_prompt: string;
+  needs_review: boolean;
+}
+
+export interface PendingQuestion {
+  question: string;
+  options: string[];
+}
+
+export interface AgentRunState {
+  status: "running" | "awaiting_input" | "done" | "error";
+  trace: AgentTraceEntry[];
+  reasoning: string;
+  posts: AutopilotPost[];
+  summary: string;
+  pending_question: PendingQuestion | null;
+  error: string | null;
+}
+
+// Self-Improving Playbook Agent
+export interface PlaybookRule {
+  rule_name: string | null;
+  text: string;
+  source: string;
+}
+export interface ReflectRule {
+  rule_name: string;
+  instruction: string;
+}
+export interface ReflectResult {
+  learned: string;
+  rules: ReflectRule[];
+  applied: number;
+  winners: number;
+  losers: number;
+}
+export interface ReflectJob {
+  status: "running" | "done" | "error";
+  result: ReflectResult | null;
+  error: string | null;
+}
+
+// Autonomous Recovery Agent
+export interface RecoveryNotice {
+  pending: boolean;
+  needs_review?: boolean;
+  original_caption?: string;
+  recovery_caption?: string;
+  confidence?: number | null;
+  cluster_label?: string | null;
+}
+
+// The Drift Test — head-to-head brand-voice match (Create tab)
+export type VoiceMatchLabel = "closely matches" | "some drift" | "significant drift";
+export type TopicalLabel = "on topic" | "loosely related" | "off topic";
+
+export interface DriftSide {
+  caption: string;
+  score: number; // brand-voice fidelity 0-100
+  match_label: VoiceMatchLabel;
+  matched_words: string[];
+  matched_phrases: string[];
+  avoided_violations: string[];
+  topical_label: TopicalLabel;
+}
+
+export interface DriftCompareResult {
+  baseline: DriftSide;
+  stylesync: DriftSide;
+}
+
 // Comment/DM Triage
 export interface TriageResult {
   message_index: number;
@@ -159,6 +250,20 @@ export interface TriageResult {
 }
 export interface TriageBatchResponse {
   results: TriageResult[];
+  total: number;
+}
+
+// Real Instagram inbox (comments)
+export interface InboxComment {
+  id: string;
+  text: string;
+  username: string;
+  timestamp: string;
+  media_permalink: string;
+  media_shortcode: string;
+}
+export interface InboxCommentsResponse {
+  comments: InboxComment[];
   total: number;
 }
 
@@ -232,6 +337,57 @@ export interface ClusterScore {
   richness_rank: number;
 }
 
+// Insights dashboard (real ingested metrics)
+export interface InsightKpis {
+  posts_counted: number;
+  total_reach: number;
+  total_views: number;
+  total_likes: number;
+  total_comments: number;
+  total_saves: number;
+  total_shares: number;
+  avg_engagement_rate: number;
+}
+
+export interface TopPost {
+  shortcode: string;
+  cluster_id: number;
+  pillar: string;
+  hook: string;
+  timestamp_utc: string;
+  reach: number;
+  views: number;
+  likes: number;
+  comments: number;
+  saves: number;
+  shares: number;
+  engagement_rate: number;
+}
+
+export interface PillarEngagement {
+  cluster_id: number;
+  pillar: string;
+  engagement_rate: number;
+  avg_reach: number;
+  avg_saves: number;
+  post_count: number;
+}
+
+export interface BestTimeCell {
+  weekday: number; // 0=Mon .. 6=Sun
+  hour: number;    // 0..23 (UTC)
+  avg_reach: number;
+  count: number;
+}
+
+export interface InsightsOverview {
+  kpis: InsightKpis;
+  top_posts: TopPost[];
+  by_pillar: PillarEngagement[];
+  best_times: BestTimeCell[];
+  best_slot: BestTimeCell | null;
+}
+
 // Script Studio
 export interface ScriptRequest {
   reference_caption: string;
@@ -245,11 +401,21 @@ export interface ScriptRequest {
   cluster_id: number;
 }
 
+export interface ReelClip {
+  clip_number: number;
+  duration_secs: string;
+  action: string;
+  voiceover_line: string;
+  camera_angle: string;
+  lighting: string;
+  setting: string;
+  audio_cue: string;
+}
+
 export interface ReelScript {
   hook: string;
-  opening_line: string;
-  voiceover_script: string;
-  shot_suggestions: string[];
+  clips: ReelClip[];
+  music_recommendation: string;
   caption: string;
   hashtags: string[];
   reasoning?: string;
@@ -319,6 +485,7 @@ export interface BoostAdvisorResult {
   dont_boost_cluster_name: string;
   dont_boost_reason: string;
   confidence?: { score: number; rationale: string };
+  engagement_is_synthetic?: boolean;
 }
 
 // Voice loop
@@ -368,11 +535,14 @@ export interface MemoryStatusResponse {
 }
 
 export interface TrendBriefing {
-  micro_trends:     { trend: string; relevance: string; urgency: "high" | "medium" | "low" }[];
-  content_hooks:    string[];
-  suggested_angles: { angle: string; cluster: string; format: string; why_now: string }[];
-  briefing_summary: string;
-  sources_searched: number;
+  // The Trend agent can fail after its search step (network/API error) and
+  // still return a truthy result — orchestrator.py falls back to `{}` in
+  // that case, so every field here is genuinely optional at runtime.
+  micro_trends?:     { trend: string; relevance: string; urgency: "high" | "medium" | "low" }[];
+  content_hooks?:    string[];
+  suggested_angles?: { angle: string; cluster: string; format: string; why_now: string }[];
+  briefing_summary?: string;
+  sources_searched?: number;
 }
 
 // JARVIS agent
@@ -381,6 +551,8 @@ export type ActionResultType =
   | "inspiration"
   | "workbench_items"
   | "post_mortem"
+  | "autopilot_started"
+  | "recovery_started"
   | "saved";
 
 export interface InspirationIdea {
@@ -399,6 +571,8 @@ export interface ActionResult {
     topic?     : string;
     items?     : unknown[];
     id?        : string;
+    job_id?    : string;
+    steer?     : string;
     // post_mortem fields:
     verdict_label?   : string;
     diagnosis?       : string;
@@ -412,4 +586,147 @@ export interface AgentChatResponse {
   response      : string;
   action_result ?: ActionResult | null;
   session_id    : string;
+}
+
+// Strategy tab (performance-first, algorithm-grounded)
+export type StrategySource = "official" | "your-data" | "industry-study";
+
+export interface ScorecardMetric {
+  key: string;
+  label: string;
+  value: number;
+  unit: string;
+  star: boolean;
+  hint: string;
+  source: StrategySource;
+}
+
+export interface PillarAgg {
+  cluster_id: number;
+  pillar: string;
+  post_count: number;
+  reach: number;
+  sends_per_reach: number;
+  saves_per_reach: number;
+  engagement_rate: number;
+  volume_pct: number;
+}
+
+export interface StrategyScorecard {
+  metrics: ScorecardMetric[];
+  posts_counted: number;
+  by_pillar: PillarAgg[];
+}
+
+export interface TimelinePoint {
+  month: string;
+  sends_per_reach: number;
+  saves_per_reach: number;
+  reach: number;
+  post_count: number;
+  top_pillar: string;
+  top_pillar_id: number | null;
+}
+
+export interface StrategyMove {
+  title: string;
+  stat: string;
+  detail: string;
+  principle: string;
+  source: StrategySource;
+  lever: string;
+}
+
+export interface RankedPost {
+  shortcode: string;
+  cluster_id: number;
+  pillar: string;
+  hook: string;
+  timestamp_utc: string;
+  reach: number;
+  views: number;
+  likes: number;
+  comments: number;
+  saves: number;
+  shares: number;
+  sends_per_reach: number;
+  saves_per_reach: number;
+  engagement_rate: number;
+}
+
+export interface StrategyOverview {
+  scorecard: StrategyScorecard;
+  timeline: TimelinePoint[];
+  moves: StrategyMove[];
+  what_worked: { winner: RankedPost | null; loser: RankedPost | null };
+}
+
+export interface PostDiagnosis {
+  verdict: string;
+  verdict_label: string;
+  diagnosis: string;
+  what_worked: string;
+  what_failed: string;
+  brand_voice_gap: string;
+  change_next_time: string;
+}
+
+export interface StrategyDiagnoses {
+  winner_diagnosis: PostDiagnosis | null;
+  loser_diagnosis: PostDiagnosis | null;
+}
+
+export interface StrategyBriefResult {
+  strategic_brief: string;
+  experiment: string;
+}
+
+// Diagnose tab — whole-account post inventory (instant) + lazy per-post diagnosis
+export type PerformanceTier = "Top" | "Solid" | "Weak" | "No data";
+
+export interface DiagnosePost {
+  shortcode: string;
+  cluster_id: number | null;
+  pillar: string;
+  group_key: string;
+  caption: string;
+  hook: string;
+  timestamp_utc: string;
+  permalink: string;
+  media_type: string;
+  post_type: "Reel" | "Carousel" | "Static";
+  reach: number;
+  views: number;
+  likes: number;
+  comments: number;
+  saves: number;
+  shares: number;
+  sends_per_reach: number;
+  saves_per_reach: number;
+  engagement_rate: number;
+  has_metrics: boolean;
+  score: number;
+  tier: PerformanceTier;
+  has_diagnosis: boolean;
+}
+
+export interface DiagnoseGroup {
+  group_key: string;
+  cluster_id: number | null;
+  pillar: string;
+  note: string;
+  post_count: number;
+  posts: DiagnosePost[];
+}
+
+export interface DiagnosePostsResponse {
+  groups: DiagnoseGroup[];
+  total: number;
+}
+
+/** A cached per-post diagnosis — PostDiagnosis plus provenance. */
+export interface PostDiagnosisResult extends PostDiagnosis {
+  shortcode: string;
+  post_type: string;
+  generated_at: string;
 }

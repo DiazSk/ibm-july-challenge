@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Info } from "lucide-react";
 import { getClusters, generateScript, saveAsset } from "@/lib/api";
 import { useLocalStorage } from "@/lib/useLocalStorage";
-import type { ScriptResult } from "@/lib/types";
+import type { ScriptResult, ReelClip } from "@/lib/types";
 
 type Format = "Reel" | "Carousel" | "Static";
 
@@ -78,10 +79,9 @@ function ScriptBlock({ label, content }: { label: string; content: string }) {
 
 function ReelOutput({ script }: { script: ScriptResult }) {
   const hook = script.hook as string | undefined;
-  const openingLine = script.opening_line as string | undefined;
-  const voiceover = script.voiceover_script as string | undefined;
   const caption = script.caption as string | undefined;
-  const shots = (script.shot_suggestions as string[] | undefined) ?? [];
+  const clips = (script.clips as ReelClip[] | undefined) ?? [];
+  const musicRecommendation = script.music_recommendation as string | undefined;
   const hashtags = (script.hashtags as string[] | undefined) ?? [];
 
   return (
@@ -96,25 +96,59 @@ function ReelOutput({ script }: { script: ScriptResult }) {
           </p>
         </div>
       )}
-      {openingLine && <ScriptBlock label="Opening Line" content={openingLine} />}
-      {voiceover && <ScriptBlock label="Voiceover Script" content={voiceover} />}
-      {shots.length > 0 && (
-        <div>
-          <p className="text-[10px] font-medium uppercase tracking-[0.1em] mb-1.5" style={{ color: "var(--color-ql-muted)" }}>
-            Shot Suggestions
-          </p>
-          <ul className="flex flex-col gap-1">
-            {shots.map((s, i) => (
-              <li key={i} className="flex items-start gap-2">
+
+      {clips.length > 0 && (
+        <div className="flex flex-col gap-2">
+          {clips.map((c) => (
+            <div
+              key={c.clip_number}
+              className="rounded-lg border p-3"
+              style={{ borderColor: "var(--color-ql-border)", background: "var(--color-ql-bg)" }}
+            >
+              <div className="flex items-start gap-2">
                 <span className="shrink-0 text-[10px] font-medium mt-0.5" style={{ color: "var(--color-ql-accent)" }}>
-                  {i + 1}.
+                  {c.clip_number}.
                 </span>
-                <span className="text-xs" style={{ color: "var(--color-ql-text)" }}>{s}</span>
-              </li>
-            ))}
-          </ul>
+                <div className="flex-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-xs font-medium" style={{ color: "var(--color-ql-dark)" }}>{c.action}</p>
+                    <span className="text-[10px] shrink-0" style={{ color: "var(--color-ql-muted)" }}>{c.duration_secs}s</span>
+                  </div>
+                  {c.voiceover_line && (
+                    <p className="text-[11px] mt-1 italic leading-snug" style={{ color: "var(--color-ql-text)" }}>
+                      &ldquo;{c.voiceover_line}&rdquo;
+                    </p>
+                  )}
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 mt-1.5">
+                    <p className="text-[10px] leading-snug" style={{ color: "var(--color-ql-muted)" }}>
+                      <span style={{ color: "var(--color-ql-accent)" }}>Camera:</span> {c.camera_angle}
+                    </p>
+                    <p className="text-[10px] leading-snug" style={{ color: "var(--color-ql-muted)" }}>
+                      <span style={{ color: "var(--color-ql-accent)" }}>Lighting:</span> {c.lighting}
+                    </p>
+                    <p className="text-[10px] leading-snug" style={{ color: "var(--color-ql-muted)" }}>
+                      <span style={{ color: "var(--color-ql-accent)" }}>Setting:</span> {c.setting}
+                    </p>
+                    <p className="text-[10px] leading-snug" style={{ color: "var(--color-ql-muted)" }}>
+                      <span style={{ color: "var(--color-ql-accent)" }}>Audio:</span> {c.audio_cue}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       )}
+
+      {musicRecommendation && (
+        <div className="rounded-lg border p-3" style={{ borderColor: "var(--color-ql-border)", background: "var(--color-ql-gap)" }}>
+          <p className="text-[10px] font-medium uppercase tracking-[0.1em] mb-1" style={{ color: "var(--color-ql-muted)" }}>
+            Music
+          </p>
+          <p className="text-xs leading-snug" style={{ color: "var(--color-ql-dark)" }}>{musicRecommendation}</p>
+        </div>
+      )}
+
       {caption && <ScriptBlock label="Caption" content={caption} />}
       {hashtags.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
@@ -228,6 +262,19 @@ function StaticOutput({ script }: { script: ScriptResult }) {
 export default function ScriptStudio() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // One-shot: "Develop this" on a weekly-brief draft seeds the ss_script_* keys
+  // and sets ss_script_open, so we open + scroll into view on arrival.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (localStorage.getItem("ss_script_open") !== "1") return;
+    localStorage.removeItem("ss_script_open");
+    setOpen(true);
+    requestAnimationFrame(() =>
+      containerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+    );
+  }, []);
 
   // Persisted across tab changes and refreshes
   const [refCaption, setRefCaption, clearRefCaption] = useLocalStorage("ss_script_caption", "");
@@ -305,7 +352,8 @@ export default function ScriptStudio() {
 
   return (
     <div
-      className="rounded-xl border overflow-hidden"
+      ref={containerRef}
+      className="rounded-xl border overflow-hidden scroll-mt-20"
       style={{ borderColor: "var(--color-ql-border)", background: "var(--color-ql-card)" }}
     >
       <button
@@ -313,8 +361,11 @@ export default function ScriptStudio() {
         className="w-full flex items-center justify-between px-5 py-4 text-left transition-colors hover:bg-[var(--color-ql-gap)]"
       >
         <div>
-          <p className="text-sm font-medium" style={{ color: "var(--color-ql-dark)", fontFamily: "var(--font-display)" }}>
+          <p className="text-sm font-medium flex items-center gap-1.5" style={{ color: "var(--color-ql-dark)", fontFamily: "var(--font-display)" }}>
             Script Studio
+            <span title="Paste a post that performed well and Granite turns it into a new Reel, Carousel, or Static script in the same successful mold.">
+              <Info size={14} style={{ color: "var(--color-ql-muted)" }} />
+            </span>
           </p>
           <p className="text-xs mt-0.5" style={{ color: "var(--color-ql-muted)" }}>
             Turn a high-performing post into a Reel, Carousel, or Static script
@@ -346,12 +397,12 @@ export default function ScriptStudio() {
             {/* Reference caption */}
             <div>
               <label className="block text-[11px] font-medium uppercase tracking-[0.12em] mb-1.5" style={{ color: "var(--color-ql-muted)" }}>
-                Reference Post Caption
+                Reference caption or idea
               </label>
               <textarea
                 value={refCaption}
                 onChange={(e) => setRefCaption(e.target.value)}
-                placeholder="Paste a caption from a post that performed really well…"
+                placeholder="Paste a caption from a post that performed well — or develop a weekly-brief idea…"
                 rows={3}
                 className="w-full text-sm rounded-lg border px-3 py-2.5 resize-none outline-none transition-colors"
                 style={{ borderColor: "var(--color-ql-border)", color: "var(--color-ql-text)", background: "var(--color-ql-bg)" }}

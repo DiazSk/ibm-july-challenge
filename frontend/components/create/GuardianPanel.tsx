@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Info } from "lucide-react";
 import type { GuardianReviewResult, GuardianRound } from "@/lib/types";
 
 const SEVERITY_COLOR: Record<string, string> = {
@@ -55,12 +56,17 @@ export default function GuardianPanel({
 
   return (
     <div className="mt-6">
-      <p
-        className="text-[11px] font-medium uppercase tracking-[0.12em] mb-3"
-        style={{ color: "var(--color-ql-muted)" }}
-      >
-        Brand Guardian Courtroom &middot; adversarial critique &amp; refine
-      </p>
+      <div className="flex items-center gap-1.5 mb-3">
+        <p
+          className="text-[11px] font-medium uppercase tracking-[0.12em]"
+          style={{ color: "var(--color-ql-muted)" }}
+        >
+          Brand Guardian Courtroom &middot; adversarial critique &amp; refine
+        </p>
+        <span title="Puts a caption through rounds of adversarial critique against your brand voice until it's approved or the panel's best attempt is reached.">
+          <Info size={14} style={{ color: "var(--color-ql-muted)" }} />
+        </span>
+      </div>
 
       <div
         className="rounded-xl border p-4 mb-3"

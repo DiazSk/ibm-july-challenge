@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Info } from "lucide-react";
 import { analyzeMoment, getDirections } from "@/lib/api";
 import type { MomentAnalysis, Direction } from "@/lib/types";
 
@@ -72,10 +73,13 @@ export default function BlankPageSolver({ onApply }: Props) {
       >
         <div>
           <p
-            className="text-sm font-medium"
+            className="text-sm font-medium flex items-center gap-1.5"
             style={{ color: "var(--color-ql-dark)", fontFamily: "var(--font-display)" }}
           >
             Blank Page Solver
+            <span title="Describe a moment and Granite finds the emotional angle and brand-voice cluster to write from — no blank-page staring.">
+              <Info size={14} style={{ color: "var(--color-ql-muted)" }} />
+            </span>
           </p>
           <p className="text-xs mt-0.5" style={{ color: "var(--color-ql-muted)" }}>
             Describe a moment — Granite finds your creative angle

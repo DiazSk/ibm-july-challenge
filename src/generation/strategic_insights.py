@@ -32,16 +32,6 @@ BRAND_PROFILE_PATH = _PROJECT_ROOT / "data" / "brand_profile.json"
 
 OLLAMA_MODEL = "granite3.1-dense:8b"
 
-_CLUSTER_ID_LABELS = {
-    0: "Homemade Classics",
-    1: "Fusion Specials",
-    2: "Behind the Scenes",
-    3: "Nutella Series",
-    4: "Bomboloni",
-}
-
-_TENSION_THRESHOLD = 15.0  # percentage-point gap that flags a mismatch
-
 _TEMPLATE = """\
 You are a creative strategist advising {brand_name}, a homemade artisan bakery.
 
@@ -73,6 +63,40 @@ _PROMPT = PromptTemplate(
     template=_TEMPLATE,
 )
 
+# Performance-first brief — grounds the recommendation in REAL engagement +
+# the Instagram signals that actually drive reach (sends & saves per reach),
+# not brand-profile text richness.
+_PERF_TEMPLATE = """\
+You are a social strategist advising {brand_name}, a homemade artisan bakery, \
+using their real Instagram performance.
+
+Per content pillar — Volume % of posts, Sends-per-reach %, Saves-per-reach %, \
+Engagement %. On Instagram, sends-per-reach (DM shares ÷ reach) is the most \
+heavily weighted driver of new-audience reach; saves are the next-highest signal.
+
+{perf_table}
+
+Moves already surfaced from the data:
+{move_lines}
+
+Write a 3-4 sentence strategic brief in plain English. Be specific — name the \
+pillars and cite the actual sends/saves numbers above. Say where reach is really \
+coming from and where effort is being wasted. Then give ONE concrete, low-effort \
+experiment for the next 2 weeks. Speak directly to them, warmly, as a peer — not \
+a consultant. Do not invent numbers not shown above.
+
+Return ONLY valid JSON — no preamble, no markdown fences:
+{{
+  "strategic_brief": "<3-4 sentences>",
+  "experiment": "<1-2 sentences: one specific, low-effort experiment>"
+}}
+"""
+
+_PERF_PROMPT = PromptTemplate(
+    input_variables=["brand_name", "perf_table", "move_lines"],
+    template=_PERF_TEMPLATE,
+)
+
 
 def _parse_json(raw: str) -> dict:
     text = raw.strip()
@@ -93,8 +117,9 @@ class StrategicInsights:
     """
 
     def __init__(self, model: str = OLLAMA_MODEL):
-        self._llm   = OllamaLLM(model=model, temperature=0.2, num_predict=500)
-        self._chain = _PROMPT | self._llm
+        self._llm        = OllamaLLM(model=model, temperature=0.2, num_predict=500)
+        self._chain      = _PROMPT | self._llm
+        self._perf_chain = _PERF_PROMPT | self._llm
 
     def compute_richness_scores(
         self, brand_profile: dict, clusters_data: dict
@@ -131,7 +156,7 @@ class StrategicInsights:
                 if cluster_posts else 0
             )
 
-            pillar = _CLUSTER_ID_LABELS.get(cp["cluster_id"], f"Cluster {cp['cluster_id']}")
+            pillar = p.get("content_pillar") or f"Cluster {cp['cluster_id']}"
             tones      = p.get("tone_descriptors", [])
 
             scores.append({
@@ -218,6 +243,38 @@ class StrategicInsights:
                 "overused_cluster"    : None,
             }
 
+    def generate_performance_brief(
+        self, by_pillar: list[dict], moves: list[dict], brand_name: str
+    ) -> dict:
+        """
+        Performance-first brief grounded in real sends/saves-per-reach.
+        Input: strategy.compute_algo_scorecard()['by_pillar'] rows + derive_moves().
+        Returns {strategic_brief, experiment}.
+        """
+        header = f"{'Pillar':<26} {'Vol%':>6} {'Sends/reach':>12} {'Saves/reach':>12} {'Eng%':>6}"
+        rows = [header, "─" * (len(header) + 2)]
+        for p in sorted(by_pillar, key=lambda x: x["sends_per_reach"], reverse=True):
+            rows.append(
+                f"{p['pillar'][:26]:<26} {p['volume_pct']:>5.0f}% "
+                f"{p['sends_per_reach']:>11.2f}% {p['saves_per_reach']:>11.2f}% "
+                f"{p['engagement_rate']:>5.0f}%"
+            )
+        move_lines = "\n".join(f"  • {m['title']} — {m['stat']}" for m in moves) or "  • (none)"
+
+        raw = self._perf_chain.invoke({
+            "brand_name": brand_name,
+            "perf_table": "\n".join(rows),
+            "move_lines": move_lines,
+        })
+        try:
+            parsed = _parse_json(raw)
+            return {
+                "strategic_brief": parsed.get("strategic_brief", ""),
+                "experiment"     : parsed.get("experiment", ""),
+            }
+        except (json.JSONDecodeError, ValueError):
+            return {"strategic_brief": raw.strip(), "experiment": ""}
+
 
 # ── Standalone demo ───────────────────────────────────────────────────────────
 
@@ -233,7 +290,7 @@ if __name__ == "__main__":
     for s in scores:
         print(
             f"  C{s['cluster_id']} {s['pillar']:<20}: "
-            f"volume={s['volume_pct']}%  richness={s['normalized_richness']}%"
+            f"volume={s['volume_pct']}%  richness_rank=#{s['richness_rank']}"
         )
 
     print("\nTensions:")

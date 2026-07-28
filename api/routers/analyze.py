@@ -7,21 +7,18 @@ Uses plain `def` because WhyEngine.analyze() is a synchronous Ollama call.
 from typing import Optional
 from uuid import uuid4
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException
+from fastapi import APIRouter, BackgroundTasks, HTTPException, UploadFile, File
 from pydantic import BaseModel
 
-from api.dependencies import get_why_engine, get_recovery_brief_generator, get_confidence_scorer
+from api.dependencies import (
+    get_why_engine, get_recovery_brief_generator, get_confidence_scorer,
+    get_vision_describer,
+)
 from api.routers.repurpose import run_repurpose_pipeline, _jobs as _repurpose_jobs
+from src.data.pillars import pillar_label
 
 router = APIRouter()
 
-_CLUSTER_ID_LABELS = {
-    0: "Homemade Classics",
-    1: "Fusion Specials",
-    2: "Behind the Scenes",
-    3: "Nutella Series",
-    4: "Bomboloni",
-}
 
 
 class WhyEngineRequest(BaseModel):
@@ -35,6 +32,42 @@ class WhyEngineRequest(BaseModel):
     saves: int
     avg_watch_time_secs: Optional[float] = None
     cluster_id: int = 0
+    visual_description: Optional[str] = None   # from /describe-image, optional
+
+
+@router.post("/describe-image")
+async def describe_image(file: UploadFile = File(...)) -> dict:
+    """
+    Run the vision model on an uploaded image/video and return a text description
+    the Why Engine can consume. Separate from /why-engine so the one vision→Granite
+    model swap happens here, on the user's explicit upload, not on every diagnosis.
+    """
+    data = await file.read()
+    if not data:
+        raise HTTPException(status_code=422, detail="empty file")
+
+    ctype    = (file.content_type or "").lower()
+    is_image = ctype.startswith("image/")
+    is_video = ctype.startswith("video/")
+    if not (is_image or is_video):
+        # Content-Type missing/generic (e.g. octet-stream) — sniff image magic bytes.
+        # ponytail: covers the common IG formats; unknown → reject rather than feed
+        # garbage to the vision model (which 502s with a cryptic decode error).
+        if (data[:3] == b"\xff\xd8\xff"                       # JPEG
+                or data[:8] == b"\x89PNG\r\n\x1a\n"           # PNG
+                or data[:6] in (b"GIF87a", b"GIF89a")         # GIF
+                or (data[:4] == b"RIFF" and data[8:12] == b"WEBP")):  # WEBP
+            is_image = True
+        else:
+            raise HTTPException(
+                status_code=415,
+                detail="Unsupported file type — upload an image or video.",
+            )
+    try:
+        desc = get_vision_describer().describe_bytes(data, is_video=is_video)
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=502, detail=f"vision model unavailable: {exc}")
+    return {"visual_description": desc}
 
 
 @router.post("/why-engine")
@@ -57,6 +90,7 @@ def run_why_engine(req: WhyEngineRequest, background_tasks: BackgroundTasks) -> 
         saves               = req.saves,
         avg_watch_time_secs = req.avg_watch_time_secs,
         cluster_id          = req.cluster_id,
+        visual_description  = req.visual_description or "",
     )
     if result.get("verdict", "").lower() in ("underperformed", "failed"):
         try:
@@ -90,7 +124,7 @@ def run_why_engine(req: WhyEngineRequest, background_tasks: BackgroundTasks) -> 
                 "views": req.views, "reach": req.reach, "likes": req.likes,
                 "comments": req.comments, "shares": req.shares, "saves": req.saves,
             }
-            cluster_label = _CLUSTER_ID_LABELS.get(req.cluster_id, f"Cluster {req.cluster_id}")
+            cluster_label = pillar_label(req.cluster_id)
             background_tasks.add_task(
                 run_repurpose_pipeline, job_id, req.caption.strip(), metrics, req.cluster_id, cluster_label,
             )

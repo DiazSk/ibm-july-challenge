@@ -17,6 +17,22 @@ const NAV = [
 ] as const;
 
 export default function StudioSidebar() {
+  return (
+    <aside
+      className="hidden w-64 shrink-0 flex-col border-r md:flex"
+      style={{ background: "var(--color-ql-sidebar)", borderColor: "var(--color-ql-border)" }}
+    >
+      <SidebarBody />
+    </aside>
+  );
+}
+
+/**
+ * The sidebar's contents (brand mark, nav, profile footer) — shared by the
+ * desktop `aside` and the mobile slide-over drawer. `onNavigate` lets the
+ * mobile drawer close itself when a link is tapped.
+ */
+export function SidebarBody({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
   const { data: profile } = useQuery({
     queryKey: ["brand-profile"],
@@ -28,14 +44,11 @@ export default function StudioSidebar() {
   const initial = displayName.charAt(0).toUpperCase();
 
   return (
-    <aside
-      className="hidden w-64 shrink-0 flex-col border-r md:flex"
-      style={{ background: "var(--color-ql-sidebar)", borderColor: "var(--color-ql-border)" }}
-    >
+    <>
       <div className="flex h-16 items-center border-b px-6" style={{ borderColor: "var(--color-ql-border)" }}>
         <BrandMark />
       </div>
-      <nav className="flex-1 px-3 py-6">
+      <nav className="flex-1 overflow-y-auto px-3 py-6">
         <p className="px-3 text-[10px] uppercase tracking-[0.25em]" style={{ color: "var(--color-ql-muted)" }}>
           Studio
         </p>
@@ -47,6 +60,7 @@ export default function StudioSidebar() {
               <li key={n.href}>
                 <Link
                   href={n.href}
+                  onClick={onNavigate}
                   className="flex items-center gap-3 rounded-sm px-3 py-2 text-sm transition-colors"
                   style={{
                     background: active ? "var(--color-ql-card)" : "transparent",
@@ -82,7 +96,7 @@ export default function StudioSidebar() {
           </div>
         </div>
       </div>
-    </aside>
+    </>
   );
 }
 

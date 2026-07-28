@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { Info } from "lucide-react";
 import { getClusters } from "@/lib/api";
 
 interface Props {
@@ -86,12 +87,17 @@ export default function CaptionBrief({
       }}
     >
       <div className="flex items-center justify-between mb-4">
-        <h3
-          className="text-base"
-          style={{ fontFamily: "var(--font-display)", color: "var(--color-ql-dark)" }}
-        >
-          Caption Brief
-        </h3>
+        <div className="flex items-center gap-1.5">
+          <h3
+            className="text-base"
+            style={{ fontFamily: "var(--font-display)", color: "var(--color-ql-dark)" }}
+          >
+            Caption Brief
+          </h3>
+          <span title="Fill in the product, occasion, and desired feel, and Granite drafts on-brand caption variants from your real content clusters.">
+            <Info size={14} style={{ color: "var(--color-ql-muted)" }} />
+          </span>
+        </div>
         <button
           onClick={onClear}
           className="text-[11px] px-2 py-1 rounded border transition-colors"

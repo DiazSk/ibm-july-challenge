@@ -49,6 +49,7 @@ Content brief:
 - Each variant should take a different angle (e.g. emotional, sensory, humorous)
 - Use a maximum of 5 hashtags; choose them for reach and discoverability, not decoration
 - Place 2-3 niche targeting keywords naturally in the caption body (not as hashtags) to boost reach
+- End with a natural, on-brand invitation to engage — a light question or a gentle nudge to save or share. Keep it warm and human, never spammy or growth-hacky (no "TAG A FRIEND", no ALL CAPS CTAs)
 
 {exclusion_block}Return ONLY valid JSON — no preamble, no explanation, no markdown fences:
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Info } from "lucide-react";
 import type { Caption } from "@/lib/types";
 
 interface Props {
@@ -60,6 +61,9 @@ export default function CaptionVariants({
           >
             Caption Variants
           </p>
+          <span title="Multiple Granite-generated caption options for your brief — copy, save, or push one into image direction, resonance check, or Guardian review.">
+            <Info size={14} style={{ color: "var(--color-ql-muted)" }} />
+          </span>
           {!!usedRealOutcomes && usedRealOutcomes > 0 && (
             <span
               className="text-[9px] px-1.5 py-0.5 rounded-full"

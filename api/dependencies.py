@@ -26,6 +26,12 @@ def get_caption_generator():
 
 
 @lru_cache(maxsize=1)
+def get_baseline_caption_generator():
+    from src.generation.baseline_caption import BaselineCaptionGenerator
+    return BaselineCaptionGenerator()
+
+
+@lru_cache(maxsize=1)
 def get_image_generator():
     from src.generation.image_prompt_generator import ImagePromptGenerator
     return ImagePromptGenerator()
@@ -35,6 +41,12 @@ def get_image_generator():
 def get_why_engine():
     from src.generation.why_engine import WhyEngine
     return WhyEngine()
+
+
+@lru_cache(maxsize=1)
+def get_vision_describer():
+    from src.generation.vision_describer import VisionDescriber
+    return VisionDescriber()
 
 
 @lru_cache(maxsize=1)
@@ -166,7 +178,32 @@ def get_memory_store():
 
 
 @lru_cache(maxsize=1)
+def get_trend_agent():
+    from src.agents.trend_agent import TrendAgent
+    return TrendAgent(memory=get_memory_store())
+
+
+@lru_cache(maxsize=1)
 def get_orchestrator():
     from src.agents.orchestrator import StyleSyncOrchestrator
     memory = get_memory_store()
     return StyleSyncOrchestrator(memory=memory)
+
+
+@lru_cache(maxsize=1)
+def get_autopilot():
+    from src.agents.autopilot import WeeklyAutopilot
+    return WeeklyAutopilot(get_orchestrator())
+
+
+@lru_cache(maxsize=1)
+def get_playbook_agent():
+    import json
+    from src.agents.playbook_agent import PlaybookAgent
+    try:
+        brand_name = json.loads(
+            (_PROJECT_ROOT / "data" / "brand_profile.json").read_text(encoding="utf-8")
+        ).get("brand_name", "the brand")
+    except Exception:
+        brand_name = "the brand"
+    return PlaybookAgent(get_memory_store(), brand_name=brand_name)

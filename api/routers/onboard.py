@@ -54,7 +54,7 @@ def _clear_caches() -> None:
             get_voice_transcriber, get_voice_synthesizer,
             get_confidence_scorer, get_persona_simulator, get_resonance_synthesizer,
             get_weekly_brief_planner, get_brand_guardian, get_brand_drift_analyzer,
-            get_comment_triager,
+            get_comment_triager, get_trend_agent,
         )
         for fn in (
             get_caption_generator, get_image_generator, get_why_engine,
@@ -65,7 +65,7 @@ def _clear_caches() -> None:
             get_voice_transcriber, get_voice_synthesizer,
             get_confidence_scorer, get_persona_simulator, get_resonance_synthesizer,
             get_weekly_brief_planner, get_brand_guardian, get_brand_drift_analyzer,
-            get_comment_triager,
+            get_comment_triager, get_trend_agent,
         ):
             try:
                 fn.cache_clear()
@@ -84,6 +84,36 @@ def _clear_caches() -> None:
     except Exception:
         pass
 
+    try:
+        from api.routers.insights import _compute_overview_cached
+        _compute_overview_cached.cache_clear()
+    except Exception:
+        pass
+
+    # Pillar names are re-derived by Granite on every rebuild, so the shared
+    # label cache has to drop with everything else or the UI keeps the old names.
+    try:
+        from src.data.pillars import clear_cache as _clear_pillar_cache
+        _clear_pillar_cache()
+    except Exception:
+        pass
+
+    # These were missing: a re-sync left the Strategy tab and the Diagnose list
+    # serving pre-sync results.
+    try:
+        from api.routers.strategy import _overview, _diagnoses, _brief
+        _overview.cache_clear()
+        _diagnoses.cache_clear()
+        _brief.cache_clear()
+    except Exception:
+        pass
+
+    try:
+        from api.routers.diagnose import _posts
+        _posts.cache_clear()
+    except Exception:
+        pass
+
 
 # ── Background tasks ──────────────────────────────────────────────────────────
 
@@ -94,27 +124,15 @@ def _run_handle_pipeline(job_id: str, handle: str, brand_name: str) -> None:
 
         from src.scrapers.instaloader_scraper import scrape_profile
         _update_job(job_id, 10, f"Fetching posts for @{handle.lstrip('@')}...")
-        n = scrape_profile(handle)
+        scrape_profile(handle)
 
-        _update_job(job_id, 30, f"Fetched {n} posts. Processing captions...")
-        from src.data.pipeline import run_pipeline
-        records = run_pipeline()
-        if not records:
-            raise RuntimeError("No posts with usable captions found.")
-
-        _update_job(job_id, 50, "Clustering your content...")
-        from src.embeddings.cluster import run_clustering
-        run_clustering()
-
-        _update_job(job_id, 65, "IBM Granite is building your brand voice...")
-        from src.embeddings.profile_extractor import BrandProfileExtractor
         ig_handle = handle if handle.startswith("@") else f"@{handle}"
-        extractor = BrandProfileExtractor(
+        from run_pipeline import run_full_pipeline
+        run_full_pipeline(
             brand_name=brand_name,
-            ig_handle=ig_handle,
-            brand_bio=f"{brand_name} — Instagram creator analyzed by StyleSync.",
+            handle=ig_handle,
+            progress_cb=lambda pct, msg: _update_job(job_id, pct, msg),
         )
-        extractor.build_brand_profile()
 
         _clear_caches()
         _update_job(job_id, 100, "Your brand profile is ready!", status="done")
@@ -153,27 +171,13 @@ def _run_export_pipeline(
             Path(tmp_path).unlink(missing_ok=True)
 
         _update_job(job_id, 30, "Posts extracted. Processing captions...")
-        from src.data.pipeline import run_pipeline
-        records = run_pipeline()
-        if not records:
-            raise RuntimeError(
-                "No posts with usable captions found in the export. "
-                "Make sure you exported 'Posts' and 'Reels' in JSON format."
-            )
-
-        _update_job(job_id, 50, "Clustering your content...")
-        from src.embeddings.cluster import run_clustering
-        run_clustering()
-
-        _update_job(job_id, 65, "IBM Granite is building your brand voice...")
-        from src.embeddings.profile_extractor import BrandProfileExtractor
         ig_handle = account if account.startswith("@") else f"@{account}"
-        extractor = BrandProfileExtractor(
+        from run_pipeline import run_full_pipeline
+        run_full_pipeline(
             brand_name=brand_name,
-            ig_handle=ig_handle,
-            brand_bio=f"{brand_name} — Instagram creator analyzed by StyleSync.",
+            handle=ig_handle,
+            progress_cb=lambda pct, msg: _update_job(job_id, pct, msg),
         )
-        extractor.build_brand_profile()
 
         _clear_caches()
         _update_job(job_id, 100, "Your brand profile is ready!", status="done")

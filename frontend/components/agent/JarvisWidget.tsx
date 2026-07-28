@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { agentChat, clearAgentSession, saveAsset, getWeeklyBriefPendingNotice } from "@/lib/api";
+import { agentChat, clearAgentSession, saveAsset, getWeeklyBriefPendingNotice, getRecoveryPendingNotice } from "@/lib/api";
 import type { ActionResult, InspirationIdea } from "@/lib/types";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -158,14 +158,40 @@ function PostMortemCard({ data }: { data: ActionResult["data"] }) {
   );
 }
 
+function AutopilotCard({
+  data, onOpen,
+}: {
+  data  : ActionResult["data"];
+  onOpen: (jobId: string) => void;
+}) {
+  const jobId = data.job_id ?? "";
+  return (
+    <div className="rounded-xl border mt-2 p-3 flex flex-col gap-2"
+      style={{ borderColor: "var(--color-ql-accent)", background: "color-mix(in oklch, var(--color-ql-accent) 7%, transparent)" }}>
+      <div className="flex items-center gap-1.5">
+        <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "var(--color-ql-accent)" }} />
+        <span className="text-[11px] font-medium" style={{ color: "var(--color-ql-accent)" }}>
+          Autopilot is working{data.steer ? ` — focus: ${data.steer}` : ""}
+        </span>
+      </div>
+      <button onClick={() => onOpen(jobId)}
+        className="text-[11px] px-3 py-1.5 rounded-lg font-medium hover:opacity-80 transition-opacity self-start"
+        style={{ background: "var(--color-ql-accent)", color: "var(--color-ql-bg)" }}>
+        Watch it think →
+      </button>
+    </div>
+  );
+}
+
 // ── Message bubble ────────────────────────────────────────────────────────────
 
 function MessageBubble({
-  msg, onUseCaption, onSaveCaption,
+  msg, onUseCaption, onSaveCaption, onOpenAutopilot,
 }: {
-  msg          : LocalMessage;
-  onUseCaption : (c: string) => void;
-  onSaveCaption: (c: string) => void;
+  msg            : LocalMessage;
+  onUseCaption   : (c: string) => void;
+  onSaveCaption  : (c: string) => void;
+  onOpenAutopilot: (jobId: string) => void;
 }) {
   const isUser = msg.role === "user";
   return (
@@ -197,6 +223,9 @@ function MessageBubble({
       )}
       {msg.actionResult?.type === "post_mortem" && (
         <PostMortemCard data={msg.actionResult.data} />
+      )}
+      {msg.actionResult?.type === "autopilot_started" && (
+        <AutopilotCard data={msg.actionResult.data} onOpen={onOpenAutopilot} />
       )}
     </div>
   );
@@ -256,6 +285,46 @@ export default function JarvisWidget() {
         // best-effort nudge — silent on failure
       }
     })();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Proactive: the Autonomous Recovery Agent runs unprompted when a post is
+  // tagged underperformed/failed. Poll for its result and have JARVIS announce it.
+  useEffect(() => {
+    const announce = async () => {
+      try {
+        const n = await getRecoveryPendingNotice();
+        if (!n.pending) return;
+        if (n.needs_review) {
+          addMessage({
+            role: "assistant",
+            content: "One of your posts underperformed, but I couldn't confidently diagnose why — I've flagged it for you to review rather than guess.",
+          });
+        } else {
+          const conf = n.confidence != null ? ` It scores ${n.confidence}/100.` : "";
+          addMessage({
+            role: "assistant",
+            content: `I noticed a post underperformed, so I diagnosed it and wrote a recovery version — it's in your Workbench.${conf}`,
+          });
+        }
+      } catch {
+        // best-effort — silent on failure
+      }
+    };
+    announce();
+    const id = setInterval(announce, 15_000);
+    return () => clearInterval(id);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Dashboard insight chips dispatch "jarvis:ask" — open the panel and answer.
+  useEffect(() => {
+    const onAsk = (e: Event) => {
+      const q = (e as CustomEvent<string>).detail;
+      if (!q) return;
+      setIsOpen(true);
+      sendToJarvis(q);
+    };
+    window.addEventListener("jarvis:ask", onAsk);
+    return () => window.removeEventListener("jarvis:ask", onAsk);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── History helpers ─────────────────────────────────────────────────────
@@ -387,6 +456,11 @@ export default function JarvisWidget() {
     } catch { /* silent */ }
   }
 
+  function handleOpenAutopilot(jobId: string) {
+    router.push(jobId ? `/app/agents?run=${jobId}` : "/app/agents");
+    setIsOpen(false);
+  }
+
   // ── Clear conversation ──────────────────────────────────────────────────
   async function handleClear() {
     currentAudioRef.current?.pause();
@@ -439,12 +513,15 @@ export default function JarvisWidget() {
 
   // ── Render: expanded panel ──────────────────────────────────────────────
   return (
-    <div className="fixed bottom-6 right-6 z-40 flex flex-col" style={{ width: 380 }}>
+    <div
+      className="fixed bottom-6 right-6 z-40 flex flex-col"
+      style={{ width: "min(380px, calc(100vw - 3rem))" }}
+    >
       {/* Panel */}
       <div
         className="flex flex-col rounded-2xl border shadow-2xl overflow-hidden"
         style={{
-          height          : 540,
+          height          : "min(540px, calc(100vh - 3rem))",
           borderColor     : "var(--color-ql-border)",
           background      : "var(--color-ql-card)",
         }}
@@ -504,6 +581,7 @@ export default function JarvisWidget() {
               msg={msg}
               onUseCaption={handleUseCaption}
               onSaveCaption={handleSaveCaption}
+              onOpenAutopilot={handleOpenAutopilot}
             />
           ))}
 
@@ -539,58 +617,61 @@ export default function JarvisWidget() {
           className="shrink-0 border-t px-4 py-3"
           style={{ borderColor: "var(--color-ql-border)" }}
         >
-          {supported ? (
-            <div className="flex items-center gap-3">
-              <p className="flex-1 text-[11px]" style={{ color: "var(--color-ql-muted)" }}>
-                {isListening
-                  ? "Listening… click to stop"
-                  : isThinking
-                  ? "Thinking…"
-                  : phase === "speaking"
-                  ? "Speaking…"
-                  : "Click mic to speak"}
-              </p>
+          {/* Status hint while busy (feedback that used to live beside the mic) */}
+          {(isListening || isThinking || phase === "speaking") && (
+            <p className="mb-2 text-[11px]" style={{ color: "var(--color-ql-muted)" }}>
+              {isListening ? "Listening… click to stop" : isThinking ? "Thinking…" : "Speaking…"}
+            </p>
+          )}
+
+          {/* Type or talk — text always available so a mic failure never blocks you */}
+          <div className="flex items-center gap-2">
+            <form onSubmit={handleTextSubmit} className="flex-1 flex gap-2">
+              <input
+                type="text"
+                value={textInput}
+                onChange={e => setTextInput(e.target.value)}
+                placeholder={supported ? "Type, or tap the mic…" : "Type a message…"}
+                disabled={isThinking || phase === "speaking"}
+                className="flex-1 text-xs rounded-lg px-3 py-2 outline-none disabled:opacity-50"
+                style={{
+                  background: "var(--color-ql-gap)",
+                  border    : "1px solid var(--color-ql-border)",
+                  color     : "var(--color-ql-dark)",
+                }}
+              />
+              <button
+                type="submit"
+                disabled={!textInput.trim() || isThinking || phase === "speaking"}
+                className="px-3 py-2 rounded-lg text-xs font-medium disabled:opacity-40"
+                style={{ background: "var(--color-ql-dark)", color: "var(--color-ql-bg)" }}
+              >
+                Send
+              </button>
+            </form>
+
+            {supported && (
               <button
                 onClick={isListening ? stopListening : startListening}
                 disabled={isThinking || phase === "speaking"}
+                title={isListening ? "Stop recording" : "Speak"}
                 className="relative flex items-center justify-center rounded-full transition-colors disabled:opacity-40"
                 style={{
-                  width     : 44,
-                  height    : 44,
-                  background: isListening ? "var(--color-verdict-failed)" : "var(--color-ql-dark)",
-                  color     : "var(--color-ql-bg)",
-                  flexShrink: 0,
+                  width     : 40,
+                  height    : 40,
+                  background : isListening ? "var(--color-verdict-failed)" : "var(--color-ql-dark)",
+                  color      : "var(--color-ql-bg)",
+                  flexShrink : 0,
                 }}
               >
-                {isListening ? <StopIcon size={14} /> : <MicIcon size={18} />}
+                {isListening ? <StopIcon size={13} /> : <MicIcon size={16} />}
                 {isListening && (
                   <span className="absolute inset-0 rounded-full animate-ping"
                     style={{ background: "var(--color-verdict-failed)", opacity: 0.2 }} />
                 )}
               </button>
-            </div>
-          ) : (
-            /* Text fallback for non-Chrome browsers */
-            <form onSubmit={handleTextSubmit} className="flex gap-2">
-              <input
-                type="text"
-                value={textInput}
-                onChange={e => setTextInput(e.target.value)}
-                placeholder="Type a message…"
-                className="flex-1 text-xs rounded-lg px-3 py-2 outline-none"
-                style={{
-                  background  : "var(--color-ql-gap)",
-                  border      : "1px solid var(--color-ql-border)",
-                  color       : "var(--color-ql-dark)",
-                }}
-              />
-              <button type="submit"
-                className="px-3 py-2 rounded-lg text-xs font-medium"
-                style={{ background: "var(--color-ql-dark)", color: "var(--color-ql-bg)" }}>
-                Send
-              </button>
-            </form>
-          )}
+            )}
+          </div>
 
         </div>
       </div>

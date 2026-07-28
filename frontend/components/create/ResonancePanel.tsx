@@ -1,5 +1,6 @@
 "use client";
 
+import { Info } from "lucide-react";
 import type { ResonanceResult, PersonaReaction } from "@/lib/types";
 
 const POSITIVE_WORDS = ["delight", "excit", "intrigu", "love", "happy", "eager", "curious"];
@@ -54,12 +55,17 @@ function PersonaCard({ reaction }: { reaction: PersonaReaction }) {
 export default function ResonancePanel({ result }: { result: ResonanceResult }) {
   return (
     <div className="mt-6">
-      <p
-        className="text-[11px] font-medium uppercase tracking-[0.12em] mb-3"
-        style={{ color: "var(--color-ql-muted)" }}
-      >
-        Resonance Simulator · 3 audience personas, grounded in your real content clusters
-      </p>
+      <div className="flex items-center gap-1.5 mb-3">
+        <p
+          className="text-[11px] font-medium uppercase tracking-[0.12em]"
+          style={{ color: "var(--color-ql-muted)" }}
+        >
+          Resonance Simulator · 3 audience personas, grounded in your real content clusters
+        </p>
+        <span title="Runs your captions past 3 simulated audience personas built from your real content history, and picks the one predicted to land best.">
+          <Info size={14} style={{ color: "var(--color-ql-muted)" }} />
+        </span>
+      </div>
 
       {/* Lead with the actionable fix — the most useful part */}
       <div

@@ -10,6 +10,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from api.dependencies import get_brand_drift_analyzer, get_sentence_embedder
+from src.data.pillars import pillar_label
 
 router = APIRouter()
 
@@ -17,13 +18,6 @@ _PROJECT_ROOT  = Path(__file__).resolve().parent.parent.parent
 _PROFILE_PATH  = _PROJECT_ROOT / "data" / "brand_profile.json"
 _CLUSTERS_PATH = _PROJECT_ROOT / "data" / "clusters.json"
 
-_CLUSTER_ID_LABELS = {
-    0: "Homemade Classics",
-    1: "Fusion Specials",
-    2: "Behind the Scenes",
-    3: "Nutella Series",
-    4: "Bomboloni",
-}
 
 
 def _unique(items: list) -> list:
@@ -59,7 +53,7 @@ async def get_profile():
         p = cp.get("profile", {})
         if p.get("parse_error"):
             continue
-        pillar = _CLUSTER_ID_LABELS.get(cp["cluster_id"], f"Cluster {cp['cluster_id']}")
+        pillar = pillar_label(cp["cluster_id"])
         if pillar and pillar not in content_pillars:
             content_pillars.append(pillar)
         tone_descriptors  += p.get("tone_descriptors", [])
@@ -71,6 +65,7 @@ async def get_profile():
     return {
         "brand_name"      : raw["brand_name"],
         "handle"          : raw["ig_handle"],
+        "timezone"        : raw.get("timezone") or "UTC",
         "content_pillars" : content_pillars,
         "tone_descriptors": _unique(tone_descriptors),
         "signature_phrases": _unique(signature_phrases),
@@ -112,7 +107,7 @@ async def get_clusters():
         voc = p.get("vocabulary_patterns", {})
         result[cid_str] = {
             "cluster_id"      : cid,
-            "pillar"          : _CLUSTER_ID_LABELS.get(cid, f"Cluster {cid}"),
+            "pillar"          : pillar_label(cid),
             "post_count"      : cp.get("post_count", len(posts)),
             "tone_descriptors": p.get("tone_descriptors", []),
             "signature_phrases": voc.get("signature_phrases", []),
@@ -154,7 +149,7 @@ def check_brand_drift(req: DriftCheckRequest) -> dict:
     nearest_cluster_id, similarity_signal = detect_nearest_cluster_and_signal(
         posts, clusters_data, embedder,
     )
-    cluster_label = _CLUSTER_ID_LABELS.get(nearest_cluster_id, f"Cluster {nearest_cluster_id}")
+    cluster_label = pillar_label(nearest_cluster_id)
 
     analysis = get_brand_drift_analyzer().analyze_drift(posts, nearest_cluster_id, similarity_signal)
 

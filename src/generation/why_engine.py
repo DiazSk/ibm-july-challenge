@@ -58,16 +58,20 @@ Post being analyzed:
   Caption   : "{caption}"
   Post type : {post_type}
 
+What the post actually shows (from a vision model that looked at the image/Reel):
+{visual_description}
+
 Performance metrics (from Instagram Insights):
-  Views     : {views}
-  Reach     : {reach}
+{views_line}  Reach     : {reach}
   Likes     : {likes}
   Comments  : {comments}
   Shares    : {shares}
   Saves     : {saves}{avg_watch_line}
 
-Using these metrics AND the brand's established voice patterns above, diagnose this post.
-Be specific. Reference the actual caption text and actual numbers.
+Using the metrics, the brand's established voice patterns, AND what the post
+visually shows above, diagnose this post. Be specific. Reference the actual
+caption text, the actual numbers, and concrete visual elements (composition,
+colour, on-image text) when they explain the performance.
 
 Return ONLY valid JSON — no preamble, no explanation, no markdown fences:
 
@@ -86,8 +90,8 @@ _PROMPT = PromptTemplate(
         "brand_name", "benchmarks",
         "content_pillar", "tone_descriptors", "signature_phrases",
         "structural_signature", "emoji_style",
-        "caption", "post_type",
-        "views", "reach", "likes", "comments", "shares", "saves",
+        "caption", "post_type", "visual_description",
+        "views_line", "reach", "likes", "comments", "shares", "saves",
         "avg_watch_line",
     ],
     template=_TEMPLATE,
@@ -135,6 +139,7 @@ class WhyEngine:
         saves               : int,
         avg_watch_time_secs : float | None = None,
         cluster_id          : int = 0,
+        visual_description  : str = "",
     ) -> dict:
         """
         Returns a diagnosis dict:
@@ -157,6 +162,12 @@ class WhyEngine:
             else ""
         )
 
+        # Instagram only reports views for Reels. Showing "Views: 0" on a
+        # carousel/static made the model read a missing metric as a failure
+        # signal ("low number of views (0) suggests it didn't resonate"), so
+        # omit the line entirely when there is no views figure.
+        views_line = f"  Views     : {views}\n" if views else ""
+
         raw = self._chain.invoke({
             "brand_name"          : self._profile["brand_name"],
             "benchmarks"          : _BENCHMARKS,
@@ -167,7 +178,8 @@ class WhyEngine:
             "emoji_style"         : voc.get("emoji_style", ""),
             "caption"             : caption,
             "post_type"           : post_type,
-            "views"               : str(views),
+            "visual_description"  : visual_description.strip() or "(no visual description available)",
+            "views_line"          : views_line,
             "reach"               : str(reach),
             "likes"               : str(likes),
             "comments"            : str(comments),

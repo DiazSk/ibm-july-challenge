@@ -23,6 +23,8 @@ from uuid import uuid4
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
+from api.routers.recovery import trigger_recovery
+
 router = APIRouter()
 
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -135,6 +137,8 @@ def update_asset(asset_id: str, req: AssetUpdate) -> dict:
     if not row:
         raise HTTPException(status_code=404, detail="Asset not found.")
 
+    already_recovered = bool(row["recovery_brief_generated"])
+
     updates: list[str] = []
     params: list[Any] = []
 
@@ -157,6 +161,26 @@ def update_asset(asset_id: str, req: AssetUpdate) -> dict:
         params,
     )
     conn.commit()
+
+    # Autonomous Recovery Agent: tagging a post underperformed/failed kicks off an
+    # unprompted diagnose→recover run (once per asset). recovery_agent posts are
+    # skipped so a recovery can't recursively recover itself.
+    if (
+        req.actual_outcome in ("underperformed", "failed")
+        and not already_recovered
+        and req.recovery_brief_generated is None
+        and row["source_tab"] != "recovery_agent"
+    ):
+        if trigger_recovery(
+            req.actual_outcome, row["content"],
+            row["cluster_id"], row["cluster_label"],
+        ):
+            conn.execute(
+                "UPDATE workbench_assets SET recovery_brief_generated = 1 WHERE id = ?",
+                (asset_id,),
+            )
+            conn.commit()
+
     row = conn.execute(
         "SELECT * FROM workbench_assets WHERE id = ?", (asset_id,)
     ).fetchone()

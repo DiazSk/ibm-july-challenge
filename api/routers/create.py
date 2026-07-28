@@ -17,6 +17,7 @@ from pydantic import BaseModel
 
 from api.dependencies import (
     get_caption_generator,
+    get_baseline_caption_generator,
     get_direction_generator,
     get_image_generator,
     get_moment_analyzer,
@@ -25,6 +26,7 @@ from api.dependencies import (
     get_persona_simulator,
     get_resonance_synthesizer,
     get_brand_guardian,
+    get_sentence_embedder,
 )
 
 router = APIRouter()
@@ -164,6 +166,13 @@ class ResonanceCheckRequest(BaseModel):
 
 class GuardianReviewRequest(BaseModel):
     caption: str
+    cluster_id: int = 0
+
+
+class DriftCompareRequest(BaseModel):
+    product: str
+    occasion: str
+    desired_feel: str = ""
     cluster_id: int = 0
 
 
@@ -437,4 +446,88 @@ def run_guardian_review(req: GuardianReviewRequest) -> dict:
         "rounds_used": 2,
         "best_so_far": True,
         "history": history,
+    }
+
+
+# ── The Drift Test: head-to-head brand-voice match ─────────────────────────────
+
+# brand_drift's coarse cosine bands → honest topical labels (never a raw %). This
+# is the SECONDARY axis: it shows both captions are on the right *topic*.
+_TOPICAL_LABELS = {
+    "similar": "on topic",
+    "diverging": "loosely related",
+    "very_different": "off topic",
+}
+
+
+def _cluster_vocab(cluster_id: int) -> tuple[dict, list[str]]:
+    """(vocabulary_patterns, avoided_terms) for a cluster, from brand_profile.json."""
+    gen = get_caption_generator()
+    profiles = gen.cluster_profiles()
+    cluster = next((c for c in profiles if c["cluster_id"] == cluster_id), profiles[0])
+    p = cluster["profile"]
+    return p.get("vocabulary_patterns", {}), p.get("avoided_terms", [])
+
+
+def _score_side(caption: str, vocab: dict, avoided: list[str], clusters_data: dict, embedder) -> dict:
+    """
+    PRIMARY: brand-voice fidelity (deterministic, uses the creator's own vocab —
+    this is what reliably separates a plain LLM from StyleSync). SECONDARY:
+    embedding topical band (shows the baseline is on-topic but off-voice).
+    """
+    from src.generation.brand_drift import detect_nearest_cluster_and_signal
+    from src.generation.voice_fidelity import score_voice_fidelity
+
+    fidelity = score_voice_fidelity(caption, vocab, avoided)
+    _, topical = detect_nearest_cluster_and_signal([caption], clusters_data, embedder)
+    return {
+        "caption": caption,
+        **fidelity,  # score, match_label, matched_words, matched_phrases, avoided_violations
+        "topical_label": _TOPICAL_LABELS.get(topical["direction"], "loosely related"),
+    }
+
+
+@router.post("/drift-compare")
+def drift_compare(req: DriftCompareRequest) -> dict:
+    """
+    The Drift Test — the hero shot. Runs the SAME brief through a plain-LLM
+    baseline (no brand grounding) and StyleSync (Granite Call #2, full brand +
+    memory grounding), then scores BOTH against the creator's real brand profile.
+
+    Hero metric is brand-voice fidelity (0-100): does the caption use the
+    creator's own signature phrases and recurring words and avoid their banned
+    terms? A plain LLM has never seen the profile, so it scores near zero while
+    StyleSync scores high — a reliable, deterministic, no-extra-LLM contrast. The
+    matched phrases/words returned are the explanation. Both captions are usually
+    on-topic (secondary embedding band), which is the point: on-topic ≠ on-voice.
+    """
+    if not req.product.strip():
+        raise HTTPException(status_code=422, detail="product is required")
+    if not req.occasion.strip():
+        raise HTTPException(status_code=422, detail="occasion is required")
+
+    try:
+        clusters_data = json.loads(_CLUSTERS_PATH.read_text(encoding="utf-8"))
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail=f"Clusters data not found: {exc}")
+
+    embedder = get_sentence_embedder()
+    vocab, avoided = _cluster_vocab(req.cluster_id)
+
+    baseline_text = get_baseline_caption_generator().generate(
+        product=req.product.strip(),
+        occasion=req.occasion.strip(),
+    )
+
+    ss_variants = get_caption_generator().generate(
+        product      = req.product.strip(),
+        occasion     = req.occasion.strip(),
+        desired_feel = req.desired_feel.strip() or "on-brand and engaging",
+        cluster_id   = req.cluster_id,
+    )
+    stylesync_text = ss_variants[0]["caption"] if ss_variants else ""
+
+    return {
+        "baseline": _score_side(baseline_text, vocab, avoided, clusters_data, embedder),
+        "stylesync": _score_side(stylesync_text, vocab, avoided, clusters_data, embedder),
     }

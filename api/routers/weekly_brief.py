@@ -29,14 +29,6 @@ _PROFILE_PATH = _PROJECT_ROOT / "data" / "brand_profile.json"
 _CLUSTERS_PATH = _PROJECT_ROOT / "data" / "clusters.json"
 _DB_PATH = _PROJECT_ROOT / "data" / "workbench.db"
 
-_CLUSTER_ID_LABELS = {
-    0: "Homemade Classics",
-    1: "Fusion Specials",
-    2: "Behind the Scenes",
-    3: "Nutella Series",
-    4: "Bomboloni",
-}
-
 # In-memory job store (single-server, demo-scale — same pattern as onboard.py)
 _jobs: dict[str, dict] = {}
 
@@ -72,87 +64,74 @@ def _run_weekly_brief_pipeline(job_id: str, n: int) -> None:
     try:
         _update_job(job_id, 5, "Reviewing your content strategy...")
         profile = json.loads(_PROFILE_PATH.read_text(encoding="utf-8"))
-        clusters = json.loads(_CLUSTERS_PATH.read_text(encoding="utf-8"))
 
-        from api.routers.discover import _compute_strategic_insights, _DEMO_ENGAGEMENT
+        from api.routers.discover import _compute_strategic_insights
 
         insights = _compute_strategic_insights()  # cached — free after first Discover visit
         underutilized_id = insights.get("underutilized_cluster")
         if underutilized_id is None:
             underutilized_id = 0
 
+        # Real pillar names from the brand profile (not hardcoded demo labels).
+        pillar_labels = {
+            cp["cluster_id"]: cp["profile"].get("content_pillar", f"Cluster {cp['cluster_id']}")
+            for cp in profile["cluster_profiles"]
+        }
         cluster_profile = next(
             (cp for cp in profile["cluster_profiles"] if cp["cluster_id"] == underutilized_id),
             profile["cluster_profiles"][0],
         )
-        cluster_label = _CLUSTER_ID_LABELS.get(underutilized_id, f"Cluster {underutilized_id}")
+        cluster_label = pillar_labels.get(underutilized_id, f"Cluster {underutilized_id}")
         tone = cluster_profile["profile"].get("tone_descriptors", [])
         cluster_context = (
-            f"Pillar: {cluster_profile['profile'].get('content_pillar', '')}, "
             f"tone: {', '.join(tone) if tone else 'not specified'}. "
             f"This pillar is underutilized relative to how richly-developed its voice is."
         )
 
-        _update_job(job_id, 12, f"Researching trends for {cluster_label}...")
-        from src.generation.jarvis_agent import search_creators
+        # What actually worked / flopped for this creator (Workbench tags).
+        from src.memory.outcomes import gather_tagged_outcomes
+        winners, losers = gather_tagged_outcomes()
 
-        snippets = search_creators(cluster_label, niche=profile.get("brand_bio", "artisan bakery")[:40])
+        _update_job(job_id, 20, f"Researching trends for {cluster_label}...")
+        from api.dependencies import get_trend_agent, get_weekly_brief_planner
+        from src.agents.base import AgentTask
 
-        _update_job(job_id, 20, "IBM Granite is planning this week's content...")
-        from api.dependencies import (
-            get_weekly_brief_planner,
-            get_moment_analyzer,
-            get_direction_generator,
-            get_caption_generator,
-            get_image_generator,
-        )
+        trend_angles = []
+        try:
+            trend_result = get_trend_agent().run(AgentTask(
+                task_type="trend_briefing",
+                payload={"niche": profile.get("brand_bio", "artisan bakery")[:60], "topic": cluster_label},
+            ))
+            if trend_result.success:
+                trend_angles = (trend_result.output or {}).get("suggested_angles", [])
+        except Exception:
+            trend_angles = []  # network/LLM failure → planner leans on winner + pillar
 
-        scenarios = get_weekly_brief_planner().generate(
+        _update_job(job_id, 45, "IBM Granite is planning this week's content...")
+        cards = get_weekly_brief_planner().generate(
             cluster_label=cluster_label,
             cluster_context=cluster_context,
-            trend_snippets=snippets,
+            pillar_labels=pillar_labels,
+            winners=winners,
+            losers=losers,
+            trend_angles=trend_angles,
             brand_name=profile["brand_name"],
+            underutilized_id=underutilized_id,
             n=n,
         )
 
+        _update_job(job_id, 80, "Saving your weekly slate...")
         batch_id = str(uuid4())
-        step = 65 // max(n, 1)
-
-        for i, scenario in enumerate(scenarios):
-            base = 25 + i * step
-            scenario_text = scenario["scenario_text"]
-
-            _update_job(job_id, base, f"Scenario {i + 1}/{n}: analyzing the moment...")
-            moment_analysis = get_moment_analyzer().analyze(scenario_text)
-
-            _update_job(job_id, base + step // 3, f"Scenario {i + 1}/{n}: creative direction...")
-            directions = get_direction_generator().generate(moment_analysis, scenario_text)
-            direction = directions[0] if directions else {}
-
-            _update_job(job_id, base + 2 * step // 3, f"Scenario {i + 1}/{n}: writing captions...")
-            best_cluster_id = moment_analysis.get("best_cluster_id", underutilized_id)
-            captions = get_caption_generator().generate(
-                product=direction.get("direction_title", cluster_label),
-                occasion="Weekly content plan",
-                desired_feel=direction.get("angle", "on-brand and engaging"),
-                cluster_id=best_cluster_id,
-            )
-            caption_text = captions[0]["caption"] if captions else ""
-
-            _update_job(job_id, base + step - 1, f"Scenario {i + 1}/{n}: image direction...")
-            image = get_image_generator().generate(caption=caption_text, product=cluster_label)
-
+        conn = _get_wb_conn()
+        for i, card in enumerate(cards):
             content = {
                 "batch_id": batch_id,
                 "scenario_index": i,
-                "scenario_text": scenario_text,
-                "rationale": scenario.get("rationale", ""),
-                "caption": caption_text,
-                "image_prompt": image.get("prompt", ""),
-                "style_notes": image.get("style_notes", ""),
+                "scenario_text": card["scenario_text"],
+                "rationale": card.get("rationale", ""),
+                "format": card.get("format", "Reel"),
+                "source": card.get("source", "pillar"),
             }
-
-            conn = _get_wb_conn()
             conn.execute(
                 "INSERT INTO workbench_assets "
                 "(id, asset_type, cluster_label, cluster_id, content, source_tab) "
@@ -160,31 +139,31 @@ def _run_weekly_brief_pipeline(job_id: str, n: int) -> None:
                 (
                     str(uuid4()),
                     "weekly_brief_draft",
-                    cluster_label,
-                    best_cluster_id,
+                    card.get("pillar", cluster_label),
+                    card.get("cluster_id", underutilized_id),
                     json.dumps(content),
                     "weekly_brief",
                 ),
             )
-            conn.commit()
-            conn.close()
+        conn.commit()
+        conn.close()
 
         _jobs[job_id]["batch_id"] = batch_id
         _jobs[job_id]["cluster_label"] = cluster_label
         _jobs[job_id]["notified"] = False
-        _update_job(job_id, 100, f"{len(scenarios)} drafts ready — open Workbench to review.", status="done")
+        _update_job(job_id, 100, f"{len(cards)} content ideas ready — open Workbench to review.", status="done")
     except Exception as exc:
         current_pct = _jobs.get(job_id, {}).get("progress", 0)
         _update_job(job_id, current_pct, str(exc), status="error")
 
 
 class WeeklyBriefRequest(BaseModel):
-    n: int = 2
+    n: int = 5
 
 
 @router.post("/generate")
 def start_weekly_brief(req: WeeklyBriefRequest, background_tasks: BackgroundTasks) -> dict:
-    n = max(1, min(req.n, 3))
+    n = max(3, min(req.n, 7))
     job_id = str(uuid4())
     _jobs[job_id] = {"status": "queued", "progress": 0, "message": "Starting...", "n": n}
     background_tasks.add_task(_run_weekly_brief_pipeline, job_id, n)

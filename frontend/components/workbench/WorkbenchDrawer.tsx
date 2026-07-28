@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getWorkbenchAssets, deleteAsset, updateAsset } from "@/lib/api";
 import type { WorkbenchAsset } from "@/lib/types";
@@ -36,7 +37,7 @@ const _OUTCOME_VALUES = ["succeeded", "underperformed", "failed"] as const;
 function getPreviewText(asset: WorkbenchAsset): string {
   if (typeof asset.content === "string") return asset.content;
   const obj = asset.content as Record<string, unknown>;
-  return String(obj.hook ?? obj.caption ?? obj.recovery_script ?? obj.drafted_reply ?? JSON.stringify(obj));
+  return String(obj.hook ?? obj.caption ?? obj.scenario_text ?? obj.recovery_script ?? obj.drafted_reply ?? JSON.stringify(obj));
 }
 
 function getFullText(asset: WorkbenchAsset): string {
@@ -47,10 +48,20 @@ function getFullText(asset: WorkbenchAsset): string {
   if (asset.asset_type === "reel_script") {
     const parts: string[] = [];
     if (obj.hook) parts.push(`Hook:\n${obj.hook}`);
-    if (obj.opening_line) parts.push(`Opening Line:\n${obj.opening_line}`);
-    if (obj.voiceover_script) parts.push(`Voiceover:\n${obj.voiceover_script}`);
-    const shots = obj.shot_suggestions as string[] | undefined;
-    if (shots?.length) parts.push(`Shot Suggestions:\n${shots.map((s, i) => `${i + 1}. ${s}`).join("\n")}`);
+    const clips = obj.clips as Array<{
+      clip_number: number; duration_secs: string; action: string; voiceover_line: string;
+      camera_angle: string; lighting: string; setting: string; audio_cue: string;
+    }> | undefined;
+    if (clips?.length) {
+      parts.push(
+        clips.map((c) =>
+          `Clip ${c.clip_number} (${c.duration_secs}s): ${c.action}\n` +
+          `VO: "${c.voiceover_line}"\n` +
+          `Camera: ${c.camera_angle} | Lighting: ${c.lighting} | Setting: ${c.setting} | Audio: ${c.audio_cue}`
+        ).join("\n\n")
+      );
+    }
+    if (obj.music_recommendation) parts.push(`Music:\n${obj.music_recommendation}`);
     if (obj.caption) parts.push(`Caption:\n${obj.caption}`);
     const tags = obj.hashtags as string[] | undefined;
     if (tags?.length) parts.push(tags.join(" "));
@@ -148,17 +159,25 @@ function AssetCard({
   onPin,
   onDelete,
   onSetOutcome,
+  onDevelop,
 }: {
   asset: WorkbenchAsset;
   onPin: () => void;
   onDelete: () => void;
   onSetOutcome: (outcome: string) => void;
+  onDevelop: (scenario: string, format: string) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const fullText = getFullText(asset);
   const preview = getPreviewText(asset);
   const isLong = preview.length > 120;
   const displayText = expanded ? fullText : (isLong ? preview.slice(0, 120) + "…" : preview);
+
+  const content = (typeof asset.content === "object" ? asset.content : {}) as Record<string, unknown>;
+  const isBriefCard = asset.asset_type === "weekly_brief_draft";
+  const briefFormat = String(content.format ?? "");
+  const briefSource = String(content.source ?? "");
+  const scenarioText = String(content.scenario_text ?? "");
 
   return (
     <div
@@ -208,6 +227,24 @@ function AssetCard({
         </p>
       )}
 
+      {/* Weekly-brief card meta: format + source */}
+      {isBriefCard && (briefFormat || briefSource) && (
+        <div className="flex items-center gap-1.5 mb-1.5">
+          {briefFormat && (
+            <span className="text-[9px] uppercase tracking-[0.08em] px-1.5 py-0.5 rounded"
+              style={{ background: "var(--color-ql-gap)", color: "var(--color-ql-muted)" }}>
+              {briefFormat}
+            </span>
+          )}
+          {briefSource && (
+            <span className="text-[9px] uppercase tracking-[0.08em] px-1.5 py-0.5 rounded"
+              style={{ background: "var(--color-ql-gap)", color: "var(--color-ql-muted)" }}>
+              {briefSource === "trend" ? "🔥 trend" : briefSource === "winner" ? "★ winner" : "pillar"}
+            </span>
+          )}
+        </div>
+      )}
+
       {/* Content */}
       <p
         className="text-xs leading-relaxed whitespace-pre-wrap"
@@ -231,6 +268,17 @@ function AssetCard({
         )}
         <CopyButton text={fullText} />
       </div>
+
+      {/* Develop this idea → seed Create with the scenario */}
+      {isBriefCard && scenarioText && (
+        <button
+          onClick={() => onDevelop(scenarioText, briefFormat || "Reel")}
+          className="mt-2.5 w-full text-[11px] font-medium py-1.5 rounded-lg transition-colors"
+          style={{ background: "var(--color-ql-accent)", color: "var(--color-ql-bg)" }}
+        >
+          Develop this →
+        </button>
+      )}
 
       {/* Outcome pills — real performance feedback the Create tab learns from */}
       {_OUTCOME_ELIGIBLE_TYPES.has(asset.asset_type) && (
@@ -263,6 +311,21 @@ function AssetCard({
 
 export default function WorkbenchDrawer({ open, onClose }: Props) {
   const queryClient = useQueryClient();
+  const router = useRouter();
+
+  function handleDevelop(scenario: string, clusterId: number | null, format: string) {
+    // Seed Script Studio (not Caption Brief) — a weekly-brief idea becomes a
+    // format-specific script. ScriptStudio hydrates these keys on mount.
+    const fmt = ["Reel", "Carousel", "Static"].includes(format) ? format : "Reel";
+    // Values must be JSON-encoded — useLocalStorage hydrates via JSON.parse.
+    localStorage.setItem("ss_script_caption", JSON.stringify(scenario));
+    localStorage.setItem("ss_script_format", JSON.stringify(fmt));
+    if (clusterId != null) localStorage.setItem("ss_script_cluster", JSON.stringify(clusterId));
+    localStorage.removeItem("ss_script_metrics"); // fresh idea has no metrics — reset to defaults
+    localStorage.setItem("ss_script_open", "1");   // one-shot: auto-open + scroll
+    onClose();
+    router.push("/app/create");
+  }
 
   const { data: assets = [], isLoading } = useQuery({
     queryKey: ["workbench"],
@@ -370,6 +433,7 @@ export default function WorkbenchDrawer({ open, onClose }: Props) {
               onPin={() => pinMutation.mutate({ id: asset.id, pinned: !asset.pinned })}
               onDelete={() => deleteMutation.mutate(asset.id)}
               onSetOutcome={(outcome) => outcomeMutation.mutate({ id: asset.id, actual_outcome: outcome })}
+              onDevelop={(scenario, format) => handleDevelop(scenario, asset.cluster_id ?? null, format)}
             />
           ))}
         </div>

@@ -122,44 +122,55 @@ def _detect_hook_pattern(hook: str) -> str:
     return "no_pattern"
 
 
+# Soft signals — a tasteful artisan brand earns credit for good writing, not
+# growth-hack CTA spam. Calibrated so a strong on-brand caption lands ~68-85, a
+# decent one ~55-65, and a flat/generic one ~25-45 — realistic, not inflated.
+_SECOND_PERSON_RE = re.compile(r"\b(you|your|you're|yours)\b", re.IGNORECASE)
+_SOFT_SHARE_RE = re.compile(r"\b(share|send|tag|dm|forward|tell a friend|show (this|someone))\b", re.IGNORECASE)
+_SOFT_SAVE_RE = re.compile(r"\b(how to|why|tip|tips|recipe|step|steps|guide|method|\d+\s+(reasons|ways|things|tips))\b", re.IGNORECASE)
+_QUESTION_RE = re.compile(r"\?")
+_EMOJI_RE = re.compile(r"[\U0001F000-\U0001FAFF☀-➿←-⇿⬀-⯿]")
+# Sensory / vivid opener words — for a warm artisan brand these ARE a strong hook,
+# not just gimmicky "pattern interrupts".
+_SENSORY = [
+    "soft", "fluffy", "gooey", "rich", "warm", "crispy", "crunchy", "golden",
+    "melty", "melt", "fresh", "buttery", "creamy", "decadent", "velvety", "tender",
+    "moist", "flaky", "silky", "luscious", "oozing", "dreamy", "indulgent",
+]
+
+
 def _score_hook(hook: str) -> tuple[int, str, list[str]]:
     """
-    Score hook strength 0-25. Returns (score, pattern_name, failures).
-    A hook is the first sentence/line of the caption — the distribution gate.
-    If the viewer swipes before 1.5s the algorithm never gets a watch signal.
+    Score hook strength 0-30. Base credit for any real opener, plus bonuses for a
+    pattern interrupt (number-led, POV, question…) OR a vivid sensory opener —
+    both are strong hooks for this brand. Returns (score, pattern_name, failures).
     """
     h = hook.lower().strip()
-    failures: list[str] = []
 
-    # Check for dead openers first — hard override
     for weak in _WEAK_OPENERS:
         if h.startswith(weak):
             return (
-                0,
+                8,
                 "dead_opener",
                 [
-                    f"DEAD_HOOK: starts with '{weak}' — viewer swipes before algorithm "
-                    f"gets a watch signal. Rewrite as number-led, result-first, or POV."
+                    f"DEAD_HOOK: starts with '{weak}' — viewer swipes before the algorithm "
+                    f"gets a watch signal. Open with a vivid detail, a number, or a question instead."
                 ],
             )
 
-    # Score pattern matches (up to 25)
-    score = 0
+    score = 16
     pattern_name = "no_pattern"
     for name, regex in _HOOK_PATTERNS:
         if re.search(regex, h, re.IGNORECASE):
-            score = min(25, score + 6)
+            score = min(30, score + 7)
             if pattern_name == "no_pattern":
-                pattern_name = name  # capture first (strongest) match
+                pattern_name = name
+    if any(w in h for w in _SENSORY):
+        score = min(30, score + 7)
+        if pattern_name == "no_pattern":
+            pattern_name = "sensory_opener"
 
-    if score < 10:
-        failures.append(
-            f"WEAK_HOOK: {score}/25 — no recognisable pattern interrupt in the first line. "
-            f"Use one of: number-led ('3 reasons...'), result-first ('How I got...'), "
-            f"POV, question, or exclusivity ('Nobody talks about...')."
-        )
-
-    return score, pattern_name, failures
+    return score, pattern_name, []
 
 
 def score_content(
@@ -168,71 +179,73 @@ def score_content(
     content_format: str = "reel",
 ) -> dict:
     """
-    Deterministic signal scorer. Returns the full breakdown dict.
-    `hook` should be the first sentence of the caption.
-    `content_format` is 'reel' | 'carousel' | 'story' | 'static'.
+    Deterministic signal scorer. Rewards what a genuinely good, on-brand caption
+    has — a strong hook (pattern interrupt OR vivid sensory opener), engagement
+    cues (a question, second-person, a gentle share/save nudge), niche vocabulary,
+    and clean craft — instead of hard-failing tasteful captions that skip
+    growth-hack CTAs. Realistic: strong ~68-85, decent ~55-65, flat ~25-45.
+
+    `hook` is the first sentence; `content_format` is reel|carousel|story|static.
     """
     text = (hook + " " + caption).lower()
     failures: list[str] = []
 
-    # --- Hook (0-25) ---
+    # --- Hook (0-30) ---
     hook_score, hook_pattern, hook_failures = _score_hook(hook)
     failures.extend(hook_failures)
 
-    # --- DM share potential (0-25) ---
-    share_score = min(25, sum(6 for t in _DM_SHARE_TRIGGERS if t in text))
-    if share_score == 0 and content_format in ("reel", "carousel"):
+    # --- Engagement (0-30): a question, second-person, and soft/explicit nudges ---
+    engagement = 0
+    if _QUESTION_RE.search(caption):
+        engagement += 10
+    if _SECOND_PERSON_RE.search(text):
+        engagement += 6
+    if _SOFT_SHARE_RE.search(text) or _SOFT_SAVE_RE.search(text):
+        engagement += 6
+    engagement += sum(8 for t in (_DM_SHARE_TRIGGERS + _SAVE_TRIGGERS + _COMMENT_TRIGGERS) if t in text)
+    engagement = min(30, engagement)
+    if engagement < 6:
         failures.append(
-            "NO_SHARE_TRIGGER: nothing makes this DM-able. Shares are the #1 reach "
-            "multiplier for Reels — a viewer DMing to a friend reaches a new account entirely. "
-            "Add one: 'Send this to someone who...' or 'Tag a baker who...'."
+            "LOW_ENGAGEMENT: nothing invites a reply, save, or share. A light question or "
+            "a gentle 'save this for your next craving' would lift reach — keep it on-brand."
         )
 
-    # --- Save potential (0-20) ---
-    save_score = min(20, sum(4 for t in _SAVE_TRIGGERS if t in text))
-    if save_score == 0 and content_format in ("reel", "carousel"):
-        failures.append(
-            "NO_SAVE_TRIGGER: no reason to bookmark. Saves signal lasting utility — "
-            "high save rate tells the algorithm the content is evergreen. "
-            "Add 'Save this for next time' or embed a step-by-step structure."
-        )
-
-    # --- Comment bait (0-15) ---
-    comment_score = min(15, sum(4 for t in _COMMENT_TRIGGERS if t in text))
-    # No failure for zero comment triggers — it's nice-to-have, not critical
-
-    # --- Keyword clarity (0-15) ---
+    # --- Niche clarity (0-20) ---
     keyword_hits = [t for t in _BAKERY_KEYWORDS if t in text]
-    keyword_score = min(15, len(keyword_hits) * 2)
-    if keyword_score < 6:
+    niche_score = min(20, len(keyword_hits) * 4)
+    if niche_score < 8:
         failures.append(
-            f"LOW_NICHE_SIGNAL: only {len(keyword_hits)} bakery keyword(s) detected. "
-            f"Instagram's topic classifier needs ≥3 niche terms to route content to the "
-            f"right interest graph. Add specific bakery terms (e.g. dough, crumb, proof, ganache)."
+            f"LOW_NICHE_SIGNAL: only {len(keyword_hits)} bakery keyword(s). Weave in 2-3 "
+            f"specific terms (dough, crumb, proof, ganache) so the topic classifier routes it right."
         )
 
-    total = hook_score + share_score + save_score + comment_score + keyword_score
+    # --- Craft (0-20): coherent length, emoji warmth, clean close ---
+    words = len(caption.split())
+    craft = 10 if 12 <= words <= 160 else (5 if words else 0)
+    if _EMOJI_RE.search(caption):
+        craft += 5
+    if caption.strip().endswith((".", "!", "?", "🙂")) or _QUESTION_RE.search(caption):
+        craft += 5
+    craft = min(20, craft)
 
-    # Gate: must clear 60/100 AND have no critical failures (dead hook or no share trigger on reels)
-    critical = [f for f in failures if f.startswith(("DEAD_HOOK", "NO_SHARE_TRIGGER"))]
-    gate_passed = total >= 60 and len(critical) == 0
+    total = hook_score + engagement + niche_score + craft
+    gate_passed = total >= 55 and hook_pattern != "dead_opener"
 
     return {
         "score": total,
         "gate_passed": gate_passed,
         "hook_pattern": hook_pattern,
         "breakdown": {
-            "hook_strength":      hook_score,
-            "dm_share_potential": share_score,
-            "save_potential":     save_score,
-            "comment_bait":       comment_score,
-            "keyword_clarity":    keyword_score,
+            "hook_strength": hook_score,
+            "engagement":    engagement,
+            "niche_clarity": niche_score,
+            "craft":         craft,
         },
         "failures": failures,
         "rationale": (
             "; ".join(failures)
             if failures
-            else f"All signal gates passed — hook pattern: {hook_pattern}, score: {total}/100."
+            else f"Distribution-ready — hook: {hook_pattern}, score: {total}/100."
         ),
     }
 
