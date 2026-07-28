@@ -20,19 +20,13 @@ from pathlib import Path
 
 from langchain_core.prompts import PromptTemplate
 from langchain_ollama import OllamaLLM
+from src.data.pillars import pillar_label
 
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 BRAND_PROFILE_PATH = _PROJECT_ROOT / "data" / "brand_profile.json"
 
 OLLAMA_MODEL = "granite3.1-dense:8b"
 
-_CLUSTER_ID_LABELS = {
-    0: "Homemade Classics",
-    1: "Fusion Specials",
-    2: "Behind the Scenes",
-    3: "Nutella Series",
-    4: "Bomboloni",
-}
 
 _TEMPLATE = """\
 You are a caption writer for {brand_name}, an artisan bakery with a specific brand voice.
@@ -112,7 +106,7 @@ class VoiceRefiner:
         Returns {refined_caption, reasoning}.
         """
         voice = _extract_cluster_voice(brand_profile, cluster_id)
-        cluster_name = _CLUSTER_ID_LABELS.get(cluster_id, f"Cluster {cluster_id}")
+        cluster_name = pillar_label(cluster_id)
 
         raw = self._chain.invoke({
             "brand_name"  : brand_profile.get("brand_name", "the brand"),

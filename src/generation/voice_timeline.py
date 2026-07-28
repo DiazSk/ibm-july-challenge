@@ -22,6 +22,7 @@ from pathlib import Path
 import pandas as pd
 from langchain_core.prompts import PromptTemplate
 from langchain_ollama import OllamaLLM
+from src.data.pillars import pillar_label
 
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 CLUSTERS_PATH = _PROJECT_ROOT / "data" / "clusters.json"
@@ -29,13 +30,6 @@ BRAND_PROFILE_PATH = _PROJECT_ROOT / "data" / "brand_profile.json"
 
 OLLAMA_MODEL = "granite3.1-dense:8b"
 
-_CLUSTER_ID_LABELS = {
-    0: "Homemade Classics",
-    1: "Fusion Specials",
-    2: "Behind the Scenes",
-    3: "Nutella Series",
-    4: "Bomboloni",
-}
 
 _TEMPLATE = """\
 You are a creative strategist analyzing how a small bakery's Instagram content \
@@ -129,7 +123,7 @@ class VoiceTimeline:
             p = cp.get("profile", {})
             if p.get("parse_error"):
                 continue
-            pillar = _CLUSTER_ID_LABELS.get(cp["cluster_id"], f"Cluster {cp['cluster_id']}")
+            pillar = pillar_label(cp["cluster_id"])
             tones      = p.get("tone_descriptors", [])
             tone_str   = ", ".join(tones[:2]) if tones else ""
             label_lines.append(
