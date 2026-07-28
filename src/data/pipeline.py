@@ -104,6 +104,13 @@ def process_file(path: Path) -> dict | None:
     if len(marketing_hook) < 15:
         return None
 
+    # Carry real engagement metrics through to the cleaned record. The Graph
+    # API uses "saved"; normalize to "saves" so every downstream consumer
+    # (cluster_engagement, insights, boost advisor) sees one name.
+    engagement = dict(raw.get("engagement") or {})
+    if "saved" in engagement and "saves" not in engagement:
+        engagement["saves"] = engagement.pop("saved")
+
     return {
         "shortcode"      : raw.get("shortcode", ""),
         "source_url"     : raw.get("source_url", ""),
@@ -115,6 +122,7 @@ def process_file(path: Path) -> dict | None:
         "logistics"      : logistics,
         "hashtags"       : raw.get("content", {}).get("hashtags", []),
         "mentions"       : raw.get("content", {}).get("mentions", []),
+        "engagement"     : engagement,
     }
 
 
@@ -127,6 +135,11 @@ def run_pipeline(
     Returns list of processed records.
     """
     output_dir.mkdir(parents=True, exist_ok=True)
+
+    # Mirror raw_dir exactly: drop cleaned files from any previous run so a
+    # re-sync (or switching accounts) can't leave stale posts to be clustered.
+    for stale in output_dir.glob("ig_text_*.json"):
+        stale.unlink()
 
     files = sorted(raw_dir.glob("ig_text_*.json"))
     if not files:

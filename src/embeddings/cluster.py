@@ -124,6 +124,7 @@ def run_clustering(
             "shortcode"     : record["shortcode"],
             "timestamp_utc" : record["timestamp_utc"],
             "marketing_hook": record["marketing_hook"],
+            "engagement"    : record.get("engagement", {}),
         })
 
     # ── Console summary ────────────────────────────────────────────────────

@@ -34,6 +34,12 @@ python-multipart>=0.0.9
 # JARVIS agent — web search for creator inspiration (no API key needed)
 duckduckgo-search>=6.0.0
 
+# Vision preprocessor — Reel keyframe extraction (imageio-ffmpeg bundles the
+# ffmpeg binary, so no system install is needed on Windows). ollama + Pillow
+# come in transitively via langchain-ollama / sentence-transformers.
+imageio>=2.34.0
+imageio-ffmpeg>=0.5.0
+
 # Voice pipeline — Whisper STT + Kokoro TTS (Voicebox's built-in engine)
 # Windows/CUDA: pip install torch --index-url https://download.pytorch.org/whl/cu121 first
 faster-whisper>=1.0.0

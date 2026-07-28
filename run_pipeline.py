@@ -1,5 +1,4 @@
-"""
-Week 1 pipeline orchestrator — runs all three stages in sequence.
+"""Pipeline orchestrator — runs all three stages in sequence.
 
 Usage:
     python run_pipeline.py              # all three stages
@@ -61,6 +60,23 @@ def run_full_pipeline(
         brand_bio=brand_bio,
     )
     profile = extractor.build_brand_profile()
+
+    # Enrich clusters.json with a real per-cluster engagement block derived from
+    # the ingested metrics. Every consumer (BoostAdvisor, Jarvis, create/agent,
+    # the insights dashboard) reads clusters["cluster_engagement"] — populating
+    # it here replaces the synthetic fallback with real numbers.
+    import json
+    from pathlib import Path
+    from src.data.insights import aggregate_cluster_engagement
+
+    root          = Path(__file__).resolve().parent
+    clusters_path = root / "data" / "clusters.json"
+    try:
+        clusters = json.loads(clusters_path.read_text(encoding="utf-8"))
+        clusters["cluster_engagement"] = aggregate_cluster_engagement(clusters, profile)
+        clusters_path.write_text(json.dumps(clusters, indent=2, ensure_ascii=False), encoding="utf-8")
+    except Exception as exc:  # noqa: BLE001 — engagement is additive; never fail the build
+        print(f"cluster_engagement enrichment skipped: {exc}")
 
     if progress_cb:
         progress_cb(100, "Done!")
