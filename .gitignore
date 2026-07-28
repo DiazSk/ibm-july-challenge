@@ -7,9 +7,25 @@ scraped_dataset/
 # Data
 data/cleaned/
 data/chroma/
+# Instagram OAuth token (secret)
+data/ig_connection.json
+# Runtime SQLite scratchpad — recreated on first run (CREATE TABLE IF NOT EXISTS)
+data/workbench.db
+# Cached Granite post diagnoses
+data/diagnoses/
 
 # __pycache__
 __pycache__/
+*.pyc
+
+# Python virtualenv
+venv/
+.venv/
+
+# Next.js build output
+frontend/.next/
+frontend/tsconfig.tsbuildinfo
+frontend/.env.local
 
 # streamlit cache
 .streamlit/
@@ -22,3 +38,15 @@ node_modules/
 
 # Graphify
 graphify-out/
+
+# Internal working notes — kept locally, not part of the submission
+PROJECT-BRAIN.md
+NEW-FEATURES.md
+QA-REPORT.md
+docs/superpowers/
+
+# Promo/demo render output
+brag-output/
+
+# Test artifacts
+*.wav
