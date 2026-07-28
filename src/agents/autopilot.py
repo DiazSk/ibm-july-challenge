@@ -32,10 +32,14 @@ from langchain_core.prompts import PromptTemplate
 from langchain_ollama import OllamaLLM
 
 from src.agents.base import OLLAMA_MODEL
+from src.data.pillars import all_pillar_labels, pillar_label
 
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 _PROFILE_PATH = _PROJECT_ROOT / "data" / "brand_profile.json"
 
+# Fallback only — used when brand_profile.json is missing or unreadable. The live
+# names come from src/data/pillars.py; see its module docstring for why six
+# modules carrying their own copy of this dict was a bug, not a convenience.
 _PILLARS = {
     0: "Homemade Classics",
     1: "Fusion Specials",
@@ -49,11 +53,7 @@ You are the autonomous content strategist for {brand_name}, a homemade artisanal
 bakery on Instagram. Plan this week's Instagram posts — decide WHAT to post and WHY.
 
 Content pillars (cluster_id — name):
-  0 — Homemade Classics (warm, nostalgic)
-  1 — Fusion Specials (bold, experimental)
-  2 — Behind the Scenes (intimate, process-focused)
-  3 — Nutella Series (indulgent, passionate)
-  4 — Bomboloni (celebratory, artisanal pride)
+{pillars_block}
 
 Evidence you gathered with your tools:
 
@@ -84,18 +84,26 @@ Return ONLY valid JSON — no preamble, no markdown fences:
   "question": "<your question if unsure, else empty string>",
   "options": ["<option 1>", "<option 2>"],
   "posts": [
-    {{"cluster_id": 0, "pillar": "Homemade Classics", "angle": "<specific angle>", "rationale": "<the gap/trend/outcome this responds to>"}}
+    {{"cluster_id": <id from the list above>, "pillar": "<matching name>", "angle": "<specific angle>", "rationale": "<the gap/trend/outcome this responds to>"}}
   ]
 }}
 """
 
 _PLANNER_PROMPT = PromptTemplate(
     input_variables=[
-        "brand_name", "gaps_block", "trends_block", "perf_block",
+        "brand_name", "pillars_block", "gaps_block", "trends_block", "perf_block",
         "steer_block", "answer_block", "target_count",
     ],
     template=_PLANNER_TEMPLATE,
 )
+
+
+def _pillars_block() -> str:
+    """The real pillar legend. A hardcoded one here doesn't just mislabel output —
+    the planner returns cluster_id, which downstream generation uses to pick the
+    voice, so a wrong legend silently writes posts in the wrong pillar's tone."""
+    labels = all_pillar_labels() or _PILLARS
+    return "\n".join(f"  {cid} — {name}" for cid, name in sorted(labels.items()))
 
 
 def _repair_missing_commas(text: str) -> str:

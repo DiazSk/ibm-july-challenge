@@ -24,6 +24,8 @@ from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_core.prompts import PromptTemplate
 from langchain_ollama import ChatOllama, OllamaLLM
 
+from src.data.pillars import pillar_names as pillar_labels_from
+
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 _PROFILE_PATH = _PROJECT_ROOT / "data" / "brand_profile.json"
 _CLUSTERS_PATH = _PROJECT_ROOT / "data" / "clusters.json"
@@ -74,15 +76,31 @@ def clear_session(session_id: str) -> None:
 
 # ── DuckDuckGo search ─────────────────────────────────────────────────────────
 
+class WebSearchUnavailable(RuntimeError):
+    """Raised when web research can't run, so callers can say so instead of guessing."""
+
+
 def search_creators(topic: str, niche: str = "bakery", max_results: int = 8) -> list[str]:
     """
     Search for creator content/trends via DuckDuckGo.
     Returns snippets formatted as 'Title: body' strings.
-    Never raises — returns [] on any failure.
+
+    Raises WebSearchUnavailable when the optional `duckduckgo-search` package
+    isn't installed. It previously returned [] in that case, which Granite
+    happily dressed up into confident-sounding "research" with no sources behind
+    it — the same failure that made the trend agent fabricate its briefings.
+    Everything else in StyleSync runs locally; this is the one optional
+    network-dependent path, so its absence has to be visible.
     """
     try:
         from duckduckgo_search import DDGS
+    except ImportError as exc:
+        raise WebSearchUnavailable(
+            "Web research needs the optional `duckduckgo-search` package "
+            "(pip install duckduckgo-search)."
+        ) from exc
 
+    try:
         queries = [
             f"{niche} instagram creator {topic} ideas",
             f"trending {niche} content {topic} instagram",
@@ -158,7 +176,7 @@ For brand/strategy/performance questions: answer directly from context above (no
   plan_week          {{"steer": str}}  — hand off to the autonomous Autopilot agent, which plans AND produces this week's whole content batch on its own. Use when the creator asks to plan their week/content or run autopilot. "steer" is an optional focus (e.g. "lean into Ramadan gifting"), else "".
   diagnose_and_fix   {{"caption": str}}  — hand off to the autonomous Recovery agent: it diagnoses WHY a post underperformed and writes a recovery version. Use when the creator asks to fix/recover/save an underperforming post, or "why did X flop and fix it". Pass the caption if they quote one, else "" and it fixes their most recent flop.
 
-Cluster IDs: Homemade Classics=0, Fusion Specials=1, Behind the Scenes=2, Nutella Series=3, Bomboloni=4
+Cluster IDs: {cluster_ids}
 
 RULES
 • Keep responses 2–3 sentences max. You are speaking aloud, not writing.
@@ -206,10 +224,17 @@ def _build_system_prompt(brand_profile: dict, cluster_engagement: dict) -> str:
             phrases = ", ".join(f'"{s}"' for s in voc.get("signature_phrases", [])[:3])
             break
 
+    # The cluster-ID legend has to come from the profile, not a local dict. Tool
+    # params are keyed by cluster_id, so a stale legend here doesn't just mislabel
+    # a reply — it routes generate_caption to the wrong pillar's voice.
+    labels = pillar_labels_from(brand_profile) or _CLUSTER_NAMES
+    cluster_ids = ", ".join(f"{name}={cid}" for cid, name in sorted(labels.items()))
+
     return _SYSTEM_TEMPLATE.format(
         brand_name    = brand_name,
         ig_handle     = ig_handle,
         cluster_block = cluster_block,
+        cluster_ids   = cluster_ids,
         tone          = tone,
         phrases       = phrases,
     )
@@ -324,7 +349,9 @@ class InspirationSynthesizer:
 
         tone    = "warm, authentic, indulgent"
         phrases = "made with love"
-        cluster_names = ", ".join(_CLUSTER_NAMES.values())
+        cluster_names = ", ".join(
+            (pillar_labels_from(brand_profile) or _CLUSTER_NAMES).values()
+        )
         for cp in brand_profile.get("cluster_profiles", []):
             p = cp.get("profile", {})
             if p.get("tone_descriptors"):

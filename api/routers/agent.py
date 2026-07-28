@@ -29,6 +29,7 @@ from src.generation.jarvis_agent import (
     clear_session,
     get_history,
     search_creators,
+    WebSearchUnavailable,
 )
 
 router = APIRouter()
@@ -182,6 +183,10 @@ class AgentChatRequest(BaseModel):
     messages: list[dict]  # [{role, content}] — only the latest turn is required
     session_id: str
     user_message: str = ""  # convenience: last user message (extracted if missing)
+    # What the creator is looking at when they ask. Without it JARVIS only sees
+    # per-cluster averages, so "why should I do this?" about a specific strategy
+    # recommendation could only be answered by improvising.
+    context: str = ""
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -281,7 +286,16 @@ def _dispatch_tool(
             topic = params.get("topic", "trending content")
             niche = brand_profile.get("brand_bio", "artisan bakery")[:40]
 
-            snippets = search_creators(topic, niche)
+            try:
+                snippets = search_creators(topic, niche)
+            except WebSearchUnavailable:
+                # Say so rather than synthesising "research" from zero sources.
+                return (
+                    "I can't do web research right now — that needs the optional "
+                    "duckduckgo-search package. I can still work from your own posts: "
+                    "ask me what's gaining traction in your account.",
+                    None,
+                )
             ideas = get_inspiration_synthesizer().synthesize(
                 snippets, topic, brand_profile
             )
@@ -410,9 +424,17 @@ def agent_chat(req: AgentChatRequest) -> dict:
     brand_profile, cluster_engagement = _load_brand_data()
     agent = get_jarvis_agent()
 
-    # Retrieve server-side session history + append current turn
+    # Retrieve server-side session history + append current turn. Page context
+    # rides along with the turn sent to Granite but is kept out of `user_msg`, so
+    # intent detection and stored history stay clean.
     history = get_history(req.session_id)
-    messages_for_call = history + [{"role": "user", "content": user_msg}]
+    turn = user_msg
+    if req.context.strip():
+        turn = (
+            f"[What the creator is looking at right now]\n{req.context.strip()}\n\n"
+            f"[Their question]\n{user_msg}"
+        )
+    messages_for_call = history + [{"role": "user", "content": turn}]
 
     # ── Call 1: Intent routing ────────────────────────────────────────────
     call1 = (

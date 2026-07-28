@@ -16,7 +16,7 @@ Self-check (no network):
 
 from datetime import datetime
 
-from src.data.pillars import pillar_names
+from src.data.pillars import UNCATEGORIZED_ID, UNCATEGORIZED_LABEL, pillar_names
 
 _INTERACTION_KEYS = ("likes", "comments", "saves", "shares")
 
@@ -47,7 +47,11 @@ def _rate(eng: dict) -> float:
 def _pillar_names(brand_profile: dict) -> dict[int, str]:
     # Shared with every other pillar-name consumer — see src/data/pillars.py for
     # why this must not be a local copy.
-    return pillar_names(brand_profile)
+    names = dict(pillar_names(brand_profile))
+    # The metrics-only bucket has no Granite profile, so name it here rather than
+    # letting it surface as "Cluster -1".
+    names.setdefault(UNCATEGORIZED_ID, UNCATEGORIZED_LABEL)
+    return names
 
 
 def _parse_ts(ts: str) -> datetime | None:
@@ -182,8 +186,18 @@ def compute_overview(clusters: dict, brand_profile: dict) -> dict:
         if dt is None:
             continue
         buckets.setdefault((dt.weekday(), dt.hour), []).append(_num(p["engagement"].get("reach")))
+    # `reaches` carries the raw per-post values so the client can take a MEDIAN
+    # after shifting into the brand's timezone. A mean here would let one viral
+    # post decide the "best day" for the whole account; the timezone shift can
+    # move a post to a different weekday, so the rollup has to happen client-side.
     best_times = [
-        {"weekday": wd, "hour": hr, "avg_reach": round(sum(v) / len(v)), "count": len(v)}
+        {
+            "weekday"  : wd,
+            "hour"     : hr,
+            "avg_reach": round(sum(v) / len(v)),
+            "count"    : len(v),
+            "reaches"  : [round(x) for x in v],
+        }
         for (wd, hr), v in sorted(buckets.items())
     ]
     best_slot = max(best_times, key=lambda c: c["avg_reach"], default=None)

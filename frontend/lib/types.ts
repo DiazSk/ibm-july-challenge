@@ -27,11 +27,28 @@ export interface Cluster {
 export type ClustersData = Record<string, Cluster>;
 
 // Create tab
+// A past post covering the same ground as the idea being written.
+// `recommendation` is the point: repeating a winner is good strategy, repeating
+// a flop is the actual mistake — so each match says which it was.
+export interface SimilarPost {
+  shortcode: string;
+  hook: string;
+  timestamp_utc: string;
+  cluster_id: number;
+  pillar: string;
+  similarity: number;        // raw cosine — for debugging, never render it
+  closeness: string;         // "almost identical to" | "very close to" | "similar to"
+  reach: number;
+  recommendation: "repeat" | "avoid" | "unknown";
+  note: string;
+}
+
 export interface MomentAnalysis {
   emotional_core: string;
   business_signal: string;
   best_cluster_id: number;
   cluster_reason: string;
+  similar_posts?: SimilarPost[];   // absent on older responses; [] when novel
 }
 
 export interface Direction {
@@ -374,10 +391,11 @@ export interface PillarEngagement {
 }
 
 export interface BestTimeCell {
-  weekday: number; // 0=Mon .. 6=Sun
-  hour: number;    // 0..23 (UTC)
+  weekday: number;    // 0=Mon .. 6=Sun
+  hour: number;       // 0..23 (UTC)
   avg_reach: number;
   count: number;
+  reaches: number[];  // raw per-post reach — lets the client take a median post-tz-shift
 }
 
 export interface InsightsOverview {
@@ -535,14 +553,18 @@ export interface MemoryStatusResponse {
 }
 
 export interface TrendBriefing {
-  // The Trend agent can fail after its search step (network/API error) and
-  // still return a truthy result — orchestrator.py falls back to `{}` in
-  // that case, so every field here is genuinely optional at runtime.
-  micro_trends?:     { trend: string; relevance: string; urgency: "high" | "medium" | "low" }[];
-  content_hooks?:    string[];
-  suggested_angles?: { angle: string; cluster: string; format: string; why_now: string }[];
-  briefing_summary?: string;
-  sources_searched?: number;
+  // The Trend agent can fail mid-run and still return a truthy result —
+  // orchestrator.py falls back to `{}` in that case, so every field here is
+  // genuinely optional at runtime.
+  micro_trends?:       { trend: string; relevance: string; urgency: "high" | "medium" | "low" }[];
+  audience_questions?: string[];
+  content_hooks?:      string[];
+  suggested_angles?:   { angle: string; cluster: string; format: string; why_now: string }[];
+  briefing_summary?:   string;
+  // Provenance. Replaces `sources_searched`, which counted hardcoded fallback
+  // strings and so reported "3 sources" when nothing had been read at all.
+  // comments_status: ok | not_connected | permission | error
+  signals_used?:       { pillars: number; comments: number; comments_status: string };
 }
 
 // JARVIS agent

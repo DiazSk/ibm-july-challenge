@@ -7,6 +7,8 @@ import AlgoScorecard from "@/components/discover/AlgoScorecard";
 import PerformanceTimeline from "@/components/discover/PerformanceTimeline";
 import WhatWorkedPanel from "@/components/discover/WhatWorkedPanel";
 import PlaybookPanel from "@/components/discover/PlaybookPanel";
+import ThisWeekHero from "@/components/discover/ThisWeekHero";
+import Collapsible from "@/components/discover/Collapsible";
 
 function SectionHeading({ children }: { children: React.ReactNode }) {
   return (
@@ -61,7 +63,7 @@ export default function DiscoverPage() {
           Strategy
         </h1>
         <p className="text-xs" style={{ color: "var(--color-ql-muted)" }}>
-          What actually worked, and what to do next — scored on the signals Instagram really ranks on.
+          One thing to try this week, based on what your own posts already did.
         </p>
       </div>
 
@@ -70,29 +72,16 @@ export default function DiscoverPage() {
 
       {ov && (
         <>
-          {/* Algorithm scorecard */}
-          <section>
-            <SectionHeading>Your algorithm scorecard</SectionHeading>
-            <p className="text-xs mb-4" style={{ color: "var(--color-ql-muted)" }}>
-              Sends- and saves-per-reach are what move reach — not likes. Across {ov.scorecard.posts_counted} posts.
-            </p>
-            <AlgoScorecard scorecard={ov.scorecard} />
-          </section>
-
-          {/* Performance over time */}
-          <section>
-            <SectionHeading>Performance over time</SectionHeading>
-            <p className="text-xs mb-4" style={{ color: "var(--color-ql-muted)" }}>
-              One line, one metric at a time. Green marks your best month, red your weakest.
-            </p>
-            <Card><PerformanceTimeline data={ov.timeline} /></Card>
-          </section>
+          {/* The one recommendation. Everything else is one click away. */}
+          {ov.moves.length > 0 && (
+            <ThisWeekHero move={ov.moves[0]} proof={ov.what_worked.winner} />
+          )}
 
           {/* What worked vs. what didn't */}
           <section>
             <SectionHeading>What worked, what didn&apos;t</SectionHeading>
             <p className="text-xs mb-4" style={{ color: "var(--color-ql-muted)" }}>
-              Your two most instructive posts, diagnosed by the Why Engine against your own brand voice.
+              Your two most instructive posts, and what separates them.
             </p>
             {diagnoses.isError ? (
               <WhatWorkedPanel winner={ov.what_worked.winner} loser={ov.what_worked.loser} loading={false} />
@@ -107,19 +96,26 @@ export default function DiscoverPage() {
             )}
           </section>
 
-          {/* Playbook */}
-          <section>
-            <SectionHeading>Your playbook</SectionHeading>
-            <p className="text-xs mb-4" style={{ color: "var(--color-ql-muted)" }}>
-              Result-proven moves — each grounded in your numbers and a real ranking principle. Doubling down on
-              your recognizable, high-performing pillars is how a consistent voice compounds reach.
-            </p>
-            <PlaybookPanel
-              moves={ov.moves}
-              brief={brief.data}
-              briefLoading={brief.isLoading}
-            />
-          </section>
+          <Collapsible
+            label="Show me the numbers"
+            hint={`How your ${ov.scorecard.posts_counted} posts scored, and how that changed over time`}
+          >
+            <AlgoScorecard scorecard={ov.scorecard} />
+            <Card><PerformanceTimeline data={ov.timeline} /></Card>
+          </Collapsible>
+
+          {ov.moves.length > 1 && (
+            <Collapsible
+              label={`${ov.moves.length - 1} more move${ov.moves.length === 2 ? "" : "s"}`}
+              hint="Worth doing once this week's change is running"
+            >
+              <PlaybookPanel
+                moves={ov.moves.slice(1)}
+                brief={brief.data}
+                briefLoading={brief.isLoading}
+              />
+            </Collapsible>
+          )}
         </>
       )}
     </motion.div>

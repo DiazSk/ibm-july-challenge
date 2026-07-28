@@ -140,6 +140,7 @@ class WhyEngine:
         avg_watch_time_secs : float | None = None,
         cluster_id          : int = 0,
         visual_description  : str = "",
+        peer_context        : str = "",
     ) -> dict:
         """
         Returns a diagnosis dict:
@@ -168,9 +169,17 @@ class WhyEngine:
         # omit the line entirely when there is no views figure.
         views_line = f"  Views     : {views}\n" if views else ""
 
+        # Absolute benchmarks alone made the model call the account's own
+        # best-ranked post "underperforming" — right next to a card labelling it
+        # the top post. Where the caller knows how this post ranks within the
+        # account, say so, so the verdict is framed relatively.
+        benchmarks = _BENCHMARKS
+        if peer_context.strip():
+            benchmarks = f"{_BENCHMARKS}\n\nHow this post ranks within this account: {peer_context.strip()}"
+
         raw = self._chain.invoke({
             "brand_name"          : self._profile["brand_name"],
-            "benchmarks"          : _BENCHMARKS,
+            "benchmarks"          : benchmarks,
             "content_pillar"      : p.get("content_pillar", "product_showcase"),
             "tone_descriptors"    : ", ".join(p.get("tone_descriptors", [])),
             "signature_phrases"   : ", ".join(voc.get("signature_phrases", [])),

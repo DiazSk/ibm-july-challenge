@@ -1,12 +1,21 @@
 """
-Trend & Research Agent — Granite invocation #22.
+Momentum & Audience Agent — Granite invocation #22.
 
-The only fully new agent (all others wrap existing chains).
+Reports what is actually moving in the creator's own account and what her own
+audience is asking for. Both signals are first-party: her post metrics and the
+comments on her own posts. Nothing leaves the machine.
 
 Flow:
-  1. Run 3 DuckDuckGo queries about the creator's niche + current trends
-  2. Feed snippets to Granite TrendSynthesizer (new prompt, new Granite call)
-  3. Return micro-trends, content hooks, suggested angles, briefing summary
+  1. Per-pillar movement over the trailing window vs the one before it
+  2. Recent comments on her own posts (optional — needs a connected account)
+  3. One Granite call turns both into content opportunities
+
+Previously this ran DuckDuckGo queries for "bakery instagram content trends".
+That produced generic listicle advice at best, and in practice produced nothing
+at all: the `duckduckgo_search` dependency was declared but never installed, the
+import error was swallowed by a bare `except`, and the agent silently emitted
+three hardcoded sentences while reporting `sources_searched: 3`. Her own numbers
+are both real and more specific than anything that search returned.
 
 Also checks episodic memory to avoid repeating angles already used this week.
 """
@@ -19,92 +28,133 @@ from langchain_core.prompts import PromptTemplate
 from langchain_ollama import OllamaLLM
 
 from src.agents.base import AgentResult, AgentTask, BaseAgent, OLLAMA_MODEL
+from src.data.pillars import all_pillar_labels
+from src.data.strategy import pillar_velocity
 
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
 OLLAMA_MODEL = "granite3.1-dense:8b"
 
 _TREND_TEMPLATE = """\
-You are a content strategist for {brand_name}, a homemade artisanal bakery on Instagram \
-({niche} niche). Your job is to identify actionable content opportunities from recent web \
-trends.
+You are a content strategist for {brand_name}, a homemade artisanal bakery on Instagram.
+Everything below is this creator's OWN data — her posts and her audience. Do not invent
+numbers, trends, or comments that are not shown here.
 
-Recent web search results:
-{snippets_block}
+How each content pillar has moved (trailing window vs the window before it):
+{velocity_block}
+
+{comments_block}
+
+Her content pillars:
+{pillars_block}
 
 Previously used angles to AVOID repeating:
 {used_angles_block}
 
-Brand voice clusters available:
-  0 - Homemade Classics (warm, nostalgic)
-  1 - Fusion Specials (bold, experimental)
-  2 - Behind the Scenes (intimate, process-focused)
-  3 - Nutella Series (indulgent, passionate)
-  4 - Bomboloni (celebratory, artisanal pride)
-
-Based on the search results, identify high-velocity trends relevant to this bakery.
-For each suggested angle, recommend the most fitting cluster.
+Write a briefing that tells her what to make next week, grounded ONLY in the data above.
+Reference her actual numbers and, where comments are shown, the actual things people
+asked. Every suggested angle must name one of her pillars exactly as written above.
 
 Return ONLY valid JSON — no preamble, no markdown fences:
 
 {{
   "micro_trends": [
-    {{"trend": "<trend name>", "relevance": "<why this matters for the bakery>", "urgency": "high"}}
+    {{"trend": "<what is moving, in plain language>", "relevance": "<why it matters to her>", "urgency": "high"}}
   ],
+  "audience_questions": ["<a recurring question her audience actually asked>"],
   "content_hooks": ["<hook 1>", "<hook 2>", "<hook 3>"],
   "suggested_angles": [
     {{
       "angle": "<content angle>",
-      "cluster": "<cluster name>",
+      "cluster": "<one of her pillar names, copied exactly>",
       "format": "Reel" or "Carousel" or "Static",
-      "why_now": "<why this is timely>"
+      "why_now": "<tie this to a number or a question above>"
     }}
   ],
-  "briefing_summary": "<2-3 sentence summary of the opportunity landscape this week>"
+  "briefing_summary": "<2-3 sentences on where her momentum is right now>"
 }}
 """
 
-_TREND_PROMPT = PromptTemplate(
-    input_variables=["brand_name", "niche", "snippets_block", "used_angles_block"],
-    template=_TREND_TEMPLATE,
-)
+_TREND_PROMPT = PromptTemplate.from_template(_TREND_TEMPLATE)
 
 
-def _web_search(topic: str, niche: str = "bakery", max_results: int = 5) -> list[str]:
-    """DuckDuckGo search — reuses the pattern from jarvis_agent.py. Never raises."""
+# ── Signal formatting ─────────────────────────────────────────────────────────
+
+def _format_velocity(rows: list[dict]) -> str:
+    """One line per pillar, biggest mover first. Plain enough for a non-marketer."""
+    if not rows:
+        return "  (not enough posts with metrics yet to measure movement)"
+
+    arrow = {"rising": "UP", "cooling": "DOWN", "steady": "flat"}
+    lines = []
+    for v in rows:
+        recent, prior = v["recent"], v["prior"]
+        metric = "share rate" if v["metric"] == "sends_per_reach" else "reach"
+        if v["multiple"] is None:
+            lines.append(
+                f"  {v['pillar']}: flat — too few posts to compare "
+                f"({recent['posts']} recent, {prior['posts']} before)"
+            )
+        else:
+            lines.append(
+                f"  {v['pillar']}: {arrow[v['direction']]} {v['multiple']}x — {metric} "
+                f"{prior[v['metric']]} → {recent[v['metric']]} "
+                f"({recent['posts']} posts recently, {prior['posts']} before)"
+            )
+    return "\n".join(lines)
+
+
+def _format_comments(comments: list[dict]) -> str:
+    """Raw comment text for Granite to group. Empty string when unavailable."""
+    texts = [(c.get("text") or "").strip() for c in comments]
+    texts = [t for t in texts if t]
+    if not texts:
+        return ""
+    body = "\n".join(f"  - {t[:160]}" for t in texts[:40])
+    return (
+        "Recent comments on her posts (group the recurring questions and count them):\n"
+        f"{body}"
+    )
+
+
+def _recent_comments() -> tuple[list[dict], str]:
+    """
+    Comments on the creator's own posts, plus why they're missing when they are.
+
+    Returns (comments, status) where status is one of:
+      ok | not_connected | permission | error
+
+    Optional by design — a judge cloning this repo has no Instagram connection and
+    must still get a working briefing. But the reason is reported rather than
+    collapsed into a bare [], because a silent empty result is exactly what let the
+    old web-search path fabricate briefings for weeks without anyone noticing.
+    """
     try:
-        from duckduckgo_search import DDGS
-        queries = [
-            f"{niche} instagram content trends {topic}",
-            f"trending {niche} food social media {topic}",
-            f"viral {niche} content ideas {topic}",
-        ]
-        results: list[str] = []
-        seen: set[str]     = set()
-        with DDGS() as ddgs:
-            for query in queries:
-                try:
-                    hits = ddgs.text(query, max_results=max_results, timelimit="m")
-                    for h in (hits or []):
-                        url = h.get("href", "")
-                        if url not in seen:
-                            seen.add(url)
-                            title = h.get("title", "")
-                            body  = h.get("body", "")[:250]
-                            results.append(f"{title}: {body}")
-                except Exception:
-                    pass
-        return results[: max_results * 2]
-    except Exception:
-        return []
+        from src.scrapers.instagram_api import fetch_recent_comments, load_connection
 
+        conn = load_connection()
+        if not conn or not conn.get("access_token"):
+            return [], "not_connected"
+        comments = fetch_recent_comments(
+            conn["access_token"],
+            own_username=conn.get("username", "") or "",
+        )
+        return comments, "ok"
+    except PermissionError:
+        # Posts report comments but the API returns none — token lacks an effective
+        # manage_comments grant (Meta requires App Review for this outside dev mode).
+        return [], "permission"
+    except Exception:
+        return [], "error"
+
+
+# ── JSON parsing ──────────────────────────────────────────────────────────────
 
 def _repair_missing_commas(text: str) -> str:
-    return re.sub(r'"(\s+)"([A-Za-z_][A-Za-z0-9_ ]*)"\s*:', r'",\1"\2":', text)
+    return re.sub(r'([}\]"])(\s*\n\s*)("[\w ]+"\s*:)', r"\1,\2\3", text)
 
 
-def _parse_json(raw: str) -> dict:
-    text  = raw.strip()
+def _parse_json(text: str) -> dict:
     fence = re.search(r"```(?:json)?\s*([\s\S]*?)```", text)
     if fence:
         text = fence.group(1).strip()
@@ -117,10 +167,12 @@ def _parse_json(raw: str) -> dict:
         return json.loads(_repair_missing_commas(text))
 
 
+# ── Agent ─────────────────────────────────────────────────────────────────────
+
 class TrendAgent(BaseAgent):
     """
-    Researches and synthesizes content opportunities from live web trends.
-    New Granite invocation #22 — TrendSynthesizer.
+    Turns the creator's own momentum and audience questions into content
+    opportunities. Granite invocation #22.
     """
 
     name = "TrendAgent"
@@ -146,54 +198,76 @@ class TrendAgent(BaseAgent):
             )
         return self._trend_briefing(task.payload)
 
+    def _load_data(self) -> tuple[dict, dict]:
+        data = _PROJECT_ROOT / "data"
+        clusters = json.loads((data / "clusters.json").read_text(encoding="utf-8"))
+        profile  = json.loads((data / "brand_profile.json").read_text(encoding="utf-8"))
+        return clusters, profile
+
     def _trend_briefing(self, payload: dict) -> AgentResult:
-        niche  = payload.get("niche", "bakery homemade desserts")
-        topic  = payload.get("topic", "")
+        # Step 1 — her own momentum
+        try:
+            clusters, profile = self._load_data()
+            velocity = pillar_velocity(clusters, profile)
+        except Exception:
+            velocity = []
 
-        # Step 1 — Web search
-        snippets = _web_search(topic or "content ideas", niche=niche)
-        if not snippets:
-            snippets = [
-                "Food content trends: behind-the-scenes process videos perform well.",
-                "Nostalgia-themed content drives high saves on Instagram.",
-                "Short-form recipe reels with text overlay see 2x engagement.",
-            ]
+        # Step 2 — her own audience (optional)
+        comments, comments_status = _recent_comments()
+        comments_block = _format_comments(comments)
 
-        snippets_block = "\n".join(f"- {s}" for s in snippets[:12])
+        # Nothing real to say. Say that, rather than inventing trends — the old
+        # behaviour produced fabrications indistinguishable from real findings.
+        if not velocity and not comments_block:
+            return AgentResult(agent_name=self.name, output={
+                "micro_trends":       [],
+                "audience_questions": [],
+                "content_hooks":      [],
+                "suggested_angles":   [],
+                "briefing_summary":   (
+                    "Not enough data yet to spot movement. Sync your Instagram account, "
+                    "or post a few more times, and this will fill in."
+                ),
+                "signals_used": {"pillars": 0, "comments": 0, "comments_status": comments_status},
+            })
 
-        # Step 2 — Pull recently used angles from episodic memory to avoid repetition
+        pillars_block = "\n".join(f"  - {name}" for name in all_pillar_labels().values()) \
+                        or "  (no pillars yet)"
+
         used_angles_block = "None recorded yet."
         if self._memory:
             past = self._memory.search_episodic("content angle trend", n_results=5)
             if past:
-                used_angles_block = "\n".join(
-                    f"- {r['text'][:120]}" for r in past
-                )
+                used_angles_block = "\n".join(f"- {r['text'][:120]}" for r in past)
 
-        # Step 3 — Granite TrendSynthesizer (#22)
+        # Step 3 — one Granite call over both signals
         try:
-            raw    = self._chain.invoke({
+            raw = self._chain.invoke({
                 "brand_name":        self._brand_name,
-                "niche":             niche,
-                "snippets_block":    snippets_block,
+                "velocity_block":    _format_velocity(velocity),
+                "comments_block":    comments_block or "(no audience comments available)",
+                "pillars_block":     pillars_block,
                 "used_angles_block": used_angles_block,
             })
             result = _parse_json(raw)
-
-            # Validate expected keys
-            result.setdefault("micro_trends",      [])
-            result.setdefault("content_hooks",     [])
-            result.setdefault("suggested_angles",  [])
-            result.setdefault("briefing_summary",  "Trend briefing generated.")
-
+            result.setdefault("micro_trends",       [])
+            result.setdefault("audience_questions", [])
+            result.setdefault("content_hooks",      [])
+            result.setdefault("suggested_angles",   [])
+            result.setdefault("briefing_summary",   "Momentum briefing generated.")
         except Exception as exc:
             result = {
-                "micro_trends":      [],
-                "content_hooks":     [],
-                "suggested_angles":  [],
-                "briefing_summary":  f"Trend synthesis failed: {exc}",
-                "raw_snippets":      snippets[:5],
+                "micro_trends":       [],
+                "audience_questions": [],
+                "content_hooks":      [],
+                "suggested_angles":   [],
+                "briefing_summary":   f"Momentum synthesis failed: {exc}",
             }
 
-        result["sources_searched"] = len(snippets)
+        # Honest provenance. The old `sources_searched` counted hardcoded strings.
+        result["signals_used"] = {
+            "pillars"        : len(velocity),
+            "comments"       : len(comments),
+            "comments_status": comments_status,
+        }
         return AgentResult(agent_name=self.name, output=result)

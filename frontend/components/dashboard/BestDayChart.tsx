@@ -25,13 +25,29 @@ function fmtTime(minOfDay: number): string {
 export interface DayRow {
   label: string;
   posts: number;
-  avgReach: number;
+  avgReach: number;   // median, not mean — see medianOf
+}
+
+/**
+ * Median, not mean. One 5.2M-reach viral reel is enough to make its weekday look
+ * 4x better than every other day on a mean, which would send the creator chasing
+ * a single outlier. The median answers the question actually being asked: on a
+ * normal day, when is a post likely to do well?
+ */
+function medianOf(values: number[]): number {
+  if (values.length === 0) return 0;
+  const s = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(s.length / 2);
+  return s.length % 2 ? s[mid] : Math.round((s[mid - 1] + s[mid]) / 2);
 }
 
 /**
  * Roll the (weekday x hour, UTC) grid up to one row per weekday, shifted into
- * the viewer's timezone. Reach is weighted by post count so a 1-post slot can't
- * outrank a 15-post one.
+ * the brand's timezone. Pools the raw per-post reach values and takes a median,
+ * so a single viral post can't crown its weekday.
+ *
+ * The timezone shift can move a post to a different weekday, which is why this
+ * rollup can't be precomputed server-side.
  *
  * ponytail: applies today's UTC offset to every cell, so posts from the other
  * side of a DST boundary land an hour off. Carry full timestamps if that matters.
@@ -46,7 +62,8 @@ export function rollupByDay(
     return {
       weekday: (((c.weekday + dayShift) % 7) + 7) % 7,
       minOfDay: ((total % 1440) + 1440) % 1440,
-      avg_reach: c.avg_reach,
+      // Older cached payloads predate `reaches`; fall back to the cell average.
+      reaches: c.reaches ?? Array(c.count).fill(c.avg_reach),
       count: c.count,
     };
   });
@@ -54,8 +71,8 @@ export function rollupByDay(
   const days = DAYS.map((label, wd) => {
     const rows = shifted.filter((c) => c.weekday === wd);
     const posts = rows.reduce((s, c) => s + c.count, 0);
-    const reach = rows.reduce((s, c) => s + c.avg_reach * c.count, 0);
-    return { label, posts, avgReach: posts ? Math.round(reach / posts) : 0 };
+    const pooled = rows.flatMap((c) => c.reaches);
+    return { label, posts, avgReach: medianOf(pooled) };
   })
     .filter((d) => d.posts > 0)
     .sort((a, b) => b.avgReach - a.avgReach);
@@ -67,6 +84,35 @@ export function rollupByDay(
   const top = [...byTime.entries()].sort((a, b) => b[1] - a[1])[0];
 
   return { days, typicalMin: top ? top[0] : null };
+}
+
+/**
+ * How concentrated the account's reach is: the fewest posts that together
+ * account for `share` of total reach.
+ *
+ * This account's median post does ~1.6K reach against a ~42K mean — nearly all
+ * of it comes from a handful of breakouts. Ranking days by median keeps one
+ * viral post from dictating strategy, but hiding the concentration entirely
+ * would misrepresent where the reach actually came from.
+ */
+export function breakoutConcentration(
+  reaches: number[],
+  share = 0.7,
+): { posts: number; pct: number; total: number } | null {
+  const total = reaches.reduce((s, r) => s + r, 0);
+  if (total <= 0 || reaches.length < 3) return null;
+
+  const desc = [...reaches].sort((a, b) => b - a);
+  let running = 0;
+  for (let i = 0; i < desc.length; i++) {
+    running += desc[i];
+    if (running / total >= share) {
+      // Only interesting when a small minority carries the account.
+      if (i + 1 > desc.length / 4) return null;
+      return { posts: i + 1, pct: Math.round((running / total) * 100), total };
+    }
+  }
+  return null;
 }
 
 /**
@@ -103,11 +149,25 @@ export default function BestDayChart({
   }
 
   const best = days[0];
-  const worst = days[days.length - 1];
-  const ratio = worst.avgReach > 0 ? best.avgReach / worst.avgReach : 0;
+
+  const allReaches = cells.flatMap((c) => c.reaches ?? []);
+  const typicalReach = medianOf(allReaches);
+  const breakout = breakoutConcentration(allReaches);
 
   return (
     <div>
+      {breakout && (
+        <p className="text-[11px] mb-3" style={{ color: "var(--color-ql-muted)" }}>
+          A typical post reaches{" "}
+          <span style={{ color: "var(--color-ql-dark)" }}>{typicalReach.toLocaleString()}</span> —
+          but{" "}
+          <span style={{ color: "var(--color-ql-dark)" }}>
+            {breakout.posts} breakout post{breakout.posts === 1 ? "" : "s"}
+          </span>{" "}
+          drove {breakout.pct}% of your {compact(breakout.total)} total.
+        </p>
+      )}
+
       {typicalMin !== null && (
         <p className="text-[11px] mb-4" style={{ color: "var(--color-ql-muted)" }}>
           You usually post around{" "}
@@ -148,16 +208,10 @@ export default function BestDayChart({
 
       <div className="flex items-baseline justify-between gap-3 flex-wrap mt-4">
         <p className="text-[11px]" style={{ color: "var(--color-ql-dark)" }}>
-          {ratio >= 1.5 && (
-            <>
-              {PLURALS[best.label]} reach{" "}
-              <span style={{ color: "var(--color-ql-accent)" }}>{ratio.toFixed(1)}×</span> more than{" "}
-              {PLURALS[worst.label]}.
-            </>
-          )}
+          {PLURALS[best.label]} are your most reliable day.
         </p>
         <p className="text-[10px]" style={{ color: "var(--color-ql-muted)" }}>
-          avg reach · posts
+          typical reach · posts
         </p>
       </div>
     </div>

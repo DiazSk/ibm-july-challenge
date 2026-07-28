@@ -90,6 +90,34 @@ def _find_row(shortcode: str) -> dict | None:
     return None
 
 
+@router.get("/posts/{shortcode}/seed")
+def post_seed(shortcode: str) -> dict:
+    """
+    Everything the script generator needs to build from an existing post.
+
+    Exists so "write the fix" can be one click: the Create page used to make the
+    creator paste a caption and hand-type six metric numbers for a post already
+    stored in clusters.json. Instant — no LLM.
+    """
+    row = _find_row(shortcode)
+    if not row:
+        raise HTTPException(status_code=404, detail=f"Unknown post {shortcode}")
+
+    rec = _scraped_record(shortcode) or {}
+    content = rec.get("content") or {}
+    # Prefer the cleaned hook (the line that actually did the work); fall back to
+    # the raw caption for posts the pipeline never split.
+    caption = (content.get("marketing_hook") or content.get("caption_raw") or "").strip()
+
+    return {
+        "shortcode" : shortcode,
+        "caption"   : caption,
+        "post_type" : row["post_type"],
+        "cluster_id": row["cluster_id"],
+        "metrics"   : {k: row[k] for k in ("reach", "views", "likes", "comments", "saves", "shares")},
+    }
+
+
 @router.get("/posts/{shortcode}")
 def post_diagnosis(shortcode: str, force: bool = False) -> dict:
     """

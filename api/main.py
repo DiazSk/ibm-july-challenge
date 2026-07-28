@@ -19,7 +19,7 @@ load_dotenv()  # read IG_* (and any other) secrets from .env into the environmen
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from api.routers import brand, create, analyze, discover, onboard, workbench, agent, voice, repurpose, weekly_brief, triage, orchestrate, agent_run, recovery, playbook, connect, insights, strategy, inbox, diagnose
+from api.routers import brand, create, analyze, discover, onboard, workbench, agent, voice, repurpose, weekly_brief, triage, orchestrate, agent_run, recovery, playbook, connect, insights, strategy, inbox, diagnose, today
 
 
 async def _instagram_poll_loop() -> None:
@@ -71,6 +71,7 @@ app.add_middleware(
     allow_headers       = ["*"],
 )
 
+app.include_router(today.router,    prefix="/api/today",    tags=["Today"])
 app.include_router(onboard.router,  prefix="/api/onboard",  tags=["Onboard"])
 app.include_router(connect.router,  prefix="/api/connect",  tags=["Connect"])
 app.include_router(insights.router, prefix="/api/insights", tags=["Insights"])

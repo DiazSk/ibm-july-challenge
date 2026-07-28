@@ -258,6 +258,7 @@ export const agentChat = (
   userMessage: string,
   sessionId: string,
   history: { role: string; content: string }[] = [],
+  context = "",   // what the creator is looking at, e.g. the strategy move on screen
 ) =>
   apiFetch<AgentChatResponse>("/api/agent/chat", {
     method: "POST",
@@ -265,6 +266,7 @@ export const agentChat = (
       user_message: userMessage,
       session_id  : sessionId,
       messages    : history,
+      context,
     }),
   });
 

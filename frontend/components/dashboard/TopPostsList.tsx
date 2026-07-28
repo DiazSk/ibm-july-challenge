@@ -2,14 +2,7 @@
 
 import type { TopPost } from "@/lib/types";
 import PostPreview from "@/components/common/PostPreview";
-
-const CLUSTER_COLORS = [
-  "var(--color-cluster-0)",
-  "var(--color-cluster-1)",
-  "var(--color-cluster-2)",
-  "var(--color-cluster-3)",
-  "var(--color-cluster-4)",
-] as const;
+import { clusterColor } from "@/lib/utils";
 
 function compact(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
@@ -40,7 +33,7 @@ export default function TopPostsList({ posts }: { posts: TopPost[] }) {
             <div className="flex items-center gap-2 mb-0.5">
               <span
                 className="w-1.5 h-1.5 rounded-full shrink-0"
-                style={{ background: CLUSTER_COLORS[p.cluster_id % 5] }}
+                style={{ background: clusterColor(p.cluster_id) }}
               />
               <span className="text-[10px] truncate" style={{ color: "var(--color-ql-muted)" }}>
                 {p.pillar}

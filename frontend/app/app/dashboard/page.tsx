@@ -276,21 +276,24 @@ export default function DashboardPage() {
             <AskJarvisChips />
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6">
-            {/* Top posts */}
-            <section
-              className="rounded-xl border p-5"
-              style={{ borderColor: "var(--color-ql-border)", background: "var(--color-ql-card)" }}
+          {/* Top posts — full width. It carries the most content, and pairing it
+              with a short card forced that card to stretch to ~3x its own height. */}
+          <section
+            className="rounded-xl border p-5"
+            style={{ borderColor: "var(--color-ql-border)", background: "var(--color-ql-card)" }}
+          >
+            <p
+              className="text-[10px] font-medium uppercase tracking-[0.12em] mb-4"
+              style={{ color: "var(--color-ql-muted)" }}
             >
-              <p
-                className="text-[10px] font-medium uppercase tracking-[0.12em] mb-4"
-                style={{ color: "var(--color-ql-muted)" }}
-              >
-                Top Posts
-              </p>
-              <TopPostsList posts={overview.top_posts} />
-            </section>
+              Top Posts
+            </p>
+            <TopPostsList posts={overview.top_posts} />
+          </section>
 
+          {/* The two short cards pair cleanly — comparable row counts, so grid
+              `align-items: stretch` no longer leaves dead space. */}
+          <div className="grid md:grid-cols-2 gap-6">
             {/* Engagement by pillar */}
             <section
               className="rounded-xl border p-5"
@@ -304,13 +307,12 @@ export default function DashboardPage() {
               </p>
               <EngagementByPillarChart data={overview.by_pillar} />
             </section>
-          </div>
 
-          {/* Best time to post */}
-          <section
-            className="rounded-xl border p-5"
-            style={{ borderColor: "var(--color-ql-border)", background: "var(--color-ql-card)" }}
-          >
+            {/* Best day to post */}
+            <section
+              className="rounded-xl border p-5"
+              style={{ borderColor: "var(--color-ql-border)", background: "var(--color-ql-card)" }}
+            >
             <div className="flex items-baseline justify-between mb-4 gap-3 flex-wrap">
               <p
                 className="text-[10px] font-medium uppercase tracking-[0.12em]"
@@ -323,7 +325,8 @@ export default function DashboardPage() {
               </p>
             </div>
             <BestDayChart cells={overview.best_times} timeZone={profile?.timezone ?? "UTC"} />
-          </section>
+            </section>
+          </div>
         </div>
       )}
 

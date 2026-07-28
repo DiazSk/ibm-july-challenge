@@ -76,7 +76,9 @@ def _diagnoses() -> dict:
     we = get_why_engine()
     vds = _visual_descriptions()
 
-    def diag(post: dict | None) -> dict | None:
+    total = _overview()["scorecard"]["posts_counted"]
+
+    def diag(post: dict | None, peer_context: str = "") -> dict | None:
         if not post:
             return None
         return we.analyze(
@@ -90,11 +92,21 @@ def _diagnoses() -> dict:
             saves              = post["saves"],
             cluster_id         = post["cluster_id"],
             visual_description = vds.get(post.get("shortcode", ""), ""),
+            peer_context       = peer_context,
         )
 
     return {
-        "winner_diagnosis": diag(ranked.get("winner")),
-        "loser_diagnosis" : diag(ranked.get("loser")),
+        "winner_diagnosis": diag(
+            ranked.get("winner"),
+            f"This is the single BEST performing post out of {total} — it ranks #1 for "
+            "share-throughs per person reached. Explain what made it work; do not call it "
+            "underperforming.",
+        ),
+        "loser_diagnosis" : diag(
+            ranked.get("loser"),
+            f"This post reached real people but ranks LAST of {total} for share-throughs "
+            "per person reached. Explain what held it back.",
+        ),
     }
 
 

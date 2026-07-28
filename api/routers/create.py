@@ -32,6 +32,7 @@ from api.dependencies import (
 router = APIRouter()
 
 _CLUSTERS_PATH = Path(__file__).resolve().parent.parent.parent / "data" / "clusters.json"
+_PROFILE_PATH = Path(__file__).resolve().parent.parent.parent / "data" / "brand_profile.json"
 _DB_PATH = Path(__file__).resolve().parent.parent.parent / "data" / "workbench.db"
 
 _WB_CREATE_TABLE_SQL = """
@@ -182,11 +183,31 @@ class DriftCompareRequest(BaseModel):
 def analyze_moment(req: AnalyzeMomentRequest) -> dict:
     """
     Granite Call #6 — MomentAnalyzer.
-    Extracts emotional_core, business_signal, best_cluster_id, cluster_reason.
+    Extracts emotional_core, business_signal, best_cluster_id, cluster_reason,
+    plus `similar_posts` — past posts covering the same ground, each with how it
+    actually performed. Additive: existing consumers ignore the new key.
     """
     if not req.moment_text.strip():
         raise HTTPException(status_code=422, detail="moment_text is required")
-    return get_moment_analyzer().analyze(req.moment_text)
+
+    result = get_moment_analyzer().analyze(req.moment_text)
+
+    # The repetition guard is an aid, not the point of the endpoint — a failure
+    # here (missing data file, embedder load) must not cost the creator her
+    # analysis. Degrade to an empty list.
+    try:
+        from src.data.repetition import find_similar_posts
+
+        result["similar_posts"] = find_similar_posts(
+            req.moment_text,
+            json.loads(_CLUSTERS_PATH.read_text(encoding="utf-8")),
+            json.loads(_PROFILE_PATH.read_text(encoding="utf-8")),
+            get_sentence_embedder(),
+        )
+    except Exception:
+        result["similar_posts"] = []
+
+    return result
 
 
 @router.post("/directions")
@@ -293,9 +314,6 @@ def voice_refine(req: VoiceRefineRequest) -> dict:
     if not req.transcript.strip():
         raise HTTPException(status_code=422, detail="transcript is required")
 
-    import json
-    from pathlib import Path
-    _PROFILE_PATH = Path(__file__).resolve().parent.parent.parent / "data" / "brand_profile.json"
     try:
         brand_profile = json.loads(_PROFILE_PATH.read_text(encoding="utf-8"))
     except Exception as exc:

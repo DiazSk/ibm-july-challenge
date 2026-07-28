@@ -191,6 +191,71 @@ export default function BlankPageSolver({ onApply }: Props) {
                 </div>
               )}
 
+              {/* Repetition guard — silent when the idea is genuinely new */}
+              {!!analysis?.similar_posts?.length && (
+                <div className="mt-4">
+                  <p
+                    className="text-[10px] uppercase tracking-[0.12em] font-medium mb-2"
+                    style={{ color: "var(--color-ql-muted)" }}
+                  >
+                    You&apos;ve posted about this before
+                  </p>
+                  <div className="flex flex-col gap-2">
+                    {analysis.similar_posts.map((s) => {
+                      const tone =
+                        s.recommendation === "repeat"
+                          ? "var(--color-verdict-succeeded)"
+                          : s.recommendation === "avoid"
+                          ? "var(--color-ql-accent)"
+                          : "var(--color-ql-muted)";
+                      return (
+                        <div
+                          key={s.shortcode}
+                          className="rounded-lg border p-3"
+                          style={{
+                            borderColor: "var(--color-ql-border)",
+                            background: "var(--color-ql-card)",
+                          }}
+                        >
+                          <div className="flex items-baseline justify-between gap-2 mb-1 flex-wrap">
+                            <span className="text-[11px]" style={{ color: "var(--color-ql-muted)" }}>
+                              {s.closeness}{" "}
+                              <span style={{ color: "var(--color-ql-dark)" }}>
+                                {new Date(s.timestamp_utc).toLocaleDateString(undefined, {
+                                  day: "numeric",
+                                  month: "short",
+                                  year: "numeric",
+                                })}
+                              </span>
+                            </span>
+                            <span
+                              className="text-[10px] uppercase tracking-[0.08em] font-medium px-2 py-0.5 rounded-full shrink-0"
+                              style={{ color: tone, background: "var(--color-ql-gap)" }}
+                            >
+                              {s.recommendation === "repeat"
+                                ? "worth repeating"
+                                : s.recommendation === "avoid"
+                                ? "change the angle"
+                                : "no metrics"}
+                            </span>
+                          </div>
+                          <p
+                            className="text-xs leading-relaxed line-clamp-2 mb-1"
+                            style={{ color: "var(--color-ql-dark)" }}
+                          >
+                            &ldquo;{s.hook}&rdquo;
+                          </p>
+                          <p className="text-[11px]" style={{ color: "var(--color-ql-muted)" }}>
+                            {s.reach > 0 && <>{s.reach.toLocaleString()} reach · </>}
+                            {s.note}
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {/* Direction cards */}
               {directions.length > 0 && (
                 <div className="mt-4">

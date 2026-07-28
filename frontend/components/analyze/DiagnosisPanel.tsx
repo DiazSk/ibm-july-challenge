@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import type { WhyEngineResult, PostDiagnosis, VerdictLabel, RepurposeStatus } from "@/lib/types";
 import ConfidenceBadge from "@/components/shared/ConfidenceBadge";
 import { getRepurposeStatus } from "@/lib/api";
+import { splitAdvice } from "@/lib/utils";
 
 interface Props {
   /**
@@ -133,10 +134,7 @@ export default function DiagnosisPanel({ result }: Props) {
   // Present only on the manual-form result, absent on a per-post diagnosis.
   const extras = result as Partial<WhyEngineResult>;
 
-  const changeItems = result.change_next_time
-    .split(/[\n•–-]+/)
-    .map((s) => s.trim())
-    .filter(Boolean);
+  const changeItems = splitAdvice(result.change_next_time);
 
   return (
     <div className="flex flex-col gap-4 mt-6">

@@ -29,6 +29,8 @@ from pathlib import Path
 from langchain_ollama import OllamaLLM
 from langchain_core.prompts import PromptTemplate
 
+from src.data.pillars import UNCATEGORIZED_ID
+
 # ── Config ───────────────────────────────────────────────────────────────────
 _PROJECT_ROOT      = Path(__file__).resolve().parent.parent.parent
 CLUSTERS_PATH      = _PROJECT_ROOT / "data" / "clusters.json"
@@ -192,18 +194,23 @@ def _pillar_name(entry: dict) -> str:
     return (entry.get("profile") or {}).get("content_pillar", "") or ""
 
 
+_STEM_LEN = 6
+
+
 def colliding_cluster_ids(names: dict[int, str]) -> list[int]:
     """
-    Cluster ids whose pillar name shares its first word with another pillar.
+    Cluster ids whose pillar name opens the same way as another pillar's.
 
-    First word is what the eye anchors on and what compact chart labels used to
-    truncate to, so a shared one means the names don't read as distinct.
+    The first word is what the eye anchors on, so a shared one means the names
+    don't read as distinct. Compared as a stem rather than the whole word, because
+    an exact match let "Custom Cakes & Bulk Orders" and "Customized Sweet Moments"
+    through — different strings, same thing to a reader.
     """
     buckets: dict[str, list[int]] = {}
     for cid, name in names.items():
         head = name.strip().split(" ")[0].lower()
         if head:
-            buckets.setdefault(head, []).append(cid)
+            buckets.setdefault(head[:_STEM_LEN], []).append(cid)
     return sorted(cid for ids in buckets.values() if len(ids) > 1 for cid in ids)
 
 
@@ -345,6 +352,12 @@ class BrandProfileExtractor:
         cluster_profiles = []
         for cid_str, posts in sorted(clusters.items(), key=lambda x: int(x[0])):
             if not posts:
+                continue
+            # The uncategorized bucket holds posts kept purely for their metrics —
+            # no caption copy, so there is no voice to extract and nothing to send
+            # to Granite.
+            if int(cid_str) == UNCATEGORIZED_ID:
+                print(f"  → Skipping cluster {cid_str} ({len(posts)} metrics-only posts)")
                 continue
             result = self.extract_cluster_profile(int(cid_str), posts)
             cluster_profiles.append(result)

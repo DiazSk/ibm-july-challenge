@@ -48,17 +48,31 @@ def resolve_device(device: str = DEVICE) -> str:
 
 # ── Data loading ─────────────────────────────────────────────────────────────
 
-def load_cleaned_posts(cleaned_dir: Path = CLEANED_DIR) -> list[dict]:
+UNCATEGORIZED_ID = -1   # posts with real metrics but no caption copy to cluster
+
+
+def load_cleaned_posts(cleaned_dir: Path = CLEANED_DIR) -> tuple[list[dict], list[dict]]:
+    """
+    Return (voiced, thin).
+
+    `voiced` posts carry marketing copy and drive clustering and the voice
+    profile. `thin` posts have no usable copy but do have real engagement — they
+    are excluded from K-Means yet must still reach every analytics surface, so
+    they ride along in the output under UNCATEGORIZED_ID.
+    """
     records = [
         json.loads(f.read_text(encoding="utf-8"))
         for f in sorted(cleaned_dir.glob("ig_text_*.json"))
     ]
-    records = [r for r in records if r.get("marketing_hook", "").strip()]
     if not records:
         raise FileNotFoundError(
             f"No cleaned posts found in {cleaned_dir}. Run pipeline.py first."
         )
-    return records
+    voiced = [r for r in records if r.get("marketing_hook", "").strip()]
+    thin   = [r for r in records if not r.get("marketing_hook", "").strip()]
+    if not voiced:
+        raise ValueError(f"No posts with marketing copy in {cleaned_dir}.")
+    return voiced, thin
 
 
 # ── Embedding ────────────────────────────────────────────────────────────────
@@ -103,8 +117,10 @@ def run_clustering(
     }
     """
     print("── Step 1: Loading cleaned posts")
-    records    = load_cleaned_posts(cleaned_dir)
-    hooks      = [r["marketing_hook"] for r in records]
+    records, thin = load_cleaned_posts(cleaned_dir)
+    hooks         = [r["marketing_hook"] for r in records]
+    if thin:
+        print(f"  {len(thin)} post(s) have metrics but no copy → cluster {UNCATEGORIZED_ID}")
 
     print("── Step 2: Generating embeddings")
     embeddings = embed(hooks, device)
@@ -116,16 +132,23 @@ def run_clustering(
     cluster_map : dict[str, int]        = {}
     clusters    : dict[str, list[dict]] = {str(i): [] for i in range(n_clusters)}
 
-    for record, label in zip(records, labels):
-        cid = int(label)
+    def _emit(record: dict, cid: int) -> None:
         key = record.get("shortcode") or record.get("timestamp_utc", "unknown")
         cluster_map[key] = cid
-        clusters[str(cid)].append({
+        clusters.setdefault(str(cid), []).append({
             "shortcode"     : record["shortcode"],
             "timestamp_utc" : record["timestamp_utc"],
             "marketing_hook": record["marketing_hook"],
             "engagement"    : record.get("engagement", {}),
         })
+
+    for record, label in zip(records, labels):
+        _emit(record, int(label))
+
+    # Metrics-only posts: never embedded, never profiled, but present so KPIs,
+    # top posts and best-day are computed over the whole account.
+    for record in thin:
+        _emit(record, UNCATEGORIZED_ID)
 
     # ── Console summary ────────────────────────────────────────────────────
     print("\n── Cluster Summaries ──────────────────────────────────────────────")

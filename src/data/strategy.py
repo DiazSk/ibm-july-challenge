@@ -22,6 +22,7 @@ Self-check (no network):
 
 import sys
 from collections import defaultdict
+from datetime import datetime, timedelta
 from pathlib import Path
 
 # Make `src` importable when run standalone (uvicorn already does this).
@@ -32,10 +33,14 @@ if str(_ROOT) not in sys.path:
 from src.data.insights import (
     _num, _has_metrics, _pillar_names, _parse_ts, compute_overview,
 )
+from src.data.pillars import pillar_label
 
 # Sends outrank saves as a reach signal — weight them 3:1 when ranking posts.
 _WEIGHT_SENDS = 3.0
 _WEIGHT_SAVES = 1.0
+
+# A pillar carrying at least this share of total reach is never labelled "scale back".
+_REACH_SHARE_PROTECT = 0.25
 
 _INTERACTION_KEYS = ("likes", "comments", "saves", "shares")
 
@@ -143,6 +148,93 @@ def monthly_timeseries(clusters: dict, brand_profile: dict) -> list[dict]:
     return series
 
 
+# ── Per-pillar movement ──────────────────────────────────────────────────────
+
+# Below this many posts in a window, a "multiple" is noise rather than a trend.
+_MIN_WINDOW_POSTS = 3
+# How far a pillar has to move before it counts as rising/cooling rather than steady.
+_MOVE_THRESHOLD   = 1.25
+
+
+def pillar_velocity(clusters: dict, brand_profile: dict, window_days: int = 60) -> list[dict]:
+    """
+    What is actually gaining or losing ground in this account.
+
+    Compares each pillar's trailing `window_days` against the equally-sized window
+    before it. Ranked by how far sends-per-reach moved, falling back to reach when
+    the account records no shares at all.
+
+    `monthly_timeseries` can't answer this — it aggregates per month and keeps only
+    the single top pillar, so a pillar that is quietly accelerating never surfaces.
+
+    Small windows are reported as "steady" rather than as a dramatic multiple: one
+    viral post already distorted the best-day metric once, and a 1-post window would
+    do the same here.
+    """
+    names = _pillar_names(brand_profile)
+
+    stamped: list[tuple[int, datetime, dict]] = []
+    for cid_str, posts in clusters.get("clusters", {}).items():
+        for p in posts:
+            ts = _parse_ts(p.get("timestamp_utc", ""))
+            if ts is None or not _has_metrics(p):
+                continue
+            stamped.append((int(cid_str), ts, p["engagement"]))
+
+    if not stamped:
+        return []
+
+    # Anchor on the newest post, not on "now" — a demo dataset may be months old and
+    # anchoring on today would report every pillar as empty.
+    latest = max(ts for _, ts, _ in stamped)
+    recent_start = latest - timedelta(days=window_days)
+    prior_start  = latest - timedelta(days=window_days * 2)
+
+    def agg(rows: list[dict]) -> dict:
+        reach  = sum(_num(e.get("reach")) for e in rows)
+        shares = sum(_num(e.get("shares")) for e in rows)
+        saves  = sum(_num(e.get("saves")) for e in rows)
+        return {
+            "posts"          : len(rows),
+            "reach"          : round(reach),
+            "sends_per_reach": round(shares / reach * 100, 2) if reach else 0.0,
+            "saves_per_reach": round(saves / reach * 100, 2) if reach else 0.0,
+        }
+
+    out: list[dict] = []
+    for cid in sorted({c for c, _, _ in stamped}):
+        recent = agg([e for c, ts, e in stamped if c == cid and ts >= recent_start])
+        prior  = agg([e for c, ts, e in stamped if c == cid and prior_start <= ts < recent_start])
+
+        # Prefer sends-per-reach; some accounts record no shares at all, and then
+        # raw reach is the only movement signal available.
+        key = "sends_per_reach" if (recent["sends_per_reach"] or prior["sends_per_reach"]) else "reach"
+        r_val, p_val = recent[key], prior[key]
+
+        thin = recent["posts"] < _MIN_WINDOW_POSTS or prior["posts"] < _MIN_WINDOW_POSTS
+        if thin or not p_val:
+            direction, multiple = "steady", None
+        else:
+            multiple  = round(r_val / p_val, 2)
+            direction = ("rising"  if multiple >= _MOVE_THRESHOLD else
+                         "cooling" if multiple <= 1 / _MOVE_THRESHOLD else "steady")
+
+        out.append({
+            "cluster_id" : cid,
+            "pillar"     : names.get(cid, pillar_label(cid)),
+            "direction"  : direction,
+            "metric"     : key,
+            "multiple"   : multiple,
+            "recent"     : recent,
+            "prior"      : prior,
+            "post_count" : recent["posts"] + prior["posts"],
+        })
+
+    # Biggest movers first; steady pillars sink to the bottom.
+    out.sort(key=lambda d: abs((d["multiple"] or 1) - 1), reverse=True)
+    return out
+
+
 # ── Best / worst post by algorithm-weighted score ────────────────────────────
 
 def _weighted_score(e: dict) -> float:
@@ -222,8 +314,9 @@ def derive_moves(by_pillar: list[dict], ranked: dict) -> list[dict]:
                           + "End each post with a reason to DM it to a friend."),
             "principle": "Sends-per-reach is Instagram's most heavily weighted driver of "
                          "new-audience reach (Mosseri, 2025).",
-            "source"   : "official",
-            "lever"    : "sends",
+            "source"    : "official",
+            "lever"     : "sends",
+            "cluster_id": rd["cluster_id"],
         })
 
         sd = max(pillars, key=lambda p: p["saves_per_reach"])
@@ -233,11 +326,23 @@ def derive_moves(by_pillar: list[dict], ranked: dict) -> list[dict]:
             "detail"   : "Package these as carousels or how-tos people save to return to.",
             "principle": "Saves are the next-highest-value signal after sends — they mark "
                          "lasting, returnable value.",
-            "source"   : "official",
-            "lever"    : "saves",
+            "source"    : "official",
+            "lever"     : "saves",
+            "cluster_id": sd["cluster_id"],
         })
 
-        vol_pillars = [p for p in pillars if p["volume_pct"] >= fair_share]
+        # Never advise scaling back a pillar that is actually carrying the account.
+        # Per-reach ratios punish breakout posts — a viral reel earns enormous
+        # reach but proportionally fewer shares, so the pillar holding the
+        # account's biggest hit can read as its weakest on sends-per-reach alone.
+        # Without this guard the page told a bakery to scale back the pillar
+        # containing her 5.2M-reach reel.
+        total_reach = sum(p.get("reach", 0) for p in by_pillar) or 1
+        vol_pillars = [
+            p for p in pillars
+            if p["volume_pct"] >= fair_share
+            and p.get("reach", 0) / total_reach < _REACH_SHARE_PROTECT
+        ]
         if vol_pillars:
             wk = min(vol_pillars, key=lambda p: p["sends_per_reach"])
             if wk["cluster_id"] != rd["cluster_id"]:
@@ -247,8 +352,9 @@ def derive_moves(by_pillar: list[dict], ranked: dict) -> list[dict]:
                     "detail"   : "You invest here often but it rarely gets sent onward. Rework "
                                  "the hook, or reallocate the slots to your reach-driver.",
                     "principle": "Reach follows share-worthiness per view, not post volume.",
-                    "source"   : "your-data",
-                    "lever"    : "sends",
+                    "source"    : "your-data",
+                    "lever"     : "sends",
+                    "cluster_id": wk["cluster_id"],
                 })
 
     w = ranked.get("winner")
@@ -260,10 +366,31 @@ def derive_moves(by_pillar: list[dict], ranked: dict) -> list[dict]:
                          "cadence so it becomes a recognizable series.",
             "principle": "Recurring, recognizable formats compound repeat viewers over "
                          "~6–12 weeks.",
-            "source"   : "industry-study",
-            "lever"    : "consistency",
+            "source"    : "industry-study",
+            "lever"     : "consistency",
+            "cluster_id": w["cluster_id"],
         })
     return moves
+
+
+def best_post_in_pillar(clusters: dict, brand_profile: dict, cluster_id: int) -> dict | None:
+    """
+    Top algorithm-weighted post inside one pillar — the reference to build from
+    when a move says "double down on X". `rank_posts` answers the account-wide
+    question; this answers the per-pillar one, so the script the Today page hands
+    off is drawn from the same pillar the recommendation names.
+
+    Falls back to the account-wide winner when the pillar has no usable post.
+    """
+    names = _pillar_names(brand_profile)
+    cand = [
+        p for p in clusters.get("clusters", {}).get(str(cluster_id), [])
+        if _has_metrics(p) and (p.get("marketing_hook") or "").strip()
+    ]
+    if not cand:
+        return rank_posts(clusters, brand_profile).get("winner")
+    best = max(cand, key=lambda p: _weighted_score(p["engagement"]))
+    return _pack_post(cluster_id, best, names.get(cluster_id, f"Cluster {cluster_id}"))
 
 
 # ── Offline self-check ────────────────────────────────────────────────────────
@@ -316,10 +443,54 @@ def _demo() -> None:
     assert any(x["source"] == "official" for x in moves)
     assert any(x["lever"] == "consistency" for x in moves)  # series from winner
     assert all({"title", "stat", "detail", "principle", "source"} <= set(x) for x in moves)
+    # Every move must carry a resolvable pillar — the Today page seeds its script
+    # from move.cluster_id, so a missing/unknown id breaks the hand-off silently.
+    known = {p["cluster_id"] for p in sc["by_pillar"]}
+    assert all(x.get("cluster_id") in known for x in moves), moves
+
+    # ── best_post_in_pillar ──────────────────────────────────────────────────
+    # Pillar-scoped, so it must pick C2 inside cluster 1 — not the account-wide
+    # winner C, and not anything from cluster 0.
+    assert best_post_in_pillar(clusters, profile, 1)["shortcode"] == "C", "cluster 1 top"
+    assert best_post_in_pillar(clusters, profile, 0)["shortcode"] == "A", "cluster 0 top"
+    # Unknown pillar falls back to the account-wide winner rather than returning None.
+    assert best_post_in_pillar(clusters, profile, 99)["shortcode"] == "C"
+
+    # ── pillar_velocity ──────────────────────────────────────────────────────
+    # Cluster 0 cools (sends/reach halves), cluster 1 rises (roughly doubles),
+    # cluster 2 has a single post per window and must stay "steady" rather than
+    # reporting a dramatic multiple off n=1.
+    def _posts(cid_ts_shares):
+        return [
+            {"shortcode": f"{cid}{i}", "timestamp_utc": ts, "marketing_hook": "x",
+             "engagement": {"reach": 1000, "views": 1000, "likes": 1,
+                            "comments": 0, "saves": 10, "shares": sh}}
+            for i, (cid, ts, sh) in enumerate(cid_ts_shares)
+        ]
+
+    recent, prior = "2026-07-10T09:00:00+0000", "2026-05-10T09:00:00+0000"
+    vclusters = {"clusters": {
+        "0": _posts([(0, prior, 40)] * 3 + [(0, recent, 20)] * 3),   # halves  → cooling
+        "1": _posts([(1, prior, 20)] * 3 + [(1, recent, 40)] * 3),   # doubles → rising
+        "2": _posts([(2, prior, 10), (2, recent, 90)]),              # n=1/window → steady
+    }}
+    vprofile = {"cluster_profiles": [
+        {"cluster_id": 0, "profile": {"content_pillar": "Cooling Pillar"}},
+        {"cluster_id": 1, "profile": {"content_pillar": "Rising Pillar"}},
+        {"cluster_id": 2, "profile": {"content_pillar": "Tiny Pillar"}},
+    ]}
+    vel = {v["cluster_id"]: v for v in pillar_velocity(vclusters, vprofile, window_days=45)}
+    assert vel[0]["direction"] == "cooling", vel[0]
+    assert vel[1]["direction"] == "rising", vel[1]
+    assert vel[2]["direction"] == "steady", vel[2]   # not "rising" off one post
+    assert vel[2]["multiple"] is None, vel[2]
+    assert vel[1]["pillar"] == "Rising Pillar", vel[1]
+    assert pillar_velocity({"clusters": {}}, vprofile) == []
 
     print("strategy self-check passed.")
     print(f"  sends/reach={m['sends_per_reach']['value']}%  winner={ranked['winner']['shortcode']}  "
-          f"loser={ranked['loser']['shortcode']}  moves={len(moves)}")
+          f"loser={ranked['loser']['shortcode']}  moves={len(moves)}  "
+          f"velocity={ {v['pillar']: v['direction'] for v in vel.values()} }")
 
 
 if __name__ == "__main__":

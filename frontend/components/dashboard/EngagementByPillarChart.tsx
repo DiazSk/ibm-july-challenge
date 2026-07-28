@@ -1,14 +1,7 @@
 "use client";
 
 import type { PillarEngagement } from "@/lib/types";
-
-const CLUSTER_COLORS = [
-  "var(--color-cluster-0)",
-  "var(--color-cluster-1)",
-  "var(--color-cluster-2)",
-  "var(--color-cluster-3)",
-  "var(--color-cluster-4)",
-] as const;
+import { clusterColor } from "@/lib/utils";
 
 // Horizontal bars, not a Recharts column chart: pillar names run 2-4 words and
 // a categorical x-axis had to truncate them to the first word, which collapsed
@@ -46,7 +39,7 @@ export default function EngagementByPillarChart({ data }: { data: PillarEngageme
               className="h-full rounded-full"
               style={{
                 width: `${(d.engagement_rate / max) * 100}%`,
-                background: CLUSTER_COLORS[d.cluster_id % CLUSTER_COLORS.length],
+                background: clusterColor(d.cluster_id),
               }}
             />
           </div>

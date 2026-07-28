@@ -10,7 +10,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from api.dependencies import get_brand_drift_analyzer, get_sentence_embedder
-from src.data.pillars import pillar_label
+from src.data.pillars import UNCATEGORIZED_ID, pillar_label
 
 router = APIRouter()
 
@@ -102,6 +102,10 @@ async def get_clusters():
     result: dict[str, dict] = {}
     for cid_str, posts in raw_clusters.get("clusters", {}).items():
         cid = int(cid_str)
+        # The metrics-only bucket has no voice profile. It belongs in analytics,
+        # not in a "write in this pillar's voice" picker.
+        if cid == UNCATEGORIZED_ID:
+            continue
         cp  = profile_by_id.get(cid, {})
         p   = cp.get("profile", {})
         voc = p.get("vocabulary_patterns", {})

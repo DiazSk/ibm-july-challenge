@@ -43,8 +43,16 @@ def _cached_names() -> dict[int, str]:
         return {}
 
 
+# Posts with real metrics but no caption copy. They have no voice to profile, so
+# they never get a Granite-generated pillar name — but they do appear in analytics.
+UNCATEGORIZED_ID    = -1
+UNCATEGORIZED_LABEL = "Uncategorized"
+
+
 def pillar_label(cluster_id: int) -> str:
     """Display name for one cluster; 'Cluster N' when the profile has no name."""
+    if cluster_id == UNCATEGORIZED_ID:
+        return UNCATEGORIZED_LABEL
     return _cached_names().get(cluster_id, f"Cluster {cluster_id}")
 
 

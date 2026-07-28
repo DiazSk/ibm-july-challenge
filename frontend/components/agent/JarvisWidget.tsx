@@ -318,10 +318,14 @@ export default function JarvisWidget() {
   // Dashboard insight chips dispatch "jarvis:ask" — open the panel and answer.
   useEffect(() => {
     const onAsk = (e: Event) => {
-      const q = (e as CustomEvent<string>).detail;
+      // Chips send either a bare question or {question, context}. Context lets
+      // JARVIS answer about the specific recommendation on screen rather than
+      // improvising from account averages.
+      const detail = (e as CustomEvent<string | { question: string; context?: string }>).detail;
+      const q = typeof detail === "string" ? detail : detail?.question;
       if (!q) return;
       setIsOpen(true);
-      sendToJarvis(q);
+      sendToJarvis(q, typeof detail === "string" ? "" : detail.context ?? "");
     };
     window.addEventListener("jarvis:ask", onAsk);
     return () => window.removeEventListener("jarvis:ask", onAsk);
@@ -337,7 +341,7 @@ export default function JarvisWidget() {
   }
 
   // ── Send to JARVIS ──────────────────────────────────────────────────────
-  async function sendToJarvis(text: string) {
+  async function sendToJarvis(text: string, context = "") {
     const trimmed = text.trim();
     if (!trimmed) return;
 
@@ -345,7 +349,7 @@ export default function JarvisWidget() {
     setPhase("thinking");
 
     try {
-      const res = await agentChat(trimmed, sessionId, historyForApi());
+      const res = await agentChat(trimmed, sessionId, historyForApi(), context);
 
       // Fetch audio before showing text so both arrive simultaneously.
       setPhase("speaking");
