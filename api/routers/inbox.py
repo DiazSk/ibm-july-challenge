@@ -22,9 +22,11 @@ from src.scrapers.instagram_api import (
 router = APIRouter()
 
 _RECONNECT_MSG = (
-    "Instagram didn't grant comment access. Add the "
-    "instagram_business_manage_comments permission in your Meta app, then "
-    "reconnect your account."
+    "Instagram isn't returning comment access, even though your account already "
+    "consented to instagram_business_manage_comments — reconnecting won't change that. "
+    "In your Meta App Dashboard, open the app's Instagram product → Permissions and "
+    "Features, and confirm instagram_business_manage_comments is added/enabled there "
+    "(and has completed App Review/Business Verification if Advanced Access is required)."
 )
 
 

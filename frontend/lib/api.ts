@@ -217,6 +217,15 @@ export const describeImage = async (file: File): Promise<{ visual_description: s
 export const getRepurposeStatus = (jobId: string) =>
   apiFetch<RepurposeStatus>(`/api/repurpose/status/${jobId}`);
 
+// On-demand fan-out: one caption → Reel + Carousel + Static + Story in the
+// Workbench. The automatic trigger needs a published post graded "succeeded",
+// so it can't serve "I just finished a bake".
+export const startRepurpose = (body: { caption: string; cluster_id: number }) =>
+  apiFetch<{ job_id: string; formats: string[] }>("/api/repurpose", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+
 // Discover
 export const getVoiceTimeline = () =>
   apiFetch<VoiceTimelineResult>("/api/discover/voice-timeline");
@@ -236,6 +245,17 @@ export const getPostDiagnosis = (shortcode: string, force = false) =>
   apiFetch<import("./types").PostDiagnosisResult>(
     `/api/diagnose/posts/${shortcode}${force ? "?force=true" : ""}`
   );
+
+// Caption + real metrics for one post, to seed the script generator. Instant.
+export const getPostSeed = (shortcode: string) =>
+  apiFetch<import("./types").PostSeed>(`/api/diagnose/posts/${shortcode}/seed`);
+
+// Today (the daily briefing — composes already-cached strategy data, instant)
+export const getToday = () => apiFetch<import("./types").TodayBriefing>("/api/today");
+
+// First-party trend read (Granite, slow, cached server-side)
+export const getTodayTrend = () =>
+  apiFetch<import("./types").TodayTrend>("/api/today/trend");
 
 // Strategy (performance-first, algorithm-grounded)
 export const getStrategyOverview = () =>

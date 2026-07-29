@@ -407,6 +407,12 @@ export interface InsightsOverview {
 }
 
 // Script Studio
+// Formats StyleSync can GENERATE. Deliberately wider than the `post_type` unions
+// used on analysis paths (WhyEngineRequest, RankedPost, recovery briefs): the Graph
+// API doesn't return Stories as media and they expire after 24h, so a Story can be
+// written but never diagnosed. Keep those unions narrow.
+export type ScriptFormat = "Reel" | "Carousel" | "Static" | "Story";
+
 export interface ScriptRequest {
   reference_caption: string;
   views: number;
@@ -415,7 +421,7 @@ export interface ScriptRequest {
   comments: number;
   shares: number;
   saves: number;
-  format: "Reel" | "Carousel" | "Static";
+  format: ScriptFormat;
   cluster_id: number;
 }
 
@@ -443,6 +449,7 @@ export interface CarouselSlide {
   slide: number;
   headline: string;
   body: string;
+  visual?: string;   // what to shoot/lay out for this slide; absent on older saved assets
 }
 
 export interface CarouselScript {
@@ -462,8 +469,30 @@ export interface StaticScript {
   reasoning?: string;
 }
 
+// The stickers Instagram actually offers — enforced server-side in
+// script_generator._normalize_story, so anything else never reaches the UI.
+export type StorySticker =
+  | "poll" | "question" | "quiz" | "slider" | "countdown" | "link" | "none";
+
+export interface StoryFrame {
+  frame: number;
+  visual: string;
+  on_screen_text: string;
+  sticker: StorySticker;
+  sticker_prompt: string;   // "" when sticker is "none"
+  duration_secs: number;
+}
+
+// No caption and no hashtags — Instagram Stories have neither.
+export interface StoryScript {
+  hook: string;
+  frames: StoryFrame[];
+  closing_cta: string;
+  reasoning?: string;
+}
+
 export interface ScriptResult {
-  format: "Reel" | "Carousel" | "Static";
+  format: ScriptFormat;
   reasoning?: string;
   // format-specific fields merged at top level
   [key: string]: unknown;
@@ -657,6 +686,8 @@ export interface StrategyMove {
   principle: string;
   source: StrategySource;
   lever: string;
+  /** Pillar the move is about — the Today page seeds its script from this. */
+  cluster_id: number;
 }
 
 export interface RankedPost {
@@ -674,6 +705,55 @@ export interface RankedPost {
   sends_per_reach: number;
   saves_per_reach: number;
   engagement_rate: number;
+}
+
+// ── Today (the daily briefing) ───────────────────────────────────────────────
+
+export interface PostSeed {
+  shortcode: string;
+  caption: string;
+  post_type: string;
+  cluster_id: number | null;
+  metrics: {
+    reach: number;
+    views: number;
+    likes: number;
+    comments: number;
+    saves: number;
+    shares: number;
+  };
+}
+
+/** A move plus the format decision derived from its lever. */
+export interface TodayRecommendation extends StrategyMove {
+  format: "Reel" | "Carousel" | "Static";
+  why_format: string;
+}
+
+export interface TodayBriefing {
+  date: string;
+  weekday: string;
+  recommendation: TodayRecommendation | null;
+  /** Best post inside the recommended pillar — the script's reference. */
+  seed_post: RankedPost | null;
+  other_moves?: StrategyMove[];
+  posts_counted: number;
+}
+
+/**
+ * First-party only: pillar velocity plus the account's own comments. There is no
+ * external trend feed — `available: false` means the agent had no signal, and it
+ * returns empty arrays rather than inventing trends.
+ */
+export interface TodayTrend {
+  available: boolean;
+  reason?: string;
+  briefing_summary?: string;
+  micro_trends?: string[];
+  audience_questions?: string[];
+  content_hooks?: string[];
+  suggested_angles?: { angle?: string; cluster?: string; format?: string; why_now?: string }[];
+  signals_used?: { pillars?: unknown; comments?: unknown; comments_status?: string };
 }
 
 export interface StrategyOverview {

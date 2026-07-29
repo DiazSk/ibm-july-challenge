@@ -23,6 +23,7 @@ from api.dependencies import get_why_engine
 from src.data.diagnose import (
     build_index, group_index, post_type_from_media, DIAGNOSES_DIR, SCRAPED_DIR,
 )
+from src.data.pipeline import clean_text, split_caption
 
 router = APIRouter()
 
@@ -103,15 +104,18 @@ def post_seed(shortcode: str) -> dict:
     if not row:
         raise HTTPException(status_code=404, detail=f"Unknown post {shortcode}")
 
-    rec = _scraped_record(shortcode) or {}
-    content = rec.get("content") or {}
-    # Prefer the cleaned hook (the line that actually did the work); fall back to
-    # the raw caption for posts the pipeline never split.
-    caption = (content.get("marketing_hook") or content.get("caption_raw") or "").strip()
+    # row["hook"] comes from clusters.json, which is the correctly-decoded copy —
+    # caption_raw in scraped_dataset is double-encoded for emoji posts, so never
+    # seed the generator from it.
+    #
+    # Re-split defensively: posts added by the live Instagram sync skip the batch
+    # pipeline, so their marketing_hook can still carry the ordering/hashtag tail.
+    # split_caption is idempotent, so already-clean hooks pass through untouched.
+    hook, _ = split_caption(clean_text(row["hook"] or ""))
 
     return {
         "shortcode" : shortcode,
-        "caption"   : caption,
+        "caption"   : hook.strip() or (row["hook"] or "").strip(),
         "post_type" : row["post_type"],
         "cluster_id": row["cluster_id"],
         "metrics"   : {k: row[k] for k in ("reach", "views", "likes", "comments", "saves", "shares")},

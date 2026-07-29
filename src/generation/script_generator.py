@@ -48,7 +48,10 @@ Brand voice for this script (cluster: {cluster_label}):
   Avoided terms     : {avoided_terms}
 {visual_world_block}
 Task: Create a brand-new {content_format} script inspired by what made the reference \
-post successful. Apply the brand voice above. Use a maximum of 5 hashtags.
+post successful. Apply the brand voice above.
+
+Hashtag rules live in the per-format instructions below — a global rule here would
+contradict Story, which has no hashtags and no caption at all.
 
 {format_instructions}
 
@@ -56,10 +59,20 @@ Return ONLY valid JSON — no preamble, no markdown fences:
 {json_schema}
 """
 
+# The only stickers Instagram actually offers. Granite will invent plausible-sounding
+# ones ("swipe-up", "emoji slider bar") if left unconstrained, and a sticker the
+# creator can't place is worse than no sticker — so the set is both stated in the
+# prompt and enforced on the way out.
+_STORY_STICKERS = {"poll", "question", "quiz", "slider", "countdown", "link", "none"}
+
 _FORMAT_INSTRUCTIONS = {
     "Reel": (
         "Structure the Reel script as a clip-by-clip shot list, ready for someone to film without any further planning:\n"
-        "  • hook: the first on-screen text or spoken line (max 8 words, punchy)\n"
+        "  • hook_options: an array of EXACTLY 3 different opening lines (each max 8 words, punchy). "
+        "Make them genuinely different approaches — e.g. one problem-first, one result-first, one "
+        "curiosity-first — not three rewordings of the same line. Do NOT start any of them with "
+        "'Stop scrolling'.\n"
+        "  • cover_text: the 2-5 word text for the Reel's cover image (what shows on the profile grid)\n"
         "  • clips: an array of 5-6 clips, each with:\n"
         "      - clip_number: sequential integer starting at 1\n"
         "      - duration_secs: approximate on-screen duration for this clip (e.g. '0-3', '3-6')\n"
@@ -77,7 +90,9 @@ _FORMAT_INSTRUCTIONS = {
     "Carousel": (
         "Structure the Carousel with 5-6 slides:\n"
         "  • hook: the cover slide headline (max 8 words)\n"
-        "  • slides: array of {slide (number), headline (short), body (1-2 sentences)}\n"
+        "  • slides: array of {slide (number), headline (short), body (1-2 sentences), "
+        "visual (what to actually photograph or lay out on THIS slide — be concrete, "
+        "e.g. 'overhead shot of cold butter cubes beside a warm bowl', not 'a nice image')}\n"
         "  • cta_slide: the final slide's call-to-action text\n"
         "  • caption: Instagram caption for the Carousel (under 150 words)\n"
         "  • hashtags: list of exactly 5 hashtag strings (with #)"
@@ -89,43 +104,75 @@ _FORMAT_INSTRUCTIONS = {
         "  • hashtags: list of exactly 5 hashtag strings (with #)\n"
         "  • visual_direction: one sentence describing the image composition and mood"
     ),
+    "Story": (
+        "Structure a Story sequence of 4 frames. Stories are the daily surface between "
+        "polished feed posts — they should feel spontaneous and be filmable on a phone in "
+        "one pass, not staged:\n"
+        "  • hook: the first frame's on-screen text (max 8 words)\n"
+        # An exact count, not a "3-5" range: Granite returned 2 frames on every run
+        # when given the range, and models hold to a single number far better.
+        "  • frames: an array of EXACTLY 4 frames, each with:\n"
+        "      - frame: sequential integer starting at 1\n"
+        "      - visual: what's on screen, shootable in a single take\n"
+        "      - on_screen_text: the exact text overlay (max 12 words — it competes with the visual)\n"
+        f"      - sticker: EXACTLY one of {' | '.join(sorted(_STORY_STICKERS))}\n"
+        "      - sticker_prompt: the sticker's wording, or \"\" when sticker is \"none\"\n"
+        "      - duration_secs: an integer from 3 to 15\n"
+        "  • closing_cta: the last frame's ask, tied to what she wants them to do next\n"
+        "At most 2 frames may carry a sticker — a sticker on every frame reads as a survey, "
+        "not a story.\n"
+        "Instagram Stories have NO caption and NO hashtags. Do NOT write a caption, do NOT "
+        "write hashtags, and do NOT return prose — return only the JSON object below."
+    ),
 }
 
 _JSON_SCHEMAS = {
     "Reel": (
-        '{{\n'
-        '  "hook": "<max 8 words>",\n'
+        '{\n'
+        '  "hook_options": ["<max 8 words>", "<a different angle>", "<a third angle>"],\n'
+        '  "cover_text": "<2-5 words for the cover image>",\n'
         '  "clips": [\n'
-        '    {{"clip_number": 1, "duration_secs": "<e.g. 0-3>", "action": "<what happens on screen>", "voiceover_line": "<one short spoken line>", "camera_angle": "<shot type>", "lighting": "<lighting mood/source>", "setting": "<background/location detail>", "audio_cue": "<SFX or sound-design note>"}},\n'
-        '    {{"clip_number": 2, "duration_secs": "<e.g. 3-6>", "action": "...", "voiceover_line": "...", "camera_angle": "...", "lighting": "...", "setting": "...", "audio_cue": "..."}}\n'
+        '    {"clip_number": 1, "duration_secs": "<e.g. 0-3>", "action": "<what happens on screen>", "voiceover_line": "<one short spoken line>", "camera_angle": "<shot type>", "lighting": "<lighting mood/source>", "setting": "<background/location detail>", "audio_cue": "<SFX or sound-design note>"},\n'
+        '    {"clip_number": 2, "duration_secs": "<e.g. 3-6>", "action": "...", "voiceover_line": "...", "camera_angle": "...", "lighting": "...", "setting": "...", "audio_cue": "..."}\n'
         '  ],\n'
         '  "music_recommendation": "<overall track mood/genre/BPM in one sentence>",\n'
         '  "caption": "<Instagram caption>",\n'
         '  "hashtags": ["#tag1", "#tag2", "#tag3", "#tag4", "#tag5"],\n'
         '  "reasoning": "<1-2 sentences on what you borrowed from the reference post>"\n'
-        '}}'
+        '}'
     ),
     "Carousel": (
-        '{{\n'
+        '{\n'
         '  "hook": "<cover slide headline>",\n'
         '  "slides": [\n'
-        '    {{"slide": 1, "headline": "<short>", "body": "<1-2 sentences>"}},\n'
-        '    {{"slide": 2, "headline": "<short>", "body": "<1-2 sentences>"}}\n'
+        '    {"slide": 1, "headline": "<short>", "body": "<1-2 sentences>", "visual": "<what to shoot or lay out>"},\n'
+        '    {"slide": 2, "headline": "<short>", "body": "<1-2 sentences>", "visual": "<what to shoot or lay out>"}\n'
         '  ],\n'
         '  "cta_slide": "<final call to action>",\n'
         '  "caption": "<Instagram caption>",\n'
         '  "hashtags": ["#tag1", "#tag2", "#tag3", "#tag4", "#tag5"],\n'
         '  "reasoning": "<1-2 sentences on what you borrowed from the reference post>"\n'
-        '}}'
+        '}'
     ),
     "Static": (
-        '{{\n'
+        '{\n'
         '  "headline": "<overlay text, max 8 words>",\n'
         '  "caption": "<Instagram caption>",\n'
         '  "hashtags": ["#tag1", "#tag2", "#tag3", "#tag4", "#tag5"],\n'
         '  "visual_direction": "<one sentence on image composition and mood>",\n'
         '  "reasoning": "<1-2 sentences on what you borrowed from the reference post>"\n'
-        '}}'
+        '}'
+    ),
+    "Story": (
+        '{\n'
+        '  "hook": "<max 8 words>",\n'
+        '  "frames": [\n'
+        '    {"frame": 1, "visual": "<what is on screen>", "on_screen_text": "<max 12 words>", "sticker": "none", "sticker_prompt": "", "duration_secs": 5},\n'
+        '    {"frame": 2, "visual": "...", "on_screen_text": "...", "sticker": "poll", "sticker_prompt": "<the poll wording>", "duration_secs": 5}\n'
+        '  ],\n'
+        '  "closing_cta": "<the last frame\'s ask>",\n'
+        '  "reasoning": "<1-2 sentences on what you borrowed from the reference post>"\n'
+        '}'
     ),
 }
 
@@ -140,6 +187,15 @@ _PROMPT = PromptTemplate(
 
 
 def _parse_script(raw: str) -> dict:
+    """
+    Parse Granite's script JSON, repairing the two defects an 8B model actually
+    produces here.
+
+    This used to be a bare `json.loads`, so any imperfection dropped the whole
+    script and the caller fell back to dumping raw prose into `caption` — the
+    creator asked for a Reel and got a paragraph. Both repairs below are reused
+    from modules that already needed them; neither is new logic.
+    """
     text = raw.strip()
     fence = re.search(r"```(?:json)?\s*([\s\S]*?)```", text)
     if fence:
@@ -148,7 +204,125 @@ def _parse_script(raw: str) -> dict:
     end   = text.rfind("}")
     if start != -1 and end != -1:
         text = text[start : end + 1]
-    return json.loads(text)
+
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        pass
+
+    # 1. Doubled braces. The schema examples were once double-braced (a stale
+    #    PromptTemplate escape) and Granite still mirrors that shape sometimes.
+    collapsed = text.replace("{{", "{").replace("}}", "}")
+    try:
+        return json.loads(collapsed)
+    except json.JSONDecodeError:
+        pass
+
+    # 2. Truncation at the num_predict ceiling — long Reel shot lists hit it.
+    from src.embeddings.profile_extractor import _repair_truncated_json
+    return json.loads(_repair_truncated_json(collapsed))
+
+
+def build_filming_checklist(clips: list, music: str = "") -> list[str]:
+    """
+    A before-you-start checklist, derived from the shot list rather than generated.
+
+    Every clip already names its camera angle, lighting, setting and audio cue, so
+    the checklist is a fold over data we have. Asking Granite for it again would add
+    tokens to the slowest call in the app (the Reel script), risk truncation, and
+    invite it to list gear the shot list never mentions.
+
+    Deduplicated while preserving first-appearance order, so it reads in shooting
+    order rather than alphabetically.
+    """
+    def collect(field: str) -> list[str]:
+        seen: dict[str, None] = {}
+        for c in clips or []:
+            if isinstance(c, dict):
+                v = str(c.get(field) or "").strip()
+                if v:
+                    seen.setdefault(v, None)
+        return list(seen)
+
+    # Caps, because dedup is exact-match and Granite rephrases the same physical
+    # setup per clip ("Warm, diffused kitchen lighting" vs "Soft, diffused kitchen
+    # lighting"). Uncapped this ran to 17 lines, which is longer than the shot list
+    # it summarises and so gets skipped. Shots are uncapped — those genuinely differ
+    # per clip and are the part worth checking off.
+    items: list[str] = []
+    for setting in collect("setting")[:3]:
+        items.append(f"Set up: {setting}")
+    for light in collect("lighting")[:2]:
+        items.append(f"Lighting: {light}")
+    for angle in collect("camera_angle"):
+        items.append(f"Shot: {angle}")
+    audio = collect("audio_cue")
+    if audio:
+        items.append("Record sound for: " + ", ".join(audio[:4]))
+    if music:
+        items.append(f"Music: {music}")
+    return items
+
+
+def _normalize_reel(result: dict) -> None:
+    """
+    Back-compat and derived fields for Reels. Mutates in place.
+
+    `hook` is kept as the first of `hook_options` because saved Workbench assets,
+    the repurpose fan-out and api/routers/create.py's caption regeneration all read
+    `script["hook"]`. Dropping it would break each of them silently.
+    """
+    options = result.get("hook_options")
+    if isinstance(options, list):
+        options = [str(o).strip() for o in options if str(o or "").strip()]
+    else:
+        options = []
+    # Granite occasionally returns `hook` instead of `hook_options`.
+    if not options and result.get("hook"):
+        options = [str(result["hook"]).strip()]
+    result["hook_options"] = options
+    if options:
+        result["hook"] = options[0]
+
+    result["filming_checklist"] = build_filming_checklist(
+        result.get("clips") or [],
+        str(result.get("music_recommendation") or ""),
+    )
+
+
+def _normalize_story(result: dict) -> None:
+    """
+    Enforce the Story contract Granite is asked for but can't be trusted to keep.
+    Mutates in place.
+
+    An 8B model reliably invents sticker types that don't exist on Instagram, and
+    occasionally attaches a `sticker_prompt` to a frame whose sticker is "none".
+    Both would send the creator looking for a control that isn't there.
+
+    It also keeps emitting `caption`/`hashtags` for Stories however firmly the prompt
+    says not to — Stories have neither, and a caption field on a Story card would just
+    be wrong. Drop them here instead of trusting the instruction to hold.
+    """
+    result.pop("caption", None)
+    result.pop("hashtags", None)
+
+    frames = result.get("frames")
+    if not isinstance(frames, list):
+        result["frames"] = []
+        return
+
+    clean: list[dict] = []
+    for i, f in enumerate(frames, start=1):
+        if not isinstance(f, dict):
+            continue
+        sticker = str(f.get("sticker", "none")).strip().lower()
+        if sticker not in _STORY_STICKERS:
+            sticker = "none"
+        f["sticker"] = sticker
+        f["sticker_prompt"] = "" if sticker == "none" else str(f.get("sticker_prompt", "") or "")
+        f["frame"] = i                      # renumber; Granite skips and repeats indices
+        clean.append(f)
+    result["frames"] = clean
 
 
 class ScriptGenerator:
@@ -158,7 +332,10 @@ class ScriptGenerator:
     """
 
     def __init__(self, model: str = OLLAMA_MODEL):
-        self._llm   = OllamaLLM(model=model, temperature=0.5, num_predict=1400)
+        # 1800, up from 1400: the Reel schema now also asks for 3 hook options and
+        # cover text. The filming checklist is computed in Python precisely so this
+        # ceiling didn't have to rise further — it's the slowest call in the app.
+        self._llm   = OllamaLLM(model=model, temperature=0.5, num_predict=1800)
         self._chain = _PROMPT | self._llm
         self._profile: dict = json.loads(
             BRAND_PROFILE_PATH.read_text(encoding="utf-8")
@@ -223,12 +400,20 @@ class ScriptGenerator:
         try:
             result = _parse_script(raw)
             result["format"] = fmt
+            if fmt == "Story":
+                _normalize_story(result)
+            elif fmt == "Reel":
+                _normalize_reel(result)
             return result
         except (json.JSONDecodeError, ValueError):
+            # Flag the failure instead of passing raw prose off as a caption. The
+            # old shape put `raw` in `caption`, so a failed Story render as a
+            # plausible-looking paragraph — the creator couldn't tell it had failed.
             return {
-                "format"   : fmt,
-                "caption"  : raw.strip(),
-                "reasoning": "Raw response (JSON parse failed)",
+                "format"      : fmt,
+                "parse_failed": True,
+                "raw_response": raw.strip(),
+                "reasoning"   : f"Granite did not return valid {fmt} JSON. Try generating again.",
             }
 
 

@@ -148,9 +148,9 @@ class WeeklyAutopilot:
         under = gaps.get("underutilized_cluster")
         over = gaps.get("overused_cluster")
         if under is not None:
-            parts.append(f"Under-used pillar: cluster {under} ({_PILLARS.get(under, '?')}).")
+            parts.append(f"Under-used pillar: cluster {under} ({pillar_label(under)}).")
         if over is not None:
-            parts.append(f"Over-used pillar: cluster {over} ({_PILLARS.get(over, '?')}).")
+            parts.append(f"Over-used pillar: cluster {over} ({pillar_label(over)}).")
         if gaps.get("strategic_brief"):
             parts.append(str(gaps["strategic_brief"])[:300])
         for t in (gaps.get("tensions") or [])[:2]:
@@ -198,6 +198,7 @@ class WeeklyAutopilot:
         def plan_once(answer_block: str) -> dict:
             raw = self._chain.invoke({
                 "brand_name": self._brand_name,
+                "pillars_block": _pillars_block(),
                 "gaps_block": self._fmt_gaps(gaps),
                 "trends_block": self._fmt_trends(trends),
                 "perf_block": self._fmt_perf(perf),
@@ -244,7 +245,7 @@ class WeeklyAutopilot:
         for i, post in enumerate(plan.get("posts", []), 1):
             cluster_id = int(post.get("cluster_id", 0))
             angle = post.get("angle", "")
-            pillar = post.get("pillar", _PILLARS.get(cluster_id, ""))
+            pillar = post.get("pillar") or pillar_label(cluster_id)
             trace({"phase": "act", "post": i, "label": f"Producing post {i}: {pillar}", "detail": angle})
 
             result = self._orch.produce_post(

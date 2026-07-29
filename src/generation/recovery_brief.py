@@ -35,10 +35,15 @@ A recent Instagram post underperformed. Here is the Why Engine diagnosis:
 Brand voice context for this content pillar:
   Content pillar    : {content_pillar}
   Tone              : {tone_descriptors}
+  Recurring words   : {recurring_words}
   Signature phrases : {signature_phrases}
   Post structure    : {structural_signature}
+  Avoided terms     : {avoided_terms}
 
 Your task: generate a recovery brief that directly addresses the identified failure.
+Build the new angle around one of {brand_name}'s own recurring words or signature phrases
+above. Do not keep the failed post's subject matter, and do not suggest an angle, hook, or
+script built around any avoided term above.
 
 Return ONLY valid JSON — no preamble, no markdown fences:
 
@@ -58,8 +63,10 @@ _PROMPT = PromptTemplate(
         "brand_voice_gap",
         "content_pillar",
         "tone_descriptors",
+        "recurring_words",
         "signature_phrases",
         "structural_signature",
+        "avoided_terms",
     ],
     template=_TEMPLATE,
 )
@@ -108,6 +115,14 @@ class RecoveryBriefGenerator:
         p   = cluster["profile"]
         voc = p.get("vocabulary_patterns", {})
 
+        # Avoided terms are a brand-wide rule, not just this cluster's own list —
+        # matches how /api/brand/profile unions them for the Brand Voice page.
+        avoided_terms: list[str] = []
+        for cp in self._profile["cluster_profiles"]:
+            for term in cp["profile"].get("avoided_terms", []):
+                if term not in avoided_terms:
+                    avoided_terms.append(term)
+
         raw = self._chain.invoke({
             "brand_name"          : self._profile["brand_name"],
             "diagnosis"           : diagnosis,
@@ -115,8 +130,10 @@ class RecoveryBriefGenerator:
             "brand_voice_gap"     : brand_voice_gap,
             "content_pillar"      : p.get("content_pillar", "product_showcase"),
             "tone_descriptors"    : ", ".join(p.get("tone_descriptors", [])),
+            "recurring_words"     : ", ".join(voc.get("recurring_words", [])),
             "signature_phrases"   : ", ".join(voc.get("signature_phrases", [])),
             "structural_signature": p.get("structural_signature", ""),
+            "avoided_terms"       : ", ".join(avoided_terms),
         })
 
         try:
@@ -128,3 +145,17 @@ class RecoveryBriefGenerator:
                 "recovery_script"    : raw.strip(),
                 "reasoning"          : "Could not parse structured response from Granite.",
             }
+
+
+if __name__ == "__main__":
+    # No Ollama call — just proves the brand-wide avoided_terms union is wired
+    # correctly (this was the actual bug: it used to be per-cluster only, so a
+    # term avoided by cluster 1 never reached a recovery brief for cluster 0).
+    profile = json.loads(BRAND_PROFILE_PATH.read_text(encoding="utf-8"))
+    merged: list[str] = []
+    for cp in profile["cluster_profiles"]:
+        for term in cp["profile"].get("avoided_terms", []):
+            if term not in merged:
+                merged.append(term)
+    assert "Vegan" in merged and "Gluten-free" in merged, merged
+    print(f"OK — {len(merged)} brand-wide avoided terms: {merged}")

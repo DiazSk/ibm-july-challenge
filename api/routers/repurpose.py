@@ -1,14 +1,20 @@
 """
 Closed-Loop Repurposing Orchestrator.
 
-Auto-triggered by /api/analyze/why-engine when a post's verdict is
-"succeeded" — no new Granite classes, this fans an already-successful
-caption out to all three ScriptGenerator formats (Reel/Carousel/Static)
-as a background job, landing the drafts directly in the Workbench.
+Fans one caption out to every ScriptGenerator format (Reel/Carousel/Static/Story)
+as a background job, landing the drafts directly in the Workbench. No new Granite
+classes.
 
-Runs as a FastAPI BackgroundTask (same pattern as onboard.py's pipeline —
-no scheduler/cron infrastructure exists in this codebase) because 3
-sequential script-generation calls take several minutes on this hardware.
+Two entry points:
+  • automatic — /api/analyze/why-engine fires it when a verdict is "succeeded"
+  • on demand — the creator asks for it after a shoot, without waiting for a post
+    to be published and graded first. One bake produces a week of formats, which
+    was the whole point; gating it on a "succeeded" verdict meant she could only
+    repurpose content that was already out and already working.
+
+Runs as a FastAPI BackgroundTask (same pattern as onboard.py's pipeline — no
+scheduler/cron infrastructure exists in this codebase) because the sequential
+script-generation calls take several minutes on this hardware.
 """
 
 import json
@@ -16,18 +22,22 @@ import sqlite3
 from pathlib import Path
 from uuid import uuid4
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, BackgroundTasks, HTTPException
+from pydantic import BaseModel
+
+from src.data.pillars import pillar_label
 
 router = APIRouter()
 
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 _DB_PATH = _PROJECT_ROOT / "data" / "workbench.db"
 
-_FORMATS = ("Reel", "Carousel", "Static")
+_FORMATS = ("Reel", "Carousel", "Static", "Story")
 _ASSET_TYPE_FOR_FORMAT = {
     "Reel": "reel_script",
     "Carousel": "carousel",
     "Static": "static_script",
+    "Story": "story_script",
 }
 
 # In-memory job store (single-server, demo-scale — same pattern as onboard.py)
@@ -111,6 +121,46 @@ def run_repurpose_pipeline(
     except Exception as exc:
         current_pct = _jobs.get(job_id, {}).get("progress", 0)
         _update_job(job_id, current_pct, str(exc), status="error")
+
+
+class RepurposeRequest(BaseModel):
+    caption: str
+    cluster_id: int = 0
+    # Optional: a just-shot bake has no metrics yet. The formats don't need them —
+    # they only colour the reference framing in the ScriptGenerator prompt.
+    views: int = 0
+    reach: int = 0
+    likes: int = 0
+    comments: int = 0
+    shares: int = 0
+    saves: int = 0
+
+
+@router.post("")
+def start_repurpose(req: RepurposeRequest, background_tasks: BackgroundTasks) -> dict:
+    """
+    Start a fan-out on demand, without waiting for a post to be published and
+    graded "succeeded" by the Why Engine.
+
+    This is the entry point for "I just finished a bake" — the case the automatic
+    trigger structurally cannot serve, since it needs a live post with metrics.
+    """
+    caption = req.caption.strip()
+    if not caption:
+        raise HTTPException(status_code=422, detail="caption is required")
+
+    job_id = str(uuid4())
+    _jobs[job_id] = {"status": "queued", "progress": 0, "message": "Starting…"}
+    background_tasks.add_task(
+        run_repurpose_pipeline,
+        job_id,
+        caption,
+        {"views": req.views, "reach": req.reach, "likes": req.likes,
+         "comments": req.comments, "shares": req.shares, "saves": req.saves},
+        req.cluster_id,
+        pillar_label(req.cluster_id),
+    )
+    return {"job_id": job_id, "formats": list(_FORMATS)}
 
 
 @router.get("/status/{job_id}")

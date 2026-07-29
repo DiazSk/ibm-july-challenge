@@ -59,6 +59,7 @@ export default function AgentsPage() {
       const s = q.state.data?.status;
       return s === "running" || s === "awaiting_input" ? 1500 : false;
     },
+    refetchIntervalInBackground: true,
   });
 
   const startMutation = useMutation({
@@ -346,6 +347,7 @@ function PlaybookPanel() {
     queryFn: () => getReflectStatus(jobId as string),
     enabled: !!jobId,
     refetchInterval: (q) => (q.state.data?.status === "running" ? 1500 : false),
+    refetchIntervalInBackground: true,
   });
 
   const start = useMutation({ mutationFn: reflectPlaybook, onSuccess: (d) => setJobId(d.job_id) });

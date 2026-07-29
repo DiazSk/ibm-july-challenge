@@ -7,6 +7,7 @@ import { getBrandProfile } from "@/lib/api";
 import { BrandMark } from "@/components/site-chrome";
 
 const NAV = [
+  { href: "/app/today",     label: "Today",        exact: false, icon: TodayIcon },
   { href: "/app/dashboard", label: "Dashboard",   exact: true,  icon: DashboardIcon },
   { href: "/app/brand",     label: "Brand voice",  exact: false, icon: VoiceIcon },
   { href: "/app/create",    label: "Generate",     exact: false, icon: SparkIcon },
@@ -131,6 +132,15 @@ function PulseIcon({ className = "", style }: { className?: string; style?: Reac
   return (
     <svg viewBox="0 0 20 20" className={className} style={style} fill="none" stroke="currentColor" strokeWidth="1.6">
       <path d="M2 10h4l2-5 4 10 2-5h4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+function TodayIcon({ className = "", style }: { className?: string; style?: React.CSSProperties }) {
+  return (
+    <svg viewBox="0 0 20 20" className={className} style={style} fill="none" stroke="currentColor" strokeWidth="1.6">
+      <rect x="2.5" y="4" width="15" height="13.5" rx="2" />
+      <path d="M2.5 8h15 M6.5 2.5v3 M13.5 2.5v3" strokeLinecap="round" />
+      <circle cx="10" cy="12.5" r="1.6" fill="currentColor" stroke="none" />
     </svg>
   );
 }

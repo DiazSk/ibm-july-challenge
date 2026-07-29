@@ -42,6 +42,7 @@ const ASSET_LABELS: Record<string, string> = {
   reel_script: "Reel Script",
   carousel: "Carousel",
   static_script: "Static Post",
+  story_script: "Story Plan",
   recovery_brief: "Recovery Brief",
   weekly_brief_draft: "Weekly Brief Draft",
   guardian_refined_caption: "Guardian-Refined Caption",

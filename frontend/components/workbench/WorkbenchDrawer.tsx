@@ -17,6 +17,7 @@ const ASSET_LABELS: Record<string, string> = {
   reel_script: "Reel Script",
   carousel: "Carousel",
   static_script: "Static Post",
+  story_script: "Story Plan",
   recovery_brief: "Recovery Brief",
   weekly_brief_draft: "Weekly Brief Draft",
   guardian_refined_caption: "Guardian-Refined Caption",
@@ -62,6 +63,15 @@ function getFullText(asset: WorkbenchAsset): string {
       );
     }
     if (obj.music_recommendation) parts.push(`Music:\n${obj.music_recommendation}`);
+    if (obj.cover_text) parts.push(`Cover text:\n${obj.cover_text}`);
+    const alts = obj.hook_options as string[] | undefined;
+    if (alts && alts.length > 1) {
+      parts.push("Other hooks:\n" + alts.slice(1).map((h) => `- ${h}`).join("\n"));
+    }
+    const checklist = obj.filming_checklist as string[] | undefined;
+    if (checklist?.length) {
+      parts.push("Before you start filming:\n" + checklist.map((c) => `- ${c}`).join("\n"));
+    }
     if (obj.caption) parts.push(`Caption:\n${obj.caption}`);
     const tags = obj.hashtags as string[] | undefined;
     if (tags?.length) parts.push(tags.join(" "));
@@ -71,14 +81,39 @@ function getFullText(asset: WorkbenchAsset): string {
   if (asset.asset_type === "carousel") {
     const parts: string[] = [];
     if (obj.hook) parts.push(`Cover Slide:\n${obj.hook}`);
-    const slides = obj.slides as Array<{ slide: number; headline: string; body: string }> | undefined;
+    const slides = obj.slides as Array<{ slide: number; headline: string; body: string; visual?: string }> | undefined;
     if (slides?.length) {
-      parts.push(slides.map((s) => `Slide ${s.slide}: ${s.headline}\n${s.body}`).join("\n\n"));
+      parts.push(slides.map((s) =>
+        `Slide ${s.slide}: ${s.headline}\n${s.body}` + (s.visual ? `\nShoot: ${s.visual}` : "")
+      ).join("\n\n"));
     }
     if (obj.cta_slide) parts.push(`CTA: ${obj.cta_slide}`);
     if (obj.caption) parts.push(`Caption:\n${obj.caption}`);
     const tags = obj.hashtags as string[] | undefined;
     if (tags?.length) parts.push(tags.join(" "));
+    return parts.join("\n\n");
+  }
+
+  if (asset.asset_type === "story_script") {
+    const parts: string[] = [];
+    if (obj.hook) parts.push(`First frame:\n${obj.hook}`);
+    const frames = obj.frames as Array<{
+      frame: number; visual: string; on_screen_text: string;
+      sticker: string; sticker_prompt: string; duration_secs: number;
+    }> | undefined;
+    if (frames?.length) {
+      parts.push(
+        frames.map((f) => {
+          const sticker = f.sticker && f.sticker !== "none"
+            ? `\n${f.sticker} sticker: "${f.sticker_prompt}"`
+            : "";
+          return `Frame ${f.frame} (${f.duration_secs}s): "${f.on_screen_text}"\n` +
+                 `Shoot: ${f.visual}${sticker}`;
+        }).join("\n\n")
+      );
+    }
+    if (obj.closing_cta) parts.push(`Closing ask:\n${obj.closing_cta}`);
+    // No caption/hashtags branch — Instagram Stories have neither.
     return parts.join("\n\n");
   }
 

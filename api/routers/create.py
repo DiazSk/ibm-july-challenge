@@ -147,7 +147,8 @@ class ScriptRequest(BaseModel):
     comments: int = 0
     shares: int = 0
     saves: int = 0
-    format: Literal["Reel", "Carousel", "Static"] = "Reel"
+    # Story is generate-only — see the ScriptFormat note in frontend/lib/types.ts.
+    format: Literal["Reel", "Carousel", "Static", "Story"] = "Reel"
     cluster_id: int = 0
 
 
@@ -279,6 +280,13 @@ def generate_script(req: ScriptRequest) -> dict:
     # CaptionGenerator — same prompt and logic as the Caption Brief tab.
     # Use the script's hook as product context (it captures what the new
     # post is actually about) and the cluster's tone as the desired feel.
+    #
+    # Stories are exempt: they have no caption field on Instagram at all, and
+    # script_generator._normalize_story deliberately strips one if Granite emits it.
+    # Running this block for a Story would put it straight back.
+    if req.format == "Story":
+        return script
+
     try:
         cap_gen = get_caption_generator()
         clusters = cap_gen.cluster_profiles()
