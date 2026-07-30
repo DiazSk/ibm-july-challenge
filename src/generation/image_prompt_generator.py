@@ -2,10 +2,11 @@
 Image Prompt Generator — Granite invocation #3.
 
 Given a chosen caption and product name, generates a Midjourney/DALL-E
-compatible image prompt that matches the brand's warm, artisanal aesthetic.
+compatible image prompt that matches the brand's warm, artisanal aesthetic,
+plus video direction for Google Veo 3 and image-to-video tools.
 
 Input:  chosen caption string, product name
-Output: {prompt, style_notes} dict
+Output: {prompt, style_notes, video_prompt, motion_notes} dict
 
 Run standalone:
     python src/generation/image_prompt_generator.py
@@ -47,11 +48,22 @@ Generate one image generation prompt for Midjourney or DALL-E 3 that:
 2. Stays true to the warm, homemade, artisanal aesthetic
 3. Specifies subject, composition, lighting, color palette, photographic style, and mood
 
+Then generate video direction for the same concept:
+4. A single-shot, 8-second text-to-video prompt for Google Veo 3. Name the subject,
+   ONE continuous action, ONE camera move, the lighting, and the ambient audio
+   (kitchen and room sounds — sizzle, crackle, a spoon on ceramic, quiet chatter).
+   Do NOT ask for background music.
+5. A one-line motion instruction for image-to-video tools like HiggsField or Runway,
+   which animate the still image described above: which camera move to apply and how
+   fast it should feel.
+
 Return ONLY valid JSON — no preamble, no explanation, no markdown fences:
 
 {{
   "prompt": "<complete image generation prompt, 50-90 words>",
-  "style_notes": "<one sentence: the key visual mood this image should convey>"
+  "style_notes": "<one sentence: the key visual mood this image should convey>",
+  "video_prompt": "<8-second single-shot Veo 3 prompt, 60-100 words: subject, one continuous action, one camera move, lighting, ambient audio>",
+  "motion_notes": "<one line: camera move + pacing to apply when animating the still image>"
 }}
 """
 
@@ -72,21 +84,24 @@ def _repair_missing_commas(text: str) -> str:
     return re.sub(r'"(\s+)"([A-Za-z_][A-Za-z0-9_ ]*)"\s*:', r'",\1"\2":', text)
 
 
+_FIELDS = ("prompt", "style_notes", "video_prompt", "motion_notes")
+
+
 def _extract_fields_by_regex(raw: str) -> dict | None:
     """
-    Last-resort fallback: pull "prompt" and "style_notes" string values directly
-    out of the raw text via regex, ignoring overall JSON validity. Used only when
-    both the direct and comma-repaired json.loads attempts fail, so the UI never
-    has to display a raw, garbled LLM response.
+    Last-resort fallback: pull each expected string value directly out of the raw
+    text via regex, ignoring overall JSON validity. Used only when both the direct
+    and comma-repaired json.loads attempts fail, so the UI never has to display a
+    raw, garbled LLM response. A field that doesn't match comes back empty; only a
+    missing "prompt" makes the whole extraction a failure.
     """
-    prompt_match = re.search(r'"prompt"\s*:\s*"((?:[^"\\]|\\.)*)"', raw, re.DOTALL)
-    style_match  = re.search(r'"style_notes"\s*:\s*"((?:[^"\\]|\\.)*)"', raw, re.DOTALL)
-    if not prompt_match:
-        return None
-    return {
-        "prompt"     : prompt_match.group(1).strip(),
-        "style_notes": style_match.group(1).strip() if style_match else "",
-    }
+    found = {}
+    for field in _FIELDS:
+        match = re.search(
+            rf'"{field}"\s*:\s*"((?:[^"\\]|\\.)*)"', raw, re.DOTALL
+        )
+        found[field] = match.group(1).strip() if match else ""
+    return found if found["prompt"] else None
 
 
 def _parse_json(raw: str) -> dict:
@@ -114,7 +129,7 @@ class ImagePromptGenerator:
     """
 
     def __init__(self, model: str = OLLAMA_MODEL):
-        self._llm        = OllamaLLM(model=model, temperature=0.5, num_predict=400)
+        self._llm        = OllamaLLM(model=model, temperature=0.5, num_predict=700)
         self._chain      = _PROMPT | self._llm
         self._brand_name = json.loads(
             BRAND_PROFILE_PATH.read_text(encoding="utf-8")
@@ -122,7 +137,7 @@ class ImagePromptGenerator:
 
     def generate(self, caption: str, product: str) -> dict:
         """
-        Returns {prompt, style_notes}.
+        Returns {prompt, style_notes, video_prompt, motion_notes}.
         Falls back to a template-based response on JSON parse failure.
         """
         raw = self._chain.invoke({
@@ -133,7 +148,12 @@ class ImagePromptGenerator:
         })
 
         try:
-            return _parse_json(raw)
+            parsed = _parse_json(raw)
+            # Normalise to exactly the four expected keys — Granite sometimes drops
+            # one, and callers (and the UI) rely on every key being present.
+            normalised = {f: str(parsed.get(f, "")).strip() for f in _FIELDS}
+            if normalised["prompt"]:
+                return normalised
         except (json.JSONDecodeError, ValueError):
             pass
 
@@ -142,8 +162,10 @@ class ImagePromptGenerator:
             return extracted
 
         return {
-            "prompt"      : raw.strip(),
-            "style_notes" : "Raw response (JSON parse failed)",
+            "prompt"       : raw.strip(),
+            "style_notes"  : "Raw response (JSON parse failed)",
+            "video_prompt" : "",
+            "motion_notes" : "",
         }
 
 
@@ -159,6 +181,18 @@ if __name__ == "__main__":
         ),
         product="Nutella Bomboloni",
     )
+    for key in _FIELDS:
+        assert key in result, f"missing key: {key}"
+    assert result["prompt"], "prompt is empty"
+    assert len(result["video_prompt"]) > 40, (
+        f"video_prompt suspiciously short ({len(result['video_prompt'])} chars) — "
+        "template regressed or num_predict too low to close the JSON"
+    )
+    assert result["motion_notes"], "motion_notes is empty"
+
     print("Prompt:")
     print(result["prompt"])
     print("\nStyle notes:", result["style_notes"])
+    print("\nVideo prompt:")
+    print(result["video_prompt"])
+    print("\nMotion notes:", result["motion_notes"])

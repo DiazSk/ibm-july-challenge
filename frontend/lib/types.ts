@@ -70,6 +70,8 @@ export interface CaptionsGenerateResponse {
 export interface ImagePromptResult {
   prompt: string;
   style_notes: string;
+  video_prompt?: string;
+  motion_notes?: string;
 }
 
 // Analyze tab

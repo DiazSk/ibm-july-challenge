@@ -8,15 +8,27 @@ interface Props {
   result: ImagePromptResult;
 }
 
-export default function ImageDirectionCard({ result }: Props) {
+function CopyBtn({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
 
   async function copy() {
-    await navigator.clipboard.writeText(result.prompt);
+    await navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
   }
 
+  return (
+    <button
+      onClick={copy}
+      className="text-[11px] transition-colors"
+      style={{ color: "var(--color-ql-accent)" }}
+    >
+      {copied ? "Copied" : "Copy"}
+    </button>
+  );
+}
+
+export default function ImageDirectionCard({ result }: Props) {
   return (
     <div
       className="mt-4 rounded-xl border overflow-hidden"
@@ -34,19 +46,13 @@ export default function ImageDirectionCard({ result }: Props) {
             className="text-[10px] font-medium uppercase tracking-[0.15em]"
             style={{ color: "var(--color-ql-muted)" }}
           >
-            Image Direction
+            Visual Direction
           </span>
-          <span title="Turns a caption into a ready-to-shoot image prompt plus style notes, grounded in your brand's visual language.">
+          <span title="Turns a caption into a ready-to-shoot image prompt, style notes, and video direction for Veo 3 or image-to-video tools — all grounded in your brand's visual language.">
             <Info size={14} style={{ color: "var(--color-ql-muted)" }} />
           </span>
         </div>
-        <button
-          onClick={copy}
-          className="text-[11px] transition-colors"
-          style={{ color: "var(--color-ql-accent)" }}
-        >
-          {copied ? "Copied" : "Copy"}
-        </button>
+        <CopyBtn text={result.prompt} />
       </div>
 
       <div
@@ -80,6 +86,58 @@ export default function ImageDirectionCard({ result }: Props) {
           </p>
           <p className="text-xs" style={{ color: "var(--color-ql-text)" }}>
             {result.style_notes}
+          </p>
+        </div>
+      )}
+
+      {result.video_prompt && (
+        <div
+          className="px-4 py-3 border-t"
+          style={{
+            background: "var(--color-ql-gap)",
+            borderColor: "var(--color-ql-border)",
+          }}
+        >
+          <div className="flex items-center justify-between mb-1">
+            <p
+              className="text-[10px] uppercase tracking-[0.1em] font-medium"
+              style={{ color: "var(--color-ql-muted)" }}
+            >
+              Video Prompt · Veo 3
+            </p>
+            <CopyBtn text={result.video_prompt} />
+          </div>
+          <p
+            className="text-xs leading-relaxed"
+            style={{
+              color: "var(--color-ql-text)",
+              fontFamily: "var(--font-family-mono)",
+            }}
+          >
+            {result.video_prompt}
+          </p>
+        </div>
+      )}
+
+      {result.motion_notes && (
+        <div
+          className="px-4 py-3 border-t"
+          style={{
+            background: "var(--color-ql-gap)",
+            borderColor: "var(--color-ql-border)",
+          }}
+        >
+          <div className="flex items-center justify-between mb-1">
+            <p
+              className="text-[10px] uppercase tracking-[0.1em] font-medium"
+              style={{ color: "var(--color-ql-muted)" }}
+            >
+              Motion · Image-to-Video
+            </p>
+            <CopyBtn text={result.motion_notes} />
+          </div>
+          <p className="text-xs" style={{ color: "var(--color-ql-text)" }}>
+            {result.motion_notes}
           </p>
         </div>
       )}

@@ -255,7 +255,11 @@ class StyleSyncOrchestrator:
         def run_visual():
             nonlocal visual_result
             visual_result = self._visual.safe_run(
-                AgentTask("generate_image_prompt", {"caption": draft, "cluster_id": cluster_id})
+                AgentTask("generate_image_prompt", {
+                    "caption": draft,
+                    "product": payload.get("product", ""),
+                    "cluster_id": cluster_id,
+                })
             )
 
         t1 = threading.Thread(target=run_score)
