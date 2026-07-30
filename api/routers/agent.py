@@ -292,7 +292,7 @@ def _dispatch_tool(
                 # Say so rather than synthesising "research" from zero sources.
                 return (
                     "I can't do web research right now — that needs the optional "
-                    "duckduckgo-search package. I can still work from your own posts: "
+                    "ddgs package. I can still work from your own posts: "
                     "ask me what's gaining traction in your account.",
                     None,
                 )

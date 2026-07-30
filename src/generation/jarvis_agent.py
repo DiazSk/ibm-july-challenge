@@ -5,8 +5,8 @@ JARVIS Agent — Granite invocations #13 and #14.
     history + brand context in the system prompt, routes to tools when needed, and
     answers directly from context when it can.
 
-#14 (InspirationSynthesizer.synthesize): Receives DuckDuckGo web search snippets
-    and synthesizes 3 brand-adapted content ideas.
+#14 (InspirationSynthesizer.synthesize): Receives DuckDuckGo (via ddgs) web search
+    snippets and synthesizes 3 brand-adapted content ideas.
 
 Session store: module-level in-memory dict, demo scale (resets on server restart).
 
@@ -80,30 +80,36 @@ class WebSearchUnavailable(RuntimeError):
     """Raised when web research can't run, so callers can say so instead of guessing."""
 
 
+_CREATOR_PLATFORMS = ("instagram.com", "tiktok.com", "pinterest.com", "youtube.com", "reddit.com")
+
+
 def search_creators(topic: str, niche: str = "bakery", max_results: int = 8) -> list[str]:
     """
-    Search for creator content/trends via DuckDuckGo.
+    Search for creator content/trends across Instagram/TikTok/etc. via DuckDuckGo.
     Returns snippets formatted as 'Title: body' strings.
 
-    Raises WebSearchUnavailable when the optional `duckduckgo-search` package
-    isn't installed. It previously returned [] in that case, which Granite
-    happily dressed up into confident-sounding "research" with no sources behind
-    it — the same failure that made the trend agent fabricate its briefings.
-    Everything else in StyleSync runs locally; this is the one optional
-    network-dependent path, so its absence has to be visible.
+    Raises WebSearchUnavailable when the optional `ddgs` package isn't installed.
+    It previously returned [] in that case, which Granite happily dressed up into
+    confident-sounding "research" with no sources behind it — the same failure
+    that made the trend agent fabricate its briefings. Everything else in
+    StyleSync runs locally; this is the one optional network-dependent path, so
+    its absence has to be visible.
     """
     try:
-        from duckduckgo_search import DDGS
+        from ddgs import DDGS
     except ImportError as exc:
         raise WebSearchUnavailable(
-            "Web research needs the optional `duckduckgo-search` package "
-            "(pip install duckduckgo-search)."
+            "Web research needs the optional `ddgs` package (pip install ddgs)."
         ) from exc
 
     try:
+        # Plain queries return generic SEO/e-commerce spam far more often than
+        # real creator content, so target the platforms creators actually post
+        # on directly instead of trusting DDG's general ranking.
         queries = [
-            f"{niche} instagram creator {topic} ideas",
-            f"trending {niche} content {topic} instagram",
+            f"site:instagram.com {niche} {topic}",
+            f"site:tiktok.com {niche} {topic}",
+            f"trending {niche} content {topic} instagram reel",
         ]
         results = []
         seen: set[str] = set()
@@ -114,11 +120,16 @@ def search_creators(topic: str, niche: str = "bakery", max_results: int = 8) -> 
                     hits = ddgs.text(query, max_results=max_results // 2, timelimit="y")
                     for h in (hits or []):
                         url = h.get("href", "")
-                        if url not in seen:
-                            seen.add(url)
-                            title = h.get("title", "")
-                            body  = h.get("body", "")[:300]
-                            results.append(f"{title}: {body}")
+                        if not url or url in seen:
+                            continue
+                        # Off-platform hits are almost always unrelated SEO/
+                        # e-commerce spam, not real creator content — skip them.
+                        if not any(p in url for p in _CREATOR_PLATFORMS):
+                            continue
+                        seen.add(url)
+                        title = h.get("title", "")
+                        body  = h.get("body", "")[:300]
+                        results.append(f"{title}: {body}")
                 except Exception:
                     pass
 

@@ -52,7 +52,7 @@ def transcribe_audio(audio: UploadFile = File(...)) -> dict:
 
 class SynthRequest(BaseModel):
     text : str
-    voice: str = "am_echo"
+    voice: str = "bm_fable"
 
 
 @router.post("/synthesize")

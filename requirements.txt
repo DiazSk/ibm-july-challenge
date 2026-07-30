@@ -32,10 +32,10 @@ uvicorn[standard]>=0.30.0
 python-multipart>=0.0.9
 
 # JARVIS agent — web search for creator inspiration (no API key needed)
-# duckduckgo-search — OPTIONAL. Only JARVIS's "research trending content" tool
-# uses it; every other feature runs entirely on local data. Install it if you
-# want that tool, otherwise JARVIS says web research is unavailable.
-#   pip install duckduckgo-search
+# ddgs — OPTIONAL. Only JARVIS's "research trending content" tool uses it;
+# every other feature runs entirely on local data. Install it if you want
+# that tool, otherwise JARVIS says web research is unavailable.
+ddgs>=9.0.0
 
 
 # Vision preprocessor — Reel keyframe extraction (imageio-ffmpeg bundles the

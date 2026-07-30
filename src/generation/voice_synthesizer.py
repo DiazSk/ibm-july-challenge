@@ -4,7 +4,7 @@ VoiceSynthesizer — Kokoro TTS (the same engine Voicebox ships as its built-in)
 Converts agent response text to a WAV blob.  Key behaviour:
   • Strips all emoji and non-ASCII decorative characters BEFORE synthesis so
     they are never spoken aloud.
-  • Uses 'am_echo' by default — natural American male voice (JARVIS-appropriate).
+  • Uses 'bm_fable' by default — British male voice (JARVIS-appropriate butler tone).
   • Returns raw WAV bytes; the browser plays them via new Audio(objectURL).
 
 GPU: auto-detected. On RTX 4060: ~100ms per response. CPU: ~300-500ms.
@@ -42,7 +42,7 @@ class VoiceSynthesizer:
     via the @lru_cache pattern in api/dependencies.py.
     """
 
-    def __init__(self, voice: str = "am_echo"):
+    def __init__(self, voice: str = "bm_fable"):
         self._pipeline = KPipeline(lang_code="a")   # 'a' = American English
         self._voice    = voice
 

@@ -61,6 +61,52 @@ function TrashIcon({ size = 13 }: { size?: number }) {
   );
 }
 
+// ── JARVIS orb ────────────────────────────────────────────────────────────────
+// A small cinematic centerpiece that stands in for the plain text/dot state
+// labels — its glow and motion communicate idle/listening/thinking/speaking
+// at a glance, using the app's existing gold/sky gradient tokens.
+
+function JarvisOrb({ phase, size = 20 }: { phase: Phase; size?: number }) {
+  const coreAnimation =
+    phase === "listening" ? "jarvis-listen-pulse 1s ease-in-out infinite"
+    : phase === "speaking" ? "jarvis-speak-pulse 0.7s ease-in-out infinite"
+    : "jarvis-breathe 3s ease-in-out infinite";
+
+  return (
+    <span className="relative inline-flex shrink-0 items-center justify-center" style={{ width: size, height: size }}>
+      {/* Glow */}
+      <span
+        className="absolute rounded-full"
+        style={{
+          inset     : -Math.max(4, size * 0.3),
+          background: "var(--gradient-gold)",
+          filter    : "blur(8px)",
+          opacity   : 0.4,
+        }}
+      />
+      {/* Thinking ring */}
+      {phase === "thinking" && (
+        <span
+          className="absolute inset-0 rounded-full"
+          style={{
+            background: "conic-gradient(from 0deg, var(--color-gold), transparent 35%, var(--color-sky), transparent 75%, var(--color-gold))",
+            animation : "jarvis-think-spin 1.3s linear infinite",
+          }}
+        />
+      )}
+      {/* Core */}
+      <span
+        className="absolute rounded-full"
+        style={{
+          inset     : phase === "thinking" ? "18%" : 0,
+          background: "var(--gradient-gold)",
+          animation : coreAnimation,
+        }}
+      />
+    </span>
+  );
+}
+
 // ── Action cards ──────────────────────────────────────────────────────────────
 
 function CaptionCard({
@@ -501,6 +547,9 @@ export default function JarvisWidget() {
             color    : "var(--color-ql-bg)",
           }}
         >
+          <span className="absolute" style={{ inset: 6 }}>
+            <JarvisOrb phase={phase} size={48} />
+          </span>
           <MicIcon size={22} />
           {messages.length > 0 && (
             <span
@@ -523,11 +572,12 @@ export default function JarvisWidget() {
     >
       {/* Panel */}
       <div
-        className="flex flex-col rounded-2xl border shadow-2xl overflow-hidden"
+        className="grain flex flex-col rounded-2xl border overflow-hidden"
         style={{
           height          : "min(540px, calc(100vh - 3rem))",
           borderColor     : "var(--color-ql-border)",
           background      : "var(--color-ql-card)",
+          boxShadow       : "var(--shadow-editorial), 0 25px 50px -12px rgb(0 0 0 / 0.25)",
         }}
       >
         {/* Header */}
@@ -535,13 +585,16 @@ export default function JarvisWidget() {
           className="shrink-0 flex items-center justify-between px-4 py-3 border-b"
           style={{ borderColor: "var(--color-ql-border)" }}
         >
-          <div>
-            <p className="text-sm font-medium" style={{ fontFamily: "var(--font-display)", color: "var(--color-ql-dark)" }}>
-              JARVIS
-            </p>
-            <p className="text-[10px] uppercase tracking-[0.12em]" style={{ color: "var(--color-ql-muted)" }}>
-              Granite #13 · StyleSync Agent
-            </p>
+          <div className="flex items-center gap-2">
+            <JarvisOrb phase={phase} size={16} />
+            <div>
+              <p className="text-sm font-medium" style={{ fontFamily: "var(--font-display)", color: "var(--color-ql-dark)" }}>
+                JARVIS
+              </p>
+              <p className="text-[10px] uppercase tracking-[0.12em]" style={{ color: "var(--color-ql-muted)" }}>
+                Granite #13 · StyleSync Agent
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             {messages.length > 0 && (
@@ -602,14 +655,7 @@ export default function JarvisWidget() {
           {/* Thinking indicator */}
           {isThinking && (
             <div className="flex items-center gap-1.5 px-1">
-              {[0, 1, 2].map(i => (
-                <span key={i} className="w-1.5 h-1.5 rounded-full animate-bounce"
-                  style={{
-                    background    : "var(--color-ql-muted)",
-                    animationDelay: `${i * 0.15}s`,
-                  }}
-                />
-              ))}
+              <JarvisOrb phase="thinking" size={18} />
             </div>
           )}
 
