@@ -9,172 +9,162 @@
   "cluster_profiles": [
     {
       "cluster_id": 0,
-      "post_count": 27,
+      "post_count": 2,
       "profile": {
-        "content_pillar": "Handcrafted Donuts & Cookies",
+        "content_pillar": "Golden Delights",
         "tone_descriptors": [
-          "Playful",
-          "Craving-inducing",
-          "Love-filled"
+          "playful",
+          "nostalgic",
+          "indulgent"
         ],
         "vocabulary_patterns": {
           "recurring_words": [
-            "donut",
-            "fluffy",
-            "soft",
-            "fresh",
-            "made with love",
-            "glazed",
-            "chocolate",
-            "sweet"
+            "golden",
+            "never",
+            "old"
           ],
           "signature_phrases": [
-            "POV: You came to watch donuts frying... now you're craving a whole box.",
-            "Baked with love, served with joy"
+            "That golden turn never gets old"
           ],
-          "emoji_style": "Emojis are used extensively to emphasize the sweetness and joy of the treats, often paired with donut or cookie imagery."
+          "emoji_style": "Uses emojis to emphasize the color and appeal of the baked goods."
         },
         "avoided_terms": [
-          "Nutritional information",
-          "Health-conscious",
-          "Dietary restrictions"
+          "specific ingredients",
+          "dietary information",
+          "ordering details"
         ],
-        "structural_signature": "Posts typically showcase a single product, highlighting its features, and encouraging engagement through craving-inducing descriptions and emojis.",
-        "representative_post": "POV: You came to watch donuts frying... now you're craving a whole box. 🍩🤤\nFresh, soft, fluffy and made with love every single time. ❤️"
+        "structural_signature": "Posts highlight a specific aspect or color theme of the baked goods, often with a nostalgic or playful tone.",
+        "representative_post": "That golden turn never gets old 🍩✨"
       }
     },
     {
       "cluster_id": 1,
-      "post_count": 30,
+      "post_count": 16,
       "profile": {
-        "content_pillar": "Indulgent Treats",
+        "content_pillar": "Bulk Dessert Orders",
         "tone_descriptors": [
-          "Indulgent",
-          "Playful",
-          "Warm"
+          "grateful",
+          "confident",
+          "informative"
         ],
         "vocabulary_patterns": {
           "recurring_words": [
-            "Nutella",
-            "Pistachio",
-            "Chocolate",
-            "Truffle",
-            "Cake",
-            "Love",
-            "Handmade"
+            "bulk order",
+            "freshly made",
+            "premium ingredients",
+            "carefully crafted"
           ],
           "signature_phrases": [
-            "A perfect trio",
-            "Made fresh, packed with flavor",
-            "Just one of many delicious designs"
+            "Thank you for trusting Hot_Cakes_Bakes",
+            "Perfect for stalls, cafés & home sellers"
           ],
-          "emoji_style": "Emojis are used extensively to emphasize the indulgent and playful nature of the treats"
+          "emoji_style": "The brand frequently uses heart emojis to express gratitude and affection towards their customers."
         },
         "avoided_terms": [
-          "Vegan",
-          "Gluten-free",
-          "Healthy",
-          "Light"
+          "individual orders",
+          "retail prices"
         ],
-        "structural_signature": "Posts typically showcase a single, visually appealing treat with a brief description highlighting its unique features or ingredients.",
-        "representative_post": "The assorted brownie tin everyone needs to try! 😍 A perfect trio of Nutella, Biscoff & Pistachio, topped with premium ingredients for the most indulgent treat. ✨"
+        "structural_signature": "These posts typically showcase bulk dessert orders, highlighting the freshness of the products, the use of premium ingredients, and the brand's commitment to customer satisfaction.",
+        "representative_post": "✨ Another bulk order packed with love! 🤎\nEvery box is made fresh using premium ingredients and lots of care. Thank you for trusting Hot_Cakes_Bakes with your celebrations and events! 🍰✨\nPlanning a birthday, office party, family gathering, or corporate event? We accept bulk orders for brownies, cookies, dessert bowls, Bomboloni, cakes, cupcakes, and more."
       }
     },
     {
       "cluster_id": 2,
-      "post_count": 60,
+      "post_count": 67,
       "profile": {
-        "content_pillar": "Custom Dessert Creations",
+        "content_pillar": "Premium Cake Creations",
         "tone_descriptors": [
-          "loving",
-          "celebratory",
-          "professional"
+          "Whimsical",
+          "Intimate",
+          "Playful"
         ],
         "vocabulary_patterns": {
           "recurring_words": [
+            "cake",
+            "custom",
             "freshly baked",
-            "handcrafted",
-            "custom"
+            "mini",
+            "bento"
           ],
           "signature_phrases": [
-            "Dutch Truffle cake",
-            "Bento Cakes"
+            "Watching a simple cake transform into a beautiful Welcome Baby Girl theme cake is what makes baking so rewarding.",
+            "Making 100% eggless Aesthetic bento cakes and combos"
           ],
-          "emoji_style": "Emojis are used to emphasize the love and care put into each cake, as well as to highlight specific flavors like chocolate and pineapple."
+          "emoji_style": "Emojis are used to emphasize the sweetness, cuteness, and playful nature of the cakes."
         },
         "avoided_terms": [
-          "bulk pricing",
-          "delivery details",
-          "store location"
+          "Fast food",
+          "Mass-produced",
+          "Preservatives"
         ],
-        "structural_signature": "Each post showcases a unique custom cake or bulk order, detailing the ingredients and care put into each creation.",
-        "representative_post": "✨ Welcoming the newest little princess with a cake made from scratch! 🎀💕\nEvery layer, every swirl of rich chocolate and cream and every tiny detail was handcrafted with love to make this special moment even sweeter. Watching a simple cake transform into a beautiful Welcome Baby Girl theme cake is what makes baking so rewarding. 💖\nPlanning a baby shower or welcoming your little bundle of joy? Let us create a custom cake that's as special as your celebration. 🎂"
+        "structural_signature": "Each post showcases a unique custom cake or bento box, accompanied by a brief description of its ingredients and creation process.",
+        "representative_post": "✨ Welcoming the newest little princess with a cake made from scratch! 🎀💕 Every layer, every swirl of rich chocolate and cream and every tiny detail was handcrafted with love to make this special moment even sweeter. Watching a simple cake transform into a beautiful Welcome Baby Girl theme cake is what makes baking so rewarding. 💖 Planning a baby shower or welcoming your little bundle of joy? Let us create a custom cake that's as special as your celebration. 🎂"
       }
     },
     {
       "cluster_id": 3,
-      "post_count": 53,
+      "post_count": 96,
       "profile": {
         "content_pillar": "Bomboloni Indulgence",
         "tone_descriptors": [
-          "playful",
-          "indulgent",
-          "affectionate"
+          "Indulgent",
+          "Playful",
+          "Love-filled"
         ],
         "vocabulary_patterns": {
           "recurring_words": [
-            "soft",
-            "fluffy",
-            "filled",
-            "Nutella",
-            "eggless"
+            "Soft",
+            "Fluffy",
+            "Freshly made",
+            "Premium ingredients",
+            "Filled generously"
           ],
           "signature_phrases": [
-            "Freshly fried until perfectly golden",
-            "Made just for you"
+            "The perfect bite",
+            "Made with love"
           ],
-          "emoji_style": "Lively use of emojis to emphasize the soft, fluffy texture and indulgent nature of the Bomboloni"
+          "emoji_style": "Lively use of emojis to express excitement and craving for the desserts"
         },
         "avoided_terms": [
-          "preservatives",
-          "stock",
-          "generic dessert categories"
+          "Product descriptions",
+          "Ordering details",
+          "Location information"
         ],
-        "structural_signature": "Posts typically highlight a specific type of Bomboloni, its features, and encourage engagement through questions or calls to action.",
-        "representative_post": "Soft, fluffy & loaded with Nutella 🤎✨\nOne bite and you'll know why everyone is obsessed with these Bomboloni 🍩🤤\nFreshly made • Filled generously • Impossible to stop at one!"
+        "structural_signature": "Posts typically showcase a specific type of dessert, highlighting its texture, filling, and premium ingredients, often accompanied by enthusiastic emojis.",
+        "representative_post": "Soft, fluffy & loaded with Nutella 🤎✨ One bite and you'll know why everyone is obsessed with these Bomboloni 🍩🤤 Freshly made • Filled generously • Impossible to stop at one!"
       }
     },
     {
       "cluster_id": 4,
-      "post_count": 37,
+      "post_count": 27,
       "profile": {
-        "content_pillar": "Signature Sweet Treats",
+        "content_pillar": "Personalized Pastry Gifts",
         "tone_descriptors": [
           "Heartfelt",
           "Personal",
-          "Gratifying"
+          "Celebratory"
         ],
         "vocabulary_patterns": {
           "recurring_words": [
             "love",
             "sweet",
-            "moments",
-            "chocolate",
-            "cake",
-            "heart"
+            "special",
+            "custom",
+            "heart-shaped"
           ],
           "signature_phrases": [
             "Say it with brownies.",
-            "Every order is a reminder that someone chose us for their sweet cravings."
+            "Handmade with Love"
           ],
-          "emoji_style": "Emojis are used extensively to convey emotions and enhance the heartfelt tone, often paired with love-related symbols like ❤️ and 🤍."
+          "emoji_style": "Emojis are used extensively to convey emotions and enhance the personal touch of each message."
         },
         "avoided_terms": [
-          "Product names",
-          "Pricing details"
+          "mass-produced",
+          "standard",
+          "generic"
         ],
-        "structural_signature": "Posts typically present customized desserts for special occasions, accompanied by a personal touch and heartfelt messages.",
-        "representative_post": "🍫 Say it with brownies. ❤️\nWhy gift the usual when you can make it personal? ✨\nOur Custom Brownie Slabs can be personalized with: 💌 Any message 🎂 Birthday wishes 💍 Anniversary surprises 🎉 Congratulations 👶 Baby announcements 🎓 Graduation ❤️ Love notes ...or absolutely anything you want!\nFreshly baked, fudgy, chocolatey, and made just for your special moments. 🤎\n✨ Perfect for birthdays • anniversaries • proposals • engagements • farewells • promotions • thank you gifts • and every occasion worth celebrating!"
+        "structural_signature": "Each post highlights a unique, customizable product with a focus on personalization and emotional connection.",
+        "representative_post": "🍫 Say it with brownies. ❤️\nWhy gift the usual when you can make it personal? ✨\nOur Custom Brownie Slabs can be personalized with: 💌 Any message\n🎂 Birthday wishes\n💍 Anniversary surprises\n🎉 Congratulations\n👶 Baby announcements\n🎓 Graduation\n❤️ Love notes\n...or absolutely anything you want!\nFreshly baked, fudgy, chocolatey, and made just for your special moments. 🤎"
       }
     }
   ]

@@ -550,7 +550,9 @@ export default function JarvisWidget() {
           <span className="absolute" style={{ inset: 6 }}>
             <JarvisOrb phase={phase} size={48} />
           </span>
-          <MicIcon size={22} />
+          <span className="relative" style={{ color: "var(--color-ql-dark)" }}>
+            <MicIcon size={22} />
+          </span>
           {messages.length > 0 && (
             <span
               className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold"

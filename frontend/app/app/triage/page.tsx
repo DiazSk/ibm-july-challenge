@@ -14,7 +14,7 @@ type Mode = "instagram" | "paste";
 export default function TriagePage() {
   const queryClient = useQueryClient();
 
-  const [mode, setMode] = useState<Mode>("instagram");
+  const [mode] = useState<Mode>("paste");
   const [text, setText] = useState("");
   const [clusterId, setClusterId] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -83,12 +83,6 @@ export default function TriagePage() {
     }
   }
 
-  const tabStyle = (active: boolean) => ({
-    color: active ? "var(--color-ql-bg)" : "var(--color-ql-muted)",
-    background: active ? "var(--color-ql-dark)" : "transparent",
-    border: `1px solid ${active ? "var(--color-ql-dark)" : "var(--color-ql-border)"}`,
-  });
-
   return (
     <motion.div
       className="max-w-2xl mx-auto"
@@ -105,16 +99,6 @@ export default function TriagePage() {
         </h1>
       </div>
 
-      {/* Source toggle */}
-      <div className="flex gap-1.5 mb-4">
-        <button onClick={() => { setMode("instagram"); reset(); }} className="text-xs px-3 py-1.5 rounded-full transition-colors" style={tabStyle(mode === "instagram")}>
-          From Instagram
-        </button>
-        <button onClick={() => { setMode("paste"); reset(); }} className="text-xs px-3 py-1.5 rounded-full transition-colors" style={tabStyle(mode === "paste")}>
-          Paste
-        </button>
-      </div>
-
       {mode === "instagram" ? (
         <InboxInput clusterId={clusterId} onClusterChange={setClusterId} onLoad={handleLoadComments} loading={loading} />
       ) : (
@@ -127,9 +111,12 @@ export default function TriagePage() {
           style={{ borderColor: "var(--color-ql-accent)", background: "color-mix(in oklch, var(--color-ql-accent) 6%, transparent)" }}
         >
           <p className="text-xs mb-2" style={{ color: "var(--color-ql-dark)" }}>
-            Your Instagram connection doesn&apos;t have comment access yet. Add the
+            Your Instagram connection doesn&apos;t have comment access yet. Adding the
             <span className="font-medium"> instagram_business_manage_comments </span>
-            permission in your Meta app, then reconnect to grant it.
+            permission and reconnecting isn&apos;t enough on its own — Meta only activates
+            it once the app passes App Review and gets Advanced Access for that
+            permission. Reconnecting first is still required so the new grant takes
+            effect once review completes.
           </p>
           <a
             href={connectInstagramUrl()}

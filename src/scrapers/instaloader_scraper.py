@@ -55,8 +55,15 @@ def scrape_profile(username: str, max_posts: int = 200) -> int:
     try:
         profile = instaloader.Profile.from_username(L.context, handle)
     except instaloader.exceptions.ProfileNotExistsException:
+        # instaloader reports this even when the account is real: an anonymous
+        # scrape getting rate-limited/blocked by Instagram (403 on their end)
+        # surfaces through instaloader as "profile does not exist," not as a
+        # distinct blocked/rate-limited error. So this message can't promise
+        # the account is actually missing.
         raise RuntimeError(
-            f"@{handle} doesn't exist on Instagram. Check the username and try again."
+            f"Couldn't find @{handle} — or Instagram blocked this anonymous scrape "
+            "(it does that a lot). If the account is real, use \"Connect Instagram "
+            "(real-time)\" instead — it authenticates properly and isn't affected."
         )
     except instaloader.exceptions.LoginRequiredException:
         raise RuntimeError(

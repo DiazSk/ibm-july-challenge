@@ -67,12 +67,12 @@ export default function TodayPage() {
   const seed = t?.seed_post;
   const lesson = diagnoses.data?.winner_diagnosis;
 
-  async function handleWriteScript() {
-    if (!seed || !rec) return;
+  async function handleWriteScript(format: SeedFormat) {
+    if (!seed) return;
     setSeeding(true);
     setSeedError(null);
     try {
-      await seedScriptFromPost(seed.shortcode, rec.format as SeedFormat);
+      await seedScriptFromPost(seed.shortcode, format);
       router.push("/app/create");
     } catch (e) {
       setSeedError(e instanceof Error ? e.message : "Could not load that post.");
@@ -177,7 +177,7 @@ export default function TodayPage() {
                   </Muted>
 
                   <button
-                    onClick={handleWriteScript}
+                    onClick={() => handleWriteScript(rec.format as SeedFormat)}
                     disabled={seeding}
                     className="mt-4 rounded-lg px-4 py-2 text-sm font-medium transition-opacity disabled:opacity-60"
                     style={{ background: "var(--color-ql-accent)", color: "white" }}
@@ -194,14 +194,28 @@ export default function TodayPage() {
             </Card>
           </section>
 
-          {/* 3 — Story plan (Phase 2 fills this) */}
+          {/* 3 — Story plan */}
           <section>
             <StepLabel n={3}>Story plan</StepLabel>
             <Card>
-              <Muted>
-                Story sequences aren&apos;t generated yet — Reels, carousels and static posts are.
-                This is the next format going in.
-              </Muted>
+              {seed ? (
+                <>
+                  <Muted>
+                    Turn the same <strong style={{ color: "var(--color-ql-dark)" }}>{seed.pillar}</strong> post
+                    into a frame-by-frame Story sequence.
+                  </Muted>
+                  <button
+                    onClick={() => handleWriteScript("Story")}
+                    disabled={seeding}
+                    className="mt-4 rounded-lg px-4 py-2 text-sm font-medium transition-opacity disabled:opacity-60"
+                    style={{ background: "var(--color-ql-accent)", color: "white" }}
+                  >
+                    {seeding ? "Loading your post…" : "Write today's Story →"}
+                  </button>
+                </>
+              ) : (
+                <Muted>No post in this pillar has enough data to build from yet.</Muted>
+              )}
             </Card>
           </section>
 

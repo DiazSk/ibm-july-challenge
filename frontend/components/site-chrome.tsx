@@ -3,12 +3,8 @@ import Link from "next/link";
 export function BrandMark({ className = "" }: { className?: string }) {
   return (
     <Link href="/" className={`inline-flex items-center gap-2.5 ${className}`}>
-      <span className="grid h-8 w-8 place-items-center rounded-sm bg-gold text-ink">
-        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M4 20 L12 4 L20 20" />
-          <path d="M8 14 L16 14" />
-        </svg>
-      </span>
+      {/* eslint-disable-next-line @next/next/no-img-element -- fixed-size static asset, next/image is overkill */}
+      <img src="/logo-128.png" alt="" className="h-8 w-8 rounded-sm object-contain" />
       <span className="font-display text-xl leading-none text-foreground">StyleSync</span>
     </Link>
   );

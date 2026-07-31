@@ -12,7 +12,7 @@ import { getPostSeed } from "@/lib/api";
  * reads these during its first render, so a write from a sibling effect after
  * mount would arrive too late.
  */
-export type SeedFormat = "Reel" | "Carousel" | "Static";
+export type SeedFormat = "Reel" | "Carousel" | "Static" | "Story";
 
 export async function seedScriptFromPost(shortcode: string, format: SeedFormat = "Reel") {
   const seed = await getPostSeed(shortcode);
