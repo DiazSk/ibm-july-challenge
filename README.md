@@ -1,4 +1,4 @@
-![StyleSync Banner](docs/banner/score-proof-1920x600.png)
+![StyleSync Banner](docs/banner/one-to-eight-1920x600.png)
 
 # StyleSync
 
@@ -47,16 +47,16 @@ Instead of asking _"what do you want to make?"_, StyleSync asks **"who are you a
 
 Eight surfaces build on the profile:
 
-| Surface         | What it does                                                                                                                                                                                                             |
-| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Today**       | Recommends one post for today, pulled from the account's own best-performing pattern, with a real caption/metrics-driven script pre-filled — one click from a ready-to-film Script Studio draft.                        |
-| **Dashboard**   | KPIs, Top Posts with embedded previews, Engagement-by-Pillar and Best-Day-to-Post charts, a background Weekly Brief agent that drafts ideas for the most underused pillar, and Ask-JARVIS quick questions.               |
-| **Brand Voice** | The extracted profile itself — tone, signature vocabulary, avoided terms, signature phrases per pillar — plus a Drift Watchdog that flags recent captions drifting off-brand.                                           |
-| **Generate**    | Blank Page Solver → 3 creative directions → caption variants + image direction → the Drift Test → Resonance Simulator (3 personas) → Brand Guardian adversarial refine loop → Script Studio (Reel/Carousel/Static/Story, shot-by-shot for Reels, one-click 4-format fan-out). |
-| **Diagnose**    | Why Engine diagnoses why a post won or flopped, auto-drafts a Recovery Brief, gated by an honest confidence score.                                                                                                        |
-| **Strategy**    | Voice Timeline, Strategic Insights (over/under-invested pillars), Boost Advisor, and the background Weekly Brief agent.                                                                                                   |
-| **Agents**      | Goal-directed Autopilot — plans and produces a week of posts autonomously with a live reasoning trace and a convergence quality gate; also a Self-Improving Playbook that learns rules from tagged real outcomes.        |
-| **Inbox Triage**| Classifies up to 20 comments/DMs and drafts brand-voice replies for each, correctly skipping spam.                                                                                                                        |
+| Surface          | What it does                                                                                                                                                                                                                                                                  |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Today**        | Recommends one post for today, pulled from the account's own best-performing pattern, with a real caption/metrics-driven script pre-filled — one click from a ready-to-film Script Studio draft.                                                                              |
+| **Dashboard**    | KPIs, Top Posts with embedded previews, Engagement-by-Pillar and Best-Day-to-Post charts, a background Weekly Brief agent that drafts ideas for the most underused pillar, and Ask-JARVIS quick questions.                                                                    |
+| **Brand Voice**  | The extracted profile itself — tone, signature vocabulary, avoided terms, signature phrases per pillar — plus a Drift Watchdog that flags recent captions drifting off-brand.                                                                                                 |
+| **Generate**     | Blank Page Solver → 3 creative directions → caption variants + image direction → the Drift Test → Resonance Simulator (3 personas) → Brand Guardian adversarial refine loop → Script Studio (Reel/Carousel/Static/Story, shot-by-shot for Reels, one-click 4-format fan-out). |
+| **Diagnose**     | Why Engine diagnoses why a post won or flopped, auto-drafts a Recovery Brief, gated by an honest confidence score.                                                                                                                                                            |
+| **Strategy**     | Voice Timeline, Strategic Insights (over/under-invested pillars), Boost Advisor, and the background Weekly Brief agent.                                                                                                                                                       |
+| **Agents**       | Goal-directed Autopilot — plans and produces a week of posts autonomously with a live reasoning trace and a convergence quality gate; also a Self-Improving Playbook that learns rules from tagged real outcomes.                                                             |
+| **Inbox Triage** | Classifies up to 20 comments/DMs and drafts brand-voice replies for each, correctly skipping spam.                                                                                                                                                                            |
 
 One moment in that stack produces a number instead of a promise: **the Drift Test**, inside Generate. Given the same creative brief, it generates a StyleSync caption alongside a generic-AI baseline and scores both for brand-voice fidelity, highlighting matched signature phrases and flagging off-brand vocabulary. It's credible because it's comparative and reproducible — the same profile, the same prompt, two outputs scored side by side — rather than a claim the product just asserts about itself.
 
@@ -142,16 +142,16 @@ To be precise about the division of labor: **IBM Bob was the development tool us
 
 ## What It Does
 
-| Tab             | What you get                                                                                                                                                                                                                       |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Today**       | One recommended post for today, pulled from your own best-performing pattern, with a caption and metrics-backed script pre-filled — one click from a ready-to-film Script Studio draft                                            |
-| **Dashboard**   | KPIs, Top Posts with embedded previews, Engagement-by-Pillar and Best-Day-to-Post charts, a background Weekly Brief Agent, and Ask-JARVIS quick questions                                                                          |
-| **Brand Voice** | Your extracted brand profile — tone, signature vocabulary, avoided terms, signature phrases per pillar — plus a Brand Drift Watchdog that flags captions sliding off-brand                                                         |
-| **Generate**    | Blank Page Solver → 3 creative directions → Caption Brief → 3 caption variants + image prompt → the Drift Test → Resonance Simulator (3 persona panel) → Brand Guardian Courtroom (adversarial refine loop) → Script Studio (Reel / Carousel / Static / Story) → Save to Workbench |
-| **Diagnose**    | Paste a post + metrics, or expand any real post → Why Engine diagnosis → Recovery Brief, gated by an honest confidence score                                                                                                        |
-| **Strategy**    | Voice Timeline chart + Strategic Insights + Boost Advisor + a "This Week" hero recommendation with a Playbook experiment to try next                                                                                               |
-| **Agents**      | Autopilot — pick post count, platform, and quality gate, then watch a live reasoning trace plan and produce a week of posts autonomously until it converges; also a Self-Improving Playbook that learns from tagged real outcomes  |
-| **Inbox Triage**| Paste up to 20 comments or DMs → Granite classifies (order inquiry / compliment / spam) → drafts brand-voice replies for each, correctly skipping spam                                                                             |
+| Tab              | What you get                                                                                                                                                                                                                                                                       |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Today**        | One recommended post for today, pulled from your own best-performing pattern, with a caption and metrics-backed script pre-filled — one click from a ready-to-film Script Studio draft                                                                                             |
+| **Dashboard**    | KPIs, Top Posts with embedded previews, Engagement-by-Pillar and Best-Day-to-Post charts, a background Weekly Brief Agent, and Ask-JARVIS quick questions                                                                                                                          |
+| **Brand Voice**  | Your extracted brand profile — tone, signature vocabulary, avoided terms, signature phrases per pillar — plus a Brand Drift Watchdog that flags captions sliding off-brand                                                                                                         |
+| **Generate**     | Blank Page Solver → 3 creative directions → Caption Brief → 3 caption variants + image prompt → the Drift Test → Resonance Simulator (3 persona panel) → Brand Guardian Courtroom (adversarial refine loop) → Script Studio (Reel / Carousel / Static / Story) → Save to Workbench |
+| **Diagnose**     | Paste a post + metrics, or expand any real post → Why Engine diagnosis → Recovery Brief, gated by an honest confidence score                                                                                                                                                       |
+| **Strategy**     | Voice Timeline chart + Strategic Insights + Boost Advisor + a "This Week" hero recommendation with a Playbook experiment to try next                                                                                                                                               |
+| **Agents**       | Autopilot — pick post count, platform, and quality gate, then watch a live reasoning trace plan and produce a week of posts autonomously until it converges; also a Self-Improving Playbook that learns from tagged real outcomes                                                  |
+| **Inbox Triage** | Paste up to 20 comments or DMs → Granite classifies (order inquiry / compliment / spam) → drafts brand-voice replies for each, correctly skipping spam                                                                                                                             |
 
 **Workbench** sits underneath all eight tabs rather than being one itself — a persistent SQLite scratchpad where captions, scripts, recovery briefs, and agent outputs from any tab get saved, starred, reviewed, and outcome-tracked to calibrate future generation.
 
@@ -230,23 +230,22 @@ POST /api/create/image-prompt
 POST /api/create/script
 
 POST /api/analyze/why-engine
-POST /api/analyze/resonance
-POST /api/analyze/guardian
-POST /api/analyze/drift
+POST /api/create/resonance-check
+POST /api/create/guardian-review
+POST /api/create/drift-compare
 
 GET  /api/discover/voice-timeline
 GET  /api/discover/strategic-insights
 GET  /api/discover/boost-advisor
 
-POST /api/weekly-brief/start
+POST /api/weekly-brief/generate
 GET  /api/weekly-brief/status/{job_id}
-GET  /api/weekly-brief/drafts/{batch_id}
 GET  /api/weekly-brief/pending-notice
 
 POST /api/repurpose
-GET  /api/repurpose/status/{batch_id}
+GET  /api/repurpose/status/{job_id}
 
-POST /api/triage/batch
+POST /api/triage/run
 
 POST /api/orchestrate
 GET  /api/orchestrate/memory-status
