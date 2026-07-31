@@ -12,11 +12,30 @@ Model auto-downloads to ~/.cache/huggingface/hub/ (~325 MB) on first call.
 """
 
 import io
+import platform
 import re
+import subprocess
 
 import numpy as np
 import soundfile as sf
 from kokoro import KPipeline
+
+# On macOS, the bundled espeakng-loader library ships with a hardcoded CI
+# build path for its espeak-ng-data directory, so KPipeline's phoneme lookup
+# fails with "No such file or directory" unless repointed at a real
+# espeak-ng install (brew install espeak-ng). Must run AFTER importing
+# kokoro, since misaki sets its (broken) defaults at import time.
+if platform.system() == "Darwin":
+    try:
+        prefix = subprocess.run(
+            ["brew", "--prefix", "espeak-ng"], capture_output=True, text=True, timeout=5
+        ).stdout.strip()
+        if prefix:
+            from phonemizer.backend.espeak.wrapper import EspeakWrapper
+            EspeakWrapper.set_library(f"{prefix}/lib/libespeak-ng.dylib")
+            EspeakWrapper.set_data_path(f"{prefix}/share/espeak-ng-data")
+    except Exception:
+        pass  # best-effort — falls back to the (possibly broken) bundled path
 
 
 # Covers the main Unicode emoji blocks — extend if needed
