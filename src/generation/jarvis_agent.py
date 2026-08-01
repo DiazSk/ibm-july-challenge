@@ -46,15 +46,6 @@ _CLUSTER_NAMES = {
     4: "Bomboloni",
 }
 
-# Demo engagement data — matches discover.py _DEMO_ENGAGEMENT, used when
-# clusters.json lacks a cluster_engagement key (standard Instagram export).
-_FALLBACK_ENGAGEMENT: dict[str, dict] = {
-    "0": {"cluster_name": "Homemade Classics",   "post_count": 34, "avg_views": 780,  "engagement_rate": 6.4},
-    "1": {"cluster_name": "Fusion Specials",      "post_count": 22, "avg_views": 1650, "engagement_rate": 11.2},
-    "2": {"cluster_name": "Behind the Scenes",    "post_count": 15, "avg_views": 1020, "engagement_rate": 9.6},
-    "3": {"cluster_name": "Nutella Series",       "post_count": 15, "avg_views": 1920, "engagement_rate": 12.8},
-    "4": {"cluster_name": "Bomboloni",            "post_count": 27, "avg_views": 2140, "engagement_rate": 11.6},
-}
 
 
 def get_history(session_id: str) -> list[dict]:
@@ -270,7 +261,9 @@ class JarvisAgent:
         try:
             profile  = json.loads(_PROFILE_PATH.read_text(encoding="utf-8"))
             clusters = json.loads(_CLUSTERS_PATH.read_text(encoding="utf-8"))
-            engagement = clusters.get("cluster_engagement") or _FALLBACK_ENGAGEMENT
+            from src.data.insights import resolve_cluster_engagement
+
+            engagement = resolve_cluster_engagement(clusters, profile)
             return _build_system_prompt(profile, engagement)
         except Exception:
             return (

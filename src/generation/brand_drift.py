@@ -7,10 +7,12 @@ the same all-MiniLM-L6-v2 embeddings used at onboarding — no manual cluster
 picker needed), then Granite explains SPECIFICALLY what's drifted from that
 pillar's locked brand voice profile, not a generic diagnosis.
 
-No centroids are persisted anywhere in this codebase, so the similarity
-signal is computed fresh per request by re-embedding a sample of the
-cluster's original posts — cheap (sub-second, local, zero Ollama calls) and
-needs no new persistent-state design.
+The similarity signal is computed fresh per request by re-embedding a sample
+of the cluster's original posts — cheap (sub-second, local, zero Ollama calls).
+Note that this samples only the first `sample_size` posts per cluster, so it is
+an approximation of the pillar centre. run_clustering() now persists exact
+centroids under "centroids" in data/clusters.json; switching this to read them
+would be both cheaper and more accurate.
 
 Input:  pasted_posts: list[str], clusters_data (data/clusters.json),
         embedder: SentenceTransformer (from api.dependencies.get_sentence_embedder)

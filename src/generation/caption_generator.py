@@ -119,11 +119,16 @@ class CaptionGenerator:
     by injecting the matching cluster profile from brand_profile.json.
     """
 
-    def __init__(self, model: str = OLLAMA_MODEL):
+    def __init__(self, model: str = OLLAMA_MODEL, profile_path: Path = BRAND_PROFILE_PATH):
+        """
+        profile_path defaults to the live brand profile. The evaluation harness
+        overrides it to point at a profile extracted from a train-only split, so
+        generated captions can be scored against posts the profile never saw.
+        """
         self._llm   = OllamaLLM(model=model, temperature=0.7, num_predict=900)
         self._chain = _PROMPT | self._llm
         self._profile: dict = json.loads(
-            BRAND_PROFILE_PATH.read_text(encoding="utf-8")
+            Path(profile_path).read_text(encoding="utf-8")
         )
 
     # ── Public ────────────────────────────────────────────────────────────────

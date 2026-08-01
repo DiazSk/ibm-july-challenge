@@ -23,6 +23,7 @@ from api.dependencies import (
     get_boost_advisor,
     get_confidence_scorer,
 )
+from src.data.insights import resolve_cluster_engagement
 from src.data.pillars import all_pillar_labels
 
 router = APIRouter()
@@ -34,68 +35,6 @@ _CLUSTERS_PATH = _PROJECT_ROOT / "data" / "clusters.json"
 _ALL_CLUSTER_COLS = ["C0", "C1", "C2", "C3", "C4"]
 
 
-# Synthesised engagement figures for clusters where real metrics are unavailable
-# (Instagram official export provides captions only, not views/saves/comments).
-# Numbers are plausible for a ~1,400-follower artisanal food account.
-_DEMO_ENGAGEMENT: dict[str, dict] = {
-    "0": {
-        "cluster_name"   : "Homemade Classics",
-        "post_count"     : 34,
-        "avg_views"      : 780,
-        "avg_saves"      : 24,
-        "avg_comments"   : 5,
-        "engagement_rate": 6.4,
-        "best_post_hook" : (
-            "100% Homemade eggless donuts — soft, fresh & chocolate-loaded 🍫🍩\n"
-            "Made with love & fried to perfection ✨"
-        ),
-    },
-    "1": {
-        "cluster_name"   : "Fusion Specials",
-        "post_count"     : 22,
-        "avg_views"      : 1650,
-        "avg_saves"      : 48,
-        "avg_comments"   : 14,
-        "engagement_rate": 11.2,
-        "best_post_hook" : (
-            "one bite of rasmalai cake & all diet plans got cancelled 😌✨ "
-            "Soft. Milky. Royal. 💛"
-        ),
-    },
-    "2": {
-        "cluster_name"   : "Behind the Scenes",
-        "post_count"     : 15,
-        "avg_views"      : 1020,
-        "avg_saves"      : 41,
-        "avg_comments"   : 17,
-        "engagement_rate": 9.6,
-        "best_post_hook" : "I'll stick to baking… not voiceovers 😅  We all know 'tomorrow' never comes 🤍",
-    },
-    "3": {
-        "cluster_name"   : "Nutella Series",
-        "post_count"     : 15,
-        "avg_views"      : 1920,
-        "avg_saves"      : 56,
-        "avg_comments"   : 11,
-        "engagement_rate": 12.8,
-        "best_post_hook" : (
-            "Soft, gooey & loaded with rich Nutella in every bite 🤤🍪✨\n"
-            "Freshly made & packed with love ❤️"
-        ),
-    },
-    "4": {
-        "cluster_name"   : "Bomboloni",
-        "post_count"     : 27,
-        "avg_views"      : 2140,
-        "avg_saves"      : 63,
-        "avg_comments"   : 9,
-        "engagement_rate": 11.6,
-        "best_post_hook" : (
-            "There's something about freshly fried Bomboloni, hot coffee & old songs… "
-            "it just feels like comfort in every bite ☕🍩🎶"
-        ),
-    },
-}
 
 
 @lru_cache(maxsize=1)
@@ -186,19 +125,23 @@ def _compute_boost_advisor() -> dict:
     profile  = json.loads(_PROFILE_PATH.read_text(encoding="utf-8"))
     clusters = json.loads(_CLUSTERS_PATH.read_text(encoding="utf-8"))
 
-    # Instagram official export has no engagement metrics; fall back to demo values
-    real_engagement = clusters.get("cluster_engagement")
-    cluster_engagement = real_engagement or _DEMO_ENGAGEMENT
+    # Derived from posts that actually carry metrics. Empty when the account has
+    # none — never backfilled with stand-in figures.
+    cluster_engagement = resolve_cluster_engagement(clusters, profile)
+    if not cluster_engagement:
+        raise HTTPException(
+            status_code=409,
+            detail="No engagement metrics for this account yet — connect Instagram "
+                   "or wait for the next sync. A boost recommendation without real "
+                   "reach data would be a guess.",
+        )
 
     si     = get_strategic_insights()
     scores = si.compute_richness_scores(profile, clusters)
 
     advisor = get_boost_advisor()
     result  = advisor.generate(scores, cluster_engagement, profile)
-    # Be honest about where the numbers came from — Instagram's official export
-    # ships captions only, so engagement is illustrative unless a richer source
-    # supplied real metrics.
-    result["engagement_is_synthetic"] = not real_engagement
+    result["engagement_is_synthetic"] = False
 
     try:
         context_summary = (

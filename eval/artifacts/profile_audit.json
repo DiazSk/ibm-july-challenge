@@ -1,0 +1,344 @@
+{
+  "recurrence_floor": 0.1,
+  "extractor_sample_cap": 12,
+  "summary": {
+    "signature_phrases_total": 9,
+    "signature_phrases_verbatim": 9,
+    "recurring_words_total": 22,
+    "recurring_words_invented": 1,
+    "recurring_words_fail_to_generalise": 3,
+    "pillar_posts_total": 208,
+    "posts_shown_to_extractor_total": 50,
+    "smallest_pillar_post_count": 2
+  },
+  "clusters": [
+    {
+      "cluster_id": 0,
+      "content_pillar": "Golden Delights",
+      "pillar_posts": 2,
+      "posts_shown_to_extractor": 2,
+      "signature_phrases": [
+        {
+          "phrase": "That golden turn never gets old",
+          "verbatim_in_training": true
+        }
+      ],
+      "recurring_words": [
+        {
+          "word": "golden",
+          "sample_occurrences": 1,
+          "sample_posts": 2,
+          "sample_share": 0.5,
+          "pillar_occurrences": 1,
+          "pillar_posts": 2,
+          "pillar_share": 0.5,
+          "invented": false,
+          "fails_to_generalise": false
+        },
+        {
+          "word": "never",
+          "sample_occurrences": 2,
+          "sample_posts": 2,
+          "sample_share": 1.0,
+          "pillar_occurrences": 2,
+          "pillar_posts": 2,
+          "pillar_share": 1.0,
+          "invented": false,
+          "fails_to_generalise": false
+        },
+        {
+          "word": "old",
+          "sample_occurrences": 1,
+          "sample_posts": 2,
+          "sample_share": 0.5,
+          "pillar_occurrences": 1,
+          "pillar_posts": 2,
+          "pillar_share": 0.5,
+          "invented": false,
+          "fails_to_generalise": false
+        }
+      ]
+    },
+    {
+      "cluster_id": 1,
+      "content_pillar": "Bulk Dessert Orders",
+      "pillar_posts": 16,
+      "posts_shown_to_extractor": 12,
+      "signature_phrases": [
+        {
+          "phrase": "Thank you for trusting Hot_Cakes_Bakes",
+          "verbatim_in_training": true
+        },
+        {
+          "phrase": "Perfect for stalls, cafés & home sellers",
+          "verbatim_in_training": true
+        }
+      ],
+      "recurring_words": [
+        {
+          "word": "bulk order",
+          "sample_occurrences": 4,
+          "sample_posts": 12,
+          "sample_share": 0.3333,
+          "pillar_occurrences": 4,
+          "pillar_posts": 16,
+          "pillar_share": 0.25,
+          "invented": false,
+          "fails_to_generalise": false
+        },
+        {
+          "word": "freshly made",
+          "sample_occurrences": 1,
+          "sample_posts": 12,
+          "sample_share": 0.0833,
+          "pillar_occurrences": 2,
+          "pillar_posts": 16,
+          "pillar_share": 0.125,
+          "invented": false,
+          "fails_to_generalise": false
+        },
+        {
+          "word": "premium ingredients",
+          "sample_occurrences": 1,
+          "sample_posts": 12,
+          "sample_share": 0.0833,
+          "pillar_occurrences": 1,
+          "pillar_posts": 16,
+          "pillar_share": 0.0625,
+          "invented": false,
+          "fails_to_generalise": false
+        },
+        {
+          "word": "carefully crafted",
+          "sample_occurrences": 0,
+          "sample_posts": 12,
+          "sample_share": 0.0,
+          "pillar_occurrences": 0,
+          "pillar_posts": 16,
+          "pillar_share": 0.0,
+          "invented": true,
+          "fails_to_generalise": false
+        }
+      ]
+    },
+    {
+      "cluster_id": 2,
+      "content_pillar": "Premium Cake Creations",
+      "pillar_posts": 67,
+      "posts_shown_to_extractor": 12,
+      "signature_phrases": [
+        {
+          "phrase": "Watching a simple cake transform into a beautiful Welcome Baby Girl theme cake is what makes baking so rewarding.",
+          "verbatim_in_training": true
+        },
+        {
+          "phrase": "Making 100% eggless Aesthetic bento cakes and combos",
+          "verbatim_in_training": true
+        }
+      ],
+      "recurring_words": [
+        {
+          "word": "cake",
+          "sample_occurrences": 10,
+          "sample_posts": 12,
+          "sample_share": 0.8333,
+          "pillar_occurrences": 47,
+          "pillar_posts": 67,
+          "pillar_share": 0.7015,
+          "invented": false,
+          "fails_to_generalise": false
+        },
+        {
+          "word": "custom",
+          "sample_occurrences": 3,
+          "sample_posts": 12,
+          "sample_share": 0.25,
+          "pillar_occurrences": 10,
+          "pillar_posts": 67,
+          "pillar_share": 0.1493,
+          "invented": false,
+          "fails_to_generalise": false
+        },
+        {
+          "word": "freshly baked",
+          "sample_occurrences": 2,
+          "sample_posts": 12,
+          "sample_share": 0.1667,
+          "pillar_occurrences": 6,
+          "pillar_posts": 67,
+          "pillar_share": 0.0896,
+          "invented": false,
+          "fails_to_generalise": true
+        },
+        {
+          "word": "mini",
+          "sample_occurrences": 1,
+          "sample_posts": 12,
+          "sample_share": 0.0833,
+          "pillar_occurrences": 2,
+          "pillar_posts": 67,
+          "pillar_share": 0.0299,
+          "invented": false,
+          "fails_to_generalise": false
+        },
+        {
+          "word": "bento",
+          "sample_occurrences": 2,
+          "sample_posts": 12,
+          "sample_share": 0.1667,
+          "pillar_occurrences": 5,
+          "pillar_posts": 67,
+          "pillar_share": 0.0746,
+          "invented": false,
+          "fails_to_generalise": true
+        }
+      ]
+    },
+    {
+      "cluster_id": 3,
+      "content_pillar": "Bomboloni Indulgence",
+      "pillar_posts": 96,
+      "posts_shown_to_extractor": 12,
+      "signature_phrases": [
+        {
+          "phrase": "The perfect bite",
+          "verbatim_in_training": true
+        },
+        {
+          "phrase": "Made with love",
+          "verbatim_in_training": true
+        }
+      ],
+      "recurring_words": [
+        {
+          "word": "Soft",
+          "sample_occurrences": 8,
+          "sample_posts": 12,
+          "sample_share": 0.6667,
+          "pillar_occurrences": 45,
+          "pillar_posts": 96,
+          "pillar_share": 0.4688,
+          "invented": false,
+          "fails_to_generalise": false
+        },
+        {
+          "word": "Fluffy",
+          "sample_occurrences": 6,
+          "sample_posts": 12,
+          "sample_share": 0.5,
+          "pillar_occurrences": 28,
+          "pillar_posts": 96,
+          "pillar_share": 0.2917,
+          "invented": false,
+          "fails_to_generalise": false
+        },
+        {
+          "word": "Freshly made",
+          "sample_occurrences": 2,
+          "sample_posts": 12,
+          "sample_share": 0.1667,
+          "pillar_occurrences": 14,
+          "pillar_posts": 96,
+          "pillar_share": 0.1458,
+          "invented": false,
+          "fails_to_generalise": false
+        },
+        {
+          "word": "Premium ingredients",
+          "sample_occurrences": 2,
+          "sample_posts": 12,
+          "sample_share": 0.1667,
+          "pillar_occurrences": 2,
+          "pillar_posts": 96,
+          "pillar_share": 0.0208,
+          "invented": false,
+          "fails_to_generalise": true
+        },
+        {
+          "word": "Filled generously",
+          "sample_occurrences": 1,
+          "sample_posts": 12,
+          "sample_share": 0.0833,
+          "pillar_occurrences": 1,
+          "pillar_posts": 96,
+          "pillar_share": 0.0104,
+          "invented": false,
+          "fails_to_generalise": false
+        }
+      ]
+    },
+    {
+      "cluster_id": 4,
+      "content_pillar": "Personalized Pastry Gifts",
+      "pillar_posts": 27,
+      "posts_shown_to_extractor": 12,
+      "signature_phrases": [
+        {
+          "phrase": "Say it with brownies.",
+          "verbatim_in_training": true
+        },
+        {
+          "phrase": "Handmade with Love",
+          "verbatim_in_training": true
+        }
+      ],
+      "recurring_words": [
+        {
+          "word": "love",
+          "sample_occurrences": 9,
+          "sample_posts": 12,
+          "sample_share": 0.75,
+          "pillar_occurrences": 17,
+          "pillar_posts": 27,
+          "pillar_share": 0.6296,
+          "invented": false,
+          "fails_to_generalise": false
+        },
+        {
+          "word": "sweet",
+          "sample_occurrences": 1,
+          "sample_posts": 12,
+          "sample_share": 0.0833,
+          "pillar_occurrences": 3,
+          "pillar_posts": 27,
+          "pillar_share": 0.1111,
+          "invented": false,
+          "fails_to_generalise": false
+        },
+        {
+          "word": "special",
+          "sample_occurrences": 2,
+          "sample_posts": 12,
+          "sample_share": 0.1667,
+          "pillar_occurrences": 6,
+          "pillar_posts": 27,
+          "pillar_share": 0.2222,
+          "invented": false,
+          "fails_to_generalise": false
+        },
+        {
+          "word": "custom",
+          "sample_occurrences": 1,
+          "sample_posts": 12,
+          "sample_share": 0.0833,
+          "pillar_occurrences": 2,
+          "pillar_posts": 27,
+          "pillar_share": 0.0741,
+          "invented": false,
+          "fails_to_generalise": false
+        },
+        {
+          "word": "heart-shaped",
+          "sample_occurrences": 1,
+          "sample_posts": 12,
+          "sample_share": 0.0833,
+          "pillar_occurrences": 1,
+          "pillar_posts": 27,
+          "pillar_share": 0.037,
+          "invented": false,
+          "fails_to_generalise": false
+        }
+      ]
+    }
+  ]
+}

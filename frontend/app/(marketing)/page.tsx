@@ -68,7 +68,7 @@ function Hero() {
             </div>
             <div className="mt-14 grid max-w-lg grid-cols-3 gap-6 border-t border-border/60 pt-8 text-sm">
               <Stat kpi={String(demoBrand.postsAnalyzed)} label="posts read" />
-              <Stat kpi={String(demoBrand.graniteInvocations)} label="Granite calls" />
+              <Stat kpi={String(demoBrand.graniteCallSites)} label="Granite calls" />
               <Stat kpi="0" label="cloud at inference" />
             </div>
           </motion.div>

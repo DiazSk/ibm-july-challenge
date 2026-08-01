@@ -1,0 +1,718 @@
+{
+  "seed": 20260801,
+  "n_train": 168,
+  "n_test": 40,
+  "train_shortcodes": [
+    "DT4UDyNivIA",
+    "DTreC26jJwp",
+    "DaKBkGHsXj0",
+    "DbCu_ZijPCr",
+    "DREJK-HjKzQ",
+    "DU2Hk4mjJJX",
+    "DVcvJ6DjIx_",
+    "DWF82WojCIh",
+    "DXQnPHNjKpd",
+    "DXTLuArDM2x",
+    "DXYYJjwDFwi",
+    "DYd5pXFMS58",
+    "DZ9MunhMj0n",
+    "DZ_xIzzs0QL",
+    "DZMS8EcMHSV",
+    "Da69N7LsmNN",
+    "Dao97rcMLVj",
+    "DaPJzuPMnVK",
+    "DaW5eUEqyex",
+    "DazP0fFMFkC",
+    "DBbjPe9Szpt",
+    "DBDfOCySNOS",
+    "DbFSDbHs09l",
+    "DBLUW_hy24c",
+    "DOX8bqQjGEr",
+    "DP-07_LiQTi",
+    "DP28tWljHHc",
+    "DPdQp92jKTx",
+    "DPiFjJDjLDQ",
+    "DPlnpgJCfqq",
+    "DPsvjqrDJey",
+    "DQ55fmMEUrV",
+    "DQLhBHwjPk3",
+    "DQoBBn3DNC3",
+    "DQOHHE5DMwq",
+    "DR1BlnpjCxK",
+    "DR3qUvmjIpZ",
+    "DR6OcBEjLQa",
+    "DR_YNWoDAym",
+    "DRyhER-DE2M",
+    "DS2bueBDNth",
+    "DSRfA0-jByv",
+    "DSutawkjI4p",
+    "DSwZ14UDIXW",
+    "DTjzlFcjNIB",
+    "DTo50VVClK8",
+    "DTRv6i-jN5b",
+    "DTUSCR7ClwI",
+    "DU4tRwiDPkw",
+    "DUAGP5XjDZj",
+    "DUe9i8wjHOY",
+    "DUhiIsBjMBj",
+    "DUM8g9yjDPU",
+    "DUr0dmtjGGS",
+    "DUSERZrDCf1",
+    "DUuZaxnDCaM",
+    "DVFl9TLjDCH",
+    "DVnCS-3jAER",
+    "DVNTAErDIpV",
+    "DW0SfRPDMC6",
+    "DX8azH6MhoF",
+    "DX_CFVjsex6",
+    "DXs8jBXDPyT",
+    "DXvivMOMbOg",
+    "DY1EbzFMLSs",
+    "DYgdHP0MOfo",
+    "DYJSUOxKYmy",
+    "DZ-q3W6DLT-",
+    "DZokVg3sko9",
+    "Da9g99BKjlg",
+    "DaCSy9_sHvT",
+    "DaHdeUosq6C",
+    "DajxserMQnY",
+    "DbH8Bo9DIBD",
+    "DbKaarNM2UM",
+    "DbXRD2XsPWP",
+    "DO2dUAmip7F",
+    "DP0KfUaDAZq",
+    "DPVesM5jLqF",
+    "DQ3Yi0sDLNe",
+    "DQQ_4rfjFW9",
+    "DQV3tsmDNtu",
+    "DRd4n7yDLPJ",
+    "DRggD-6jIYY",
+    "DRGtLFdjMwT",
+    "DRJS2kKjLof",
+    "DRRDosMDL1H",
+    "DS9Ln_yiUZH",
+    "DSEnj83DPG0",
+    "DT1vhJgDGs3",
+    "DT64586CqHQ",
+    "DTCXwtvjEGN",
+    "DTdESoNjB5n",
+    "DTE9DigDEMN",
+    "DTHn8O_DIVS",
+    "DTmSldiCouN",
+    "DTuB5_7jP4p",
+    "DTW4JOqDdvK",
+    "DTwoQQZjBYv",
+    "DTZbOOvCq7V",
+    "DUCm8cxjAEa",
+    "DUFMlvJjHpq",
+    "DUHxy63jCTq",
+    "DUmrAYUjBlg",
+    "DUpPmlNjCQF",
+    "DUUotoAjD7k",
+    "DUZ0nPQDDRY",
+    "DV5ES8GDJX7",
+    "DV7p_VRjL4O",
+    "DVh7gDjjFfI",
+    "DVP3t8JjNZx",
+    "DVpn0BljG00",
+    "DVSd1sajLa3",
+    "DVsNBMGjCOs",
+    "DVuybz3jAg_",
+    "DVVAQeyDHPq",
+    "DVXmcr9jAFq",
+    "DVxZIVwjCny",
+    "DW-mwxADFy1",
+    "DW235wFjJWD",
+    "DW8B1oOjA1u",
+    "DWAyi_IjPFg",
+    "DWDY-O1jNh9",
+    "DWgZW3SjCOw",
+    "DWiSfcgjI3I",
+    "DWnabHODCXu",
+    "DWQTv2YjGei",
+    "DWS1KKKjBke",
+    "DWskarqjE11",
+    "DWVZro_jJk4",
+    "DXGU_u1jLDk",
+    "DXyGUz8s4vT",
+    "DY_cUHGMoFe",
+    "DYEJt8EMs2e",
+    "DYjB_oOs24q",
+    "DYlsuJKMLbi",
+    "DYoK5YTsUXx",
+    "DYPu_p-jLco",
+    "DYq1darMeJW",
+    "DYREFUwMOSs",
+    "DZ7QDd6scoH",
+    "DZB86SYMddV",
+    "DZHFSOys9eJ",
+    "DZPfNqJsrEN",
+    "DZrLTfjMVg5",
+    "DZXTwrmsH05",
+    "DadCSmFjK_5",
+    "DaercsLM6sY",
+    "DaFool_DL_m",
+    "DbAGQ1dMNwZ",
+    "DNDRGR6MXvS",
+    "DOgDPdPDMt9",
+    "DRWH03mjFqy",
+    "DSMRBeIDcO2",
+    "DU7StYtjJpA",
+    "DUcXMhJjCzz",
+    "DUkJntOjJLH",
+    "DUKV_oGjAeW",
+    "DUw_6tbjLsa",
+    "DUXOn2lDDZV",
+    "DV-NvtFjDck",
+    "DVKuPHfDEi7",
+    "DWLG9ckDGOG",
+    "DXb63JjjG47",
+    "DXip7qqDPS6",
+    "DXlOjg7jPR9",
+    "DZg0obVsZ7Z",
+    "DZmC9fuMPQf"
+  ],
+  "test": [
+    {
+      "shortcode": "DVaMLfFjEr8",
+      "timestamp_utc": "2026-03-03T04:45:40+0000",
+      "real_caption": "AI tried… but real bakers don't resign 😌🍩🔥\nSoft. Sugary. Perfectly risen.\nHandmade > Artificial 🤍",
+      "assigned_cluster": 2,
+      "engagement": {
+        "reach": 3279,
+        "likes": 29,
+        "comments": 1,
+        "shares": 4,
+        "views": 4799,
+        "saves": 5
+      }
+    },
+    {
+      "shortcode": "DVfUYBZjIIm",
+      "timestamp_utc": "2026-03-05T04:41:25+0000",
+      "real_caption": "Not every batch becomes perfect… and that's the reality of baking.\nThe process looked perfect, the dough felt right, but sometimes Bomboloni has other plans. 🥲\nEvery failed batch is just practice for the perfect one. Bakers will understand this feeling.",
+      "assigned_cluster": 1,
+      "engagement": {
+        "reach": 9013,
+        "likes": 72,
+        "comments": 14,
+        "shares": 7,
+        "views": 13545,
+        "saves": 18
+      }
+    },
+    {
+      "shortcode": "DX0rl7psCRU",
+      "timestamp_utc": "2026-05-02T04:41:35+0000",
+      "real_caption": "Bulk orders available 📦🍩\nFrom classic plain Bomboloni to rich filled flavours 🤍\nPlanning to start a stall or café?\nPartner with us for fresh daily supply 🤝✨",
+      "assigned_cluster": 1,
+      "engagement": {
+        "reach": 1648,
+        "likes": 17,
+        "comments": 1,
+        "shares": 8,
+        "views": 2000,
+        "saves": 0
+      }
+    },
+    {
+      "shortcode": "DahPOQCMCYZ",
+      "timestamp_utc": "2026-07-08T05:01:49+0000",
+      "real_caption": "Tag your dessert partner because every date deserves something sweet. 🍫❤️ Our Triple Chocolate Mini Pancakes are made fresh after every order, loaded with rich chocolate, and perfect for sharing... or keeping all to yourself. 🤤✨",
+      "assigned_cluster": 4,
+      "engagement": {
+        "reach": 1470,
+        "likes": 8,
+        "comments": 0,
+        "shares": 3,
+        "views": 1750,
+        "saves": 0
+      }
+    },
+    {
+      "shortcode": "DawsRq5Mg35",
+      "timestamp_utc": "2026-07-14T05:04:16+0000",
+      "real_caption": "Pineapple cake 💛✨\n\nFreshly baked sponge, light whipped cream, juicy pineapple, and every detail finished with care. There's nothing more satisfying than watching a custom cake come together. 🤍",
+      "assigned_cluster": 2,
+      "engagement": {
+        "reach": 1464,
+        "likes": 10,
+        "comments": 0,
+        "shares": 0,
+        "views": 1701,
+        "saves": 1
+      }
+    },
+    {
+      "shortcode": "DPNx31NjEvc",
+      "timestamp_utc": "2025-09-30T05:51:31+0000",
+      "real_caption": "🍩✨ Donut underestimate the power of chocolate!\n\nThese heavenly treats from HotCakes Bakes were love at first bite 🤎\nTopped with KitKat, choco chips, and crunchy wafers — every bite is a sweet escape 🍫\nPerfectly baked, beautifully packed, and full of joy 😍\n\n📦: @hot_cakesbakes\nBaked with love, served with joy ✨\n\nCustomization Available.",
+      "assigned_cluster": 4,
+      "engagement": {
+        "reach": 166,
+        "likes": 11,
+        "comments": 0,
+        "shares": 2,
+        "saves": 0
+      }
+    },
+    {
+      "shortcode": "DQgFe9_jFUT",
+      "timestamp_utc": "2025-11-01T05:00:37+0000",
+      "real_caption": "A little crunch, a lot of Nutella 💫🤎\n\nWe fill our cakes with lots of rich Nutella and crunchy almonds — every bite tastes heavenly 🍫🌰✨\nAt Hot Cakes Bakes, we believe in quality. No premix, no shortcuts — just fresh, homemade goodness baked with love 💖",
+      "assigned_cluster": 4,
+      "engagement": {
+        "reach": 57,
+        "likes": 8,
+        "comments": 0,
+        "shares": 0,
+        "saves": 0
+      }
+    },
+    {
+      "shortcode": "DRv44p-jP0t",
+      "timestamp_utc": "2025-12-02T05:05:39+0000",
+      "real_caption": "Freshly baked 30 cupcakes for today's order ✨ Thank you for choosing @hot_cakesbakes homemade goodness.\nAnother bulk order completed - 30 soft & fresh cupcakes ready to sweeten someone's day 🤍🧁\n\"Handcrafted in small batches. Baked fresh. Made with love 🤎\n\nWhy you should order with us ?\n\n• we use quality ingredients\n• no premix\n• we baked fresh on orders\n• we do not store",
+      "assigned_cluster": 2,
+      "engagement": {
+        "reach": 483,
+        "likes": 10,
+        "comments": 5,
+        "shares": 0,
+        "views": 601,
+        "saves": 0
+      }
+    },
+    {
+      "shortcode": "DUPgAjCDPlS",
+      "timestamp_utc": "2026-02-02T04:39:37+0000",
+      "real_caption": "POV: Crumb coating our dreamy Kulfi Falooda bento cake 🤍✨\nFrom smooth base layers to the final flourish, every step is made with love and sweetness. 🍨🎂\nTreat yourself or your loved ones to a slice of happiness — because life is better with cake!",
+      "assigned_cluster": 2,
+      "engagement": {
+        "reach": 14148,
+        "likes": 59,
+        "comments": 1,
+        "shares": 1,
+        "views": 19208,
+        "saves": 1
+      }
+    },
+    {
+      "shortcode": "DVAeHKHjF3W",
+      "timestamp_utc": "2026-02-21T05:00:59+0000",
+      "real_caption": "POV: It's just a sponge… until a baker touches it 👩🏻‍🍳✨\n5 seconds transformation.\nHours of effort.\nOne happy customer 💕\nCustomised cakes available.\nBook your dates in advance 💌",
+      "assigned_cluster": 2,
+      "engagement": {
+        "reach": 1550,
+        "likes": 9,
+        "comments": 1,
+        "shares": 0,
+        "views": 2169,
+        "saves": 1
+      }
+    },
+    {
+      "shortcode": "DVkey6AjCod",
+      "timestamp_utc": "2026-03-07T04:43:01+0000",
+      "real_caption": "Step 1: Follow the page\nStep 2: Comment PUDDING\n\nNo oven. No fancy ingredients. Just biscuits and Homemade chocolate syrup (no chocolate needed)🍮✨\n\nThis **super creamy Biscuit Pudding** is one of the easiest desserts you can make at home. Soft layers, homemade chocolate syrup and ready with simple ingredients 😍\n\nComment **\"PUDDING\"** and I'll send it to you ❤️\n\nDon't forget to **save this reel** so you can try it later!",
+      "assigned_cluster": 2,
+      "engagement": {
+        "reach": 7853,
+        "likes": 43,
+        "comments": 1,
+        "shares": 9,
+        "views": 9516,
+        "saves": 18
+      }
+    },
+    {
+      "shortcode": "DXVxBD3DAdB",
+      "timestamp_utc": "2026-04-20T04:40:11+0000",
+      "real_caption": "Baby shower sweetness packed with love 🩷💙🧁\nFreshly baked chocolate cupcakes for a special celebration ✨\nEvery box is made with care to make your moments extra special 🤍\nThank you for trusting us & sharing these beautiful memories 📸\nWe're so happy to be a part of your celebration 💫\nBulk orders | Baby shower | Custom desserts available\n\nBaby shower cupcakes, chocolate cupcakes, custom cupcakes, home bakery , celebration cakes.",
+      "assigned_cluster": 2,
+      "engagement": {
+        "reach": 826,
+        "likes": 6,
+        "comments": 1,
+        "shares": 0,
+        "views": 1028,
+        "saves": 1
+      }
+    },
+    {
+      "shortcode": "DYBjY7ssFsa",
+      "timestamp_utc": "2026-05-07T04:41:15+0000",
+      "real_caption": "Our Chocolate Loaded Cake Bowl is layered with rich chocolate sauce, soft cake, and pure comfort in every bite. Freshly made in Taloja ✨\n\nChocolate desserts, chocolate loaded cake bowl, layered chocolate desserts",
+      "assigned_cluster": 2,
+      "engagement": {
+        "reach": 10162,
+        "likes": 89,
+        "comments": 4,
+        "shares": 15,
+        "views": 13332,
+        "saves": 15
+      }
+    },
+    {
+      "shortcode": "DYTm5jXMgTM",
+      "timestamp_utc": "2026-05-14T04:59:05+0000",
+      "real_caption": "No talking. Just a baker healing herself with new equipment ASMR ✨\n\nEvery small upgrade feels so special when you build your baking business from home 🥹🤍\nCan't wait to create more dreamy cakes, bomboloni & desserts with this beauty ✨🍰",
+      "assigned_cluster": 2,
+      "engagement": {
+        "reach": 1995,
+        "likes": 29,
+        "comments": 2,
+        "shares": 1,
+        "views": 2385,
+        "saves": 3
+      }
+    },
+    {
+      "shortcode": "DZJwassDJR-",
+      "timestamp_utc": "2026-06-04T05:35:47+0000",
+      "real_caption": "Dutch Truffle cake 🤎",
+      "assigned_cluster": 2,
+      "engagement": {
+        "reach": 534,
+        "likes": 10,
+        "comments": 0,
+        "shares": 2,
+        "saves": 0
+      }
+    },
+    {
+      "shortcode": "DZy9j6uDD1r",
+      "timestamp_utc": "2026-06-20T05:39:30+0000",
+      "real_caption": "Rasmalai Cake ✨",
+      "assigned_cluster": 2,
+      "engagement": {
+        "reach": 372,
+        "likes": 3,
+        "comments": 0,
+        "shares": 0,
+        "saves": 1
+      }
+    },
+    {
+      "shortcode": "Da1zjneDIo4",
+      "timestamp_utc": "2026-07-16T04:41:12+0000",
+      "real_caption": "The assorted brownie tin everyone needs to try! 😍\nA perfect trio of Nutella, Biscoff & Pistachio, topped with premium ingredients for the most indulgent treat. ✨",
+      "assigned_cluster": 4,
+      "engagement": {
+        "reach": 290,
+        "likes": 6,
+        "comments": 0,
+        "shares": 0,
+        "saves": 0
+      }
+    },
+    {
+      "shortcode": "DafuhPXDHNF",
+      "timestamp_utc": "2026-07-07T14:53:53+0000",
+      "real_caption": "✨ Freshly baked. Freshly filled. Made just for you. 🤍🍫\nFrom fudgy brownies to soft Bombolonis, rich dessert tubs, and gooey cookies—every bite is made fresh after you place your order. No preservatives, no stock, just homemade goodness crafted with premium ingredients. ✨\n💌 Custom dessert boxes available for birthdays, anniversaries, engagements, gifts, and every sweet celebration.",
+      "assigned_cluster": 4,
+      "engagement": {
+        "reach": 383,
+        "likes": 7,
+        "comments": 0,
+        "shares": 0,
+        "saves": 0
+      }
+    },
+    {
+      "shortcode": "DBfnyNJSTMR",
+      "timestamp_utc": "2024-10-24T04:50:11+0000",
+      "real_caption": "Milk Chocolate truffle✨✨\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.",
+      "assigned_cluster": 4,
+      "engagement": {}
+    },
+    {
+      "shortcode": "DPYHuwiDKGC",
+      "timestamp_utc": "2025-10-04T06:14:56+0000",
+      "real_caption": "Warning: May cause serious donut cravings 🍩🔥\nTriple the chocolate, triple the trouble 😈🍫\nDrizzled, dipped, and downright irresistible.\nWhich one would you devour first?👇",
+      "assigned_cluster": 4,
+      "engagement": {
+        "reach": 166,
+        "likes": 10,
+        "comments": 0,
+        "shares": 2,
+        "saves": 0
+      }
+    },
+    {
+      "shortcode": "DQ0yj-RDKXJ",
+      "timestamp_utc": "2025-11-09T06:04:11+0000",
+      "real_caption": "Say hello to our new Chocolate Chunk Cookies! 🤎\n\nHomemade,Homebaker , choco chunk cookie,",
+      "assigned_cluster": 4,
+      "engagement": {
+        "reach": 1799,
+        "likes": 41,
+        "comments": 3,
+        "shares": 2,
+        "views": 2121,
+        "saves": 2
+      }
+    },
+    {
+      "shortcode": "DQivg83DHpi",
+      "timestamp_utc": "2025-11-02T05:49:28+0000",
+      "real_caption": "Me: It's for content 😌\nAlso me: finishes the pastry 😂🍫",
+      "assigned_cluster": 3,
+      "engagement": {
+        "reach": 10597,
+        "likes": 71,
+        "comments": 0,
+        "shares": 7,
+        "views": 16299,
+        "saves": 4
+      }
+    },
+    {
+      "shortcode": "DRqsu0TDPo-",
+      "timestamp_utc": "2025-11-30T04:27:22+0000",
+      "real_caption": "Truffle donuts 🍩",
+      "assigned_cluster": 4,
+      "engagement": {
+        "reach": 130,
+        "likes": 4,
+        "comments": 0,
+        "shares": 0,
+        "saves": 0
+      }
+    },
+    {
+      "shortcode": "DS4AdMQDNka",
+      "timestamp_utc": "2025-12-30T05:06:30+0000",
+      "real_caption": "If loving Nutella brownies is wrong, I don't wanna be right 🍫😌\n\nNutella Bento Brownie 🤎\nFreshly baked | Limited quantity",
+      "assigned_cluster": 4,
+      "engagement": {
+        "reach": 1742,
+        "likes": 26,
+        "comments": 1,
+        "shares": 9,
+        "views": 2061,
+        "saves": 1
+      }
+    },
+    {
+      "shortcode": "DV2gZSojLCc",
+      "timestamp_utc": "2026-03-14T04:40:59+0000",
+      "real_caption": "Soft, sugary Bomboloni filled with rich chocolate 🤤🍫\nMade fresh and packed with love.\n\nTag someone who would eat this with you 👇",
+      "assigned_cluster": 1,
+      "engagement": {
+        "reach": 33860,
+        "likes": 212,
+        "comments": 6,
+        "shares": 62,
+        "views": 39591,
+        "saves": 21
+      }
+    },
+    {
+      "shortcode": "DVz8iamjLFM",
+      "timestamp_utc": "2026-03-13T04:49:20+0000",
+      "real_caption": "Fresh Bomboloni in the making 🍩✨\nSoft, fluffy dough resting before turning into the most delicious homemade donuts 🤤\nTaloja people, get ready for fresh Bomboloni!",
+      "assigned_cluster": 1,
+      "engagement": {
+        "reach": 21270,
+        "likes": 147,
+        "comments": 2,
+        "shares": 16,
+        "views": 33563,
+        "saves": 11
+      }
+    },
+    {
+      "shortcode": "DW5lBCWDL8h",
+      "timestamp_utc": "2026-04-09T05:45:32+0000",
+      "real_caption": "Not just popular… it's our BEST SELLER for a reason 🍩🍫\nSoft dough, sugar-coated, filled with rich Nutella 🤤\nTry once & you'll keep coming back 😭",
+      "assigned_cluster": 4,
+      "engagement": {
+        "reach": 595,
+        "likes": 4,
+        "comments": 0,
+        "shares": 4,
+        "saves": 3
+      }
+    },
+    {
+      "shortcode": "DWNq3OpDEZ2",
+      "timestamp_utc": "2026-03-23T04:40:34+0000",
+      "real_caption": "POV: self control left the chat 😭🍫\n\nFreshly made, rich chocolate ganache that hits different every single time.",
+      "assigned_cluster": 4,
+      "engagement": {
+        "reach": 4408,
+        "likes": 60,
+        "comments": 1,
+        "shares": 2,
+        "views": 6660,
+        "saves": 3
+      }
+    },
+    {
+      "shortcode": "DWvI0CWjHb_",
+      "timestamp_utc": "2026-04-05T04:40:25+0000",
+      "real_caption": "You saw this for a reason… now don't ignore your craving 🤤🔥\nFreshly made Bomboloni, soft like clouds & filled with pure happiness 💛\n\n⚡ Limited boxes available today\n\nWarning: One bite & you're addicted 😭🤤",
+      "assigned_cluster": 1,
+      "engagement": {
+        "reach": 6891,
+        "likes": 81,
+        "comments": 3,
+        "shares": 7,
+        "views": 8673,
+        "saves": 8
+      }
+    },
+    {
+      "shortcode": "DWX-NnjDEnx",
+      "timestamp_utc": "2026-03-27T04:40:30+0000",
+      "real_caption": "POV: \"aaj se meetha band\"… and then this happens 😌🍩\nSoft, fluffy, filled Bomboloni that no one can resist 🤤",
+      "assigned_cluster": 1,
+      "engagement": {
+        "reach": 22499,
+        "likes": 181,
+        "comments": 2,
+        "shares": 71,
+        "views": 27587,
+        "saves": 15
+      }
+    },
+    {
+      "shortcode": "DXdfOa5jCbw",
+      "timestamp_utc": "2026-04-23T04:40:16+0000",
+      "real_caption": "Our BEST SELLER Nutella Bomboloni 🍫🤤\nSoft, fluffy, sugar-coated & filled with rich Nutella in every bite 😍✨\n\nThis is the one everyone keeps coming back for… and once you try, you'll know why 😭🔥\nBe careful — one is never enough 👀",
+      "assigned_cluster": 1,
+      "engagement": {
+        "reach": 156991,
+        "likes": 1498,
+        "comments": 12,
+        "shares": 787,
+        "views": 200672,
+        "saves": 138
+      }
+    },
+    {
+      "shortcode": "DXgE1ENDJBD",
+      "timestamp_utc": "2026-04-24T04:40:59+0000",
+      "real_caption": "They'll understand the hint… or they won't 😭👀\nEither way, these soft, fresh, Nutella-loaded bomboloni are going out fast today 🤤\nOnce you try them, there's no going back 💔✨",
+      "assigned_cluster": 1,
+      "engagement": {
+        "reach": 1877,
+        "likes": 22,
+        "comments": 2,
+        "shares": 4,
+        "views": 2202,
+        "saves": 1
+      }
+    },
+    {
+      "shortcode": "DYyeeqsMVb4",
+      "timestamp_utc": "2026-05-26T04:40:56+0000",
+      "real_caption": "🍫✨ Layers so good, one bite is never enough 🤎\nFreshly made chocolate dessert tubs loaded with rich creamy goodness 😍",
+      "assigned_cluster": 4,
+      "engagement": {
+        "reach": 3482,
+        "likes": 24,
+        "comments": 0,
+        "shares": 11,
+        "views": 4677,
+        "saves": 10
+      }
+    },
+    {
+      "shortcode": "DZjbivzs-iY",
+      "timestamp_utc": "2026-06-14T04:56:29+0000",
+      "real_caption": "The kind of video you can almost smell through the screen 🤤🍩\n\nShare this with your donut partner ❤️",
+      "assigned_cluster": 4,
+      "engagement": {
+        "reach": 81660,
+        "likes": 85,
+        "comments": 0,
+        "shares": 14,
+        "views": 107505,
+        "saves": 6
+      }
+    },
+    {
+      "shortcode": "DZurCM6DEVV",
+      "timestamp_utc": "2026-06-18T13:40:39+0000",
+      "real_caption": "Triple chocolate brownie 🤎",
+      "assigned_cluster": 4,
+      "engagement": {
+        "reach": 336,
+        "likes": 3,
+        "comments": 0,
+        "shares": 0,
+        "saves": 2
+      }
+    },
+    {
+      "shortcode": "DbND8DnjEmW",
+      "timestamp_utc": "2026-07-25T05:26:53+0000",
+      "real_caption": "Two hearts, one beautiful cake. ✨❤️\nMade with love, crafted for unforgettable celebrations. Every detail tells a story. 💍",
+      "assigned_cluster": 3,
+      "engagement": {
+        "reach": 240,
+        "likes": 3,
+        "comments": 0,
+        "shares": 0,
+        "saves": 0
+      }
+    },
+    {
+      "shortcode": "DQDzd3viTGu",
+      "timestamp_utc": "2025-10-21T05:40:19+0000",
+      "real_caption": "He said he's charging extra for premium handling 💸🫡\n\nHe's just 13….but already my biggest supporter 🥺📦❤️",
+      "assigned_cluster": 0,
+      "engagement": {
+        "reach": 6851,
+        "likes": 59,
+        "comments": 12,
+        "shares": 3,
+        "views": 8708,
+        "saves": 1
+      }
+    },
+    {
+      "shortcode": "DR8yd4zjXsP",
+      "timestamp_utc": "2025-12-07T05:10:19+0000",
+      "real_caption": "Every single order still makes my heart do a little happy dance 🥹🎀\nRunning a small business means nothing goes unnoticed - every message, every order, every kind word.\nForever grateful 🤍✨",
+      "assigned_cluster": 3,
+      "engagement": {
+        "reach": 1808,
+        "likes": 27,
+        "comments": 5,
+        "shares": 2,
+        "views": 2320,
+        "saves": 0
+      }
+    },
+    {
+      "shortcode": "DWakmY6jCiL",
+      "timestamp_utc": "2026-03-28T04:50:03+0000",
+      "real_caption": "Soft, fluffy & filled with pure happiness 🤤\nLimited stock for today 🚨",
+      "assigned_cluster": 3,
+      "engagement": {
+        "reach": 18210,
+        "likes": 120,
+        "comments": 2,
+        "shares": 5,
+        "views": 24590,
+        "saves": 6
+      }
+    },
+    {
+      "shortcode": "DZSni9CDH6t",
+      "timestamp_utc": "2026-06-07T16:11:26+0000",
+      "real_caption": "POV: You swiped for one cookie photo and ended up craving a whole box 🍪🤭\n\nKeep swiping 👉",
+      "assigned_cluster": 4,
+      "engagement": {
+        "reach": 329,
+        "likes": 7,
+        "comments": 0,
+        "shares": 0,
+        "saves": 2
+      }
+    }
+  ]
+}

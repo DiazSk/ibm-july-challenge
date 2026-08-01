@@ -23,7 +23,7 @@ from api.dependencies import (
     get_jarvis_agent,
     get_why_engine,
 )
-from api.routers.discover import _DEMO_ENGAGEMENT
+from src.data.insights import resolve_cluster_engagement
 from src.generation.jarvis_agent import (
     append_message,
     clear_session,
@@ -197,7 +197,9 @@ def _load_brand_data() -> tuple[dict, dict]:
     try:
         profile = json.loads(_PROFILE_PATH.read_text(encoding="utf-8"))
         clusters = json.loads(_CLUSTERS_PATH.read_text(encoding="utf-8"))
-        engagement = clusters.get("cluster_engagement") or _DEMO_ENGAGEMENT
+        # May be empty — callers must handle an account with no metrics rather
+        # than receiving stand-in figures.
+        engagement = resolve_cluster_engagement(clusters, profile)
         return profile, engagement
     except Exception as exc:
         raise HTTPException(status_code=503, detail=f"Brand profile not found: {exc}")

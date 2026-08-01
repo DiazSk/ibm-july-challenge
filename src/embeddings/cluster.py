@@ -91,11 +91,18 @@ def embed(texts: list[str], device: str = DEVICE) -> np.ndarray:
 
 # ── Clustering ───────────────────────────────────────────────────────────────
 
-def cluster(embeddings: np.ndarray, n_clusters: int = N_CLUSTERS) -> np.ndarray:
+def cluster(
+    embeddings: np.ndarray, n_clusters: int = N_CLUSTERS
+) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Returns (labels, centroids). Centroids are kept because scoring a *new*
+    caption against a pillar needs the pillar's centre — recovering it later
+    would mean re-fitting K-Means and hoping for the same partition.
+    """
     print(f"  Running K-Means (k={n_clusters})…")
     km = KMeans(n_clusters=n_clusters, random_state=RANDOM_STATE, n_init="auto")
     km.fit(embeddings)
-    return km.labels_
+    return km.labels_, km.cluster_centers_
 
 
 # ── Main pipeline ─────────────────────────────────────────────────────────────
@@ -113,7 +120,9 @@ def run_clustering(
     {
       "n_clusters": 5,
       "cluster_map": { "<shortcode>": <cluster_id>, ... },
-      "clusters": { "0": [{shortcode, timestamp_utc, marketing_hook}, ...], ... }
+      "clusters": { "0": [{shortcode, timestamp_utc, marketing_hook}, ...], ... },
+      "centroids": [[float, ...], ...],   # row i = centre of cluster i
+      "embed_model": "all-MiniLM-L6-v2"
     }
     """
     print("── Step 1: Loading cleaned posts")
@@ -126,7 +135,7 @@ def run_clustering(
     embeddings = embed(hooks, device)
 
     print("── Step 3: Clustering")
-    labels     = cluster(embeddings, n_clusters)
+    labels, centroids = cluster(embeddings, n_clusters)
 
     # ── Build output structure ─────────────────────────────────────────────
     cluster_map : dict[str, int]        = {}
@@ -164,6 +173,10 @@ def run_clustering(
         "n_clusters" : n_clusters,
         "cluster_map": cluster_map,
         "clusters"   : clusters,
+        # Row i is the centre of cluster i, in the same L2-normalised space as
+        # embed(), so cosine to a pillar is a plain dot product.
+        "centroids"  : centroids.tolist(),
+        "embed_model": EMBED_MODEL,
     }
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(json.dumps(output, indent=2, ensure_ascii=False), encoding="utf-8")

@@ -108,6 +108,24 @@ def aggregate_cluster_engagement(clusters: dict, brand_profile: dict) -> dict:
     return out
 
 
+def resolve_cluster_engagement(clusters: dict, brand_profile: dict) -> dict:
+    """
+    The single honest source of per-cluster engagement.
+
+    Prefers the persisted `cluster_engagement` block; if it is missing, derives
+    the same structure from whatever posts actually carry metrics. Returns an
+    empty dict when the account has no engagement data at all.
+
+    An empty dict is the correct answer in that case. Callers must render an
+    empty state rather than substituting stand-in figures — surfacing invented
+    numbers as measured ones is the failure mode this function exists to close.
+    """
+    persisted = clusters.get("cluster_engagement")
+    if persisted:
+        return persisted
+    return aggregate_cluster_engagement(clusters, brand_profile)
+
+
 # ── Dashboard overview (the four widgets) ────────────────────────────────────
 
 def compute_overview(clusters: dict, brand_profile: dict) -> dict:

@@ -1,0 +1,174 @@
+{
+  "brand_name": "HotCakes Bakes",
+  "ig_handle": "@hot_cakesbakes",
+  "brand_bio": "Homemade cakes & desserts. Based in Taloja, Navi Mumbai. Baked with love, served with joy.",
+  "timezone": "UTC",
+  "model_used": "granite3.1-dense:8b",
+  "inference_backend": "ollama-local",
+  "n_clusters": 5,
+  "cluster_profiles": [
+    {
+      "cluster_id": 0,
+      "post_count": 4,
+      "profile": {
+        "content_pillar": "Bento Cake Creations",
+        "tone_descriptors": [
+          "affectionate",
+          "playful",
+          "romantic"
+        ],
+        "vocabulary_patterns": {
+          "recurring_words": [
+            "love",
+            "bento",
+            "cake",
+            "extra",
+            "special"
+          ],
+          "signature_phrases": [
+            "Because it's never about the price… it's about the effort",
+            "Make your special moments sweeter with our custom bento cakes"
+          ],
+          "emoji_style": "Emojis are used to convey affection and emphasize the personal touch in each cake."
+        },
+        "avoided_terms": [
+          "generic desserts",
+          "standard sizes"
+        ],
+        "structural_signature": "These posts typically present custom bento cakes as a thoughtful, personalized gift option for various occasions.",
+        "representative_post": "Because it's never about the price… it's about the effort ❤️\nMake your special moments sweeter with our custom bento cakes 🫶"
+      }
+    },
+    {
+      "cluster_id": 1,
+      "post_count": 44,
+      "profile": {
+        "content_pillar": "Bomboloni Mastery",
+        "tone_descriptors": [
+          "playful",
+          "informative",
+          "confident"
+        ],
+        "vocabulary_patterns": {
+          "recurring_words": [
+            "Bomboloni",
+            "perfect",
+            "soft",
+            "fluffy",
+            "gold",
+            "love",
+            "care"
+          ],
+          "signature_phrases": [
+            "Always weight your ingredients using a scale for accurate measurements.",
+            "Keep the oil temperature between 160–170°C."
+          ],
+          "emoji_style": "The brand frequently uses heart and donut emojis to express affection and emphasize their dessert offerings."
+        },
+        "avoided_terms": [
+          "gluten-free",
+          "vegan",
+          "healthy"
+        ],
+        "structural_signature": "The posts typically follow a structured format, starting with an engaging statement or question related to Bomboloni, followed by tips or details about the dessert's preparation and features.",
+        "representative_post": "Freshly prepared Bomboloni made with love & care 🍩🤍 From small orders to bulk — growing step by step 🤍 Thank you for trusting our desserts 💛 We provide fresh & affordable desserts for bulk, parties & stall supply 💰"
+      }
+    },
+    {
+      "cluster_id": 2,
+      "post_count": 51,
+      "profile": {
+        "content_pillar": "Special Event Treats",
+        "tone_descriptors": [
+          "passionate",
+          "humble",
+          "playful"
+        ],
+        "vocabulary_patterns": {
+          "recurring_words": [
+            "cake",
+            "custom",
+            "love",
+            "handcrafted",
+            "special"
+          ],
+          "signature_phrases": [
+            "Welcoming the newest little princess with a cake made from scratch!",
+            "Creating the perfect Chocolate Mousse Cake starts with a flawless crumb coat."
+          ],
+          "emoji_style": "Emojis are used to express joy, excitement, and pride in the baking process and finished products."
+        },
+        "avoided_terms": [
+          "mass-produced",
+          "preservatives"
+        ],
+        "structural_signature": "Posts typically showcase custom cakes with detailed descriptions of flavors, techniques, and special occasions they're suitable for.",
+        "representative_post": "✨ Welcoming the newest little princess with a cake made from scratch! 🎀💕\nEvery layer, every swirl of rich chocolate and cream and every tiny detail was handcrafted with love to make this special moment even sweeter. Watching a simple cake transform into a beautiful Welcome Baby Girl theme cake is what makes baking so rewarding. 💖\nPlanning a baby shower or welcoming your little bundle of joy? Let us create a custom cake that's as special as your celebration. 🎂"
+      }
+    },
+    {
+      "cluster_id": 3,
+      "post_count": 29,
+      "profile": {
+        "content_pillar": "Fudgy Brownies & Custom Orders",
+        "tone_descriptors": [
+          "playful",
+          "affectionate",
+          "personal"
+        ],
+        "vocabulary_patterns": {
+          "recurring_words": [
+            "🍫",
+            "love",
+            "fudgy",
+            "made with love"
+          ],
+          "signature_phrases": [
+            "That golden turn never gets old",
+            "12 hours of baking, frosting & ganache pouring… and we still don't compromise on quality"
+          ],
+          "emoji_style": "Emojis are used to emphasize the chocolatey theme and convey affection."
+        },
+        "avoided_terms": [
+          "light",
+          "dieting",
+          "generic cake flavors"
+        ],
+        "structural_signature": "Posts typically showcase brownies or bomboloni, with a focus on their richness, freshness, and the love put into making them. Some posts also highlight custom order options.",
+        "representative_post": "Warning ⚠️ These brownies make people fall in love 🤎"
+      }
+    },
+    {
+      "cluster_id": 4,
+      "post_count": 40,
+      "profile": {
+        "content_pillar": "Bulk Orders & Wholesale",
+        "tone_descriptors": [
+          "warm",
+          "inviting",
+          "confident"
+        ],
+        "vocabulary_patterns": {
+          "recurring_words": [
+            "freshly made",
+            "premium ingredients",
+            "carefully crafted",
+            "love"
+          ],
+          "signature_phrases": [
+            "POV: A customer tried our...",
+            "Real bakers know..."
+          ],
+          "emoji_style": "Emojis are used to express joy, love, and excitement about the desserts."
+        },
+        "avoided_terms": [
+          "gluten",
+          "vegan",
+          "healthy"
+        ],
+        "structural_signature": "Posts typically showcase a specific dessert item or type of order, accompanied by a personal anecdote or behind-the-scenes insight.",
+        "representative_post": "POV: A customer tried our mini pancakes once… and came back with a 120-piece order 🤭🥞✨\nNothing makes us happier than repeat customers and bulk orders! Freshly made, chocolate-loaded, and perfect for every celebration. ❤️\n📦 Bulk orders available"
+      }
+    }
+  ]
+}

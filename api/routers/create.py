@@ -353,12 +353,18 @@ def _build_persona_groundings(clusters: dict) -> dict[str, str]:
     Grounds each simulator persona in one of the creator's own real content
     clusters, picked by engagement_rate/avg_views — not a generic archetype.
     """
-    from api.routers.discover import _DEMO_ENGAGEMENT
+    from src.data.insights import resolve_cluster_engagement
 
-    engagement = clusters.get("cluster_engagement") or _DEMO_ENGAGEMENT
+    profile = json.loads(_PROFILE_PATH.read_text(encoding="utf-8"))
+    engagement = resolve_cluster_engagement(clusters, profile)
     entries = list(engagement.values())
     if not entries:
-        generic = "This persona represents a typical Instagram follower for this brand."
+        # No real metrics — say so rather than grounding personas in stand-in
+        # numbers and presenting the result as data-driven.
+        generic = (
+            "No engagement data for this account yet, so this persona is a "
+            "generic Instagram follower rather than one derived from real posts."
+        )
         return {"devotee": generic, "skeptic": generic, "casual_scroller": generic}
 
     devotee_cluster = max(entries, key=lambda e: e.get("engagement_rate", 0))
