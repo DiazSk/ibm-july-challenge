@@ -13,11 +13,19 @@ than lru_cache alone (which evaporates on uvicorn --reload).
 """
 
 import json
+import re
 from datetime import datetime, timezone
 from functools import lru_cache
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
+
+# Running this file directly (for the self-check at the bottom) puts api/routers
+# on sys.path instead of the repo root, so `import api.*` would fail. Put the
+# repo root back on the path first.
+if __package__ in (None, ""):  # pragma: no cover — only when run as a script
+    import sys
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from api.dependencies import get_why_engine
 from src.data.diagnose import (
@@ -59,8 +67,30 @@ def posts() -> dict:
     return _posts()
 
 
+# Instagram shortcodes are base64url. Anything else is rejected before it can
+# reach the filesystem: `shortcode` lands in a path via f-string, Starlette's
+# default path convertor is [^/]+ (so it permits backslashes), and on Windows a
+# backslash IS a separator — `..\..\data\ig_connection` would otherwise read the
+# stored OAuth token straight off disk.
+#
+# This validator is the trust boundary for this module. Every helper below that
+# builds a path from a shortcode assumes it has already been through here.
+_SHORTCODE_RE = re.compile(r"[A-Za-z0-9_-]{5,32}")
+
+
+def _safe_shortcode(shortcode: str) -> str:
+    if not _SHORTCODE_RE.fullmatch(shortcode):
+        raise HTTPException(status_code=400, detail="Invalid shortcode.")
+    return shortcode
+
+
 def _cache_path(shortcode: str) -> Path:
-    return DIAGNOSES_DIR / f"{shortcode}.json"
+    p = (DIAGNOSES_DIR / f"{_safe_shortcode(shortcode)}.json").resolve()
+    # Belt and braces: even if the pattern above ever loosens, refuse to step
+    # outside the cache directory.
+    if not p.is_relative_to(DIAGNOSES_DIR.resolve()):
+        raise HTTPException(status_code=400, detail="Invalid shortcode.")
+    return p
 
 
 def _read_cached(shortcode: str) -> dict | None:
@@ -74,7 +104,7 @@ def _read_cached(shortcode: str) -> dict | None:
 
 
 def _scraped_record(shortcode: str) -> dict | None:
-    p = SCRAPED_DIR / f"ig_text_{shortcode}.json"
+    p = SCRAPED_DIR / f"ig_text_{_safe_shortcode(shortcode)}.json"
     if not p.exists():
         return None
     try:
@@ -190,3 +220,43 @@ def post_diagnosis(shortcode: str, force: bool = False) -> dict:
         pass  # caching is best-effort; the diagnosis still returns
 
     return payload
+
+
+def _demo() -> None:
+    """Offline self-check for the shortcode trust boundary (python api/routers/diagnose.py)."""
+    ok  = ["DXip7qqDPS6", "abc_1", "A" * 32]
+    bad = [
+        "..\\..\\data\\ig_connection",  # windows traversal — backslash is a separator
+        "../../data/ig_connection",     # posix traversal
+        "..",
+        "",
+        "a" * 33,                       # too long
+        "abc",                          # too short
+        "has space",
+        "dot.dot",                      # '.' would keep traversal alive
+    ]
+
+    for sc in ok:
+        assert _safe_shortcode(sc) == sc, f"should accept {sc!r}"
+
+    for sc in bad:
+        try:
+            _safe_shortcode(sc)
+        except HTTPException as e:
+            assert e.status_code == 400, f"{sc!r} should be a 400"
+        else:
+            raise AssertionError(f"traversal/invalid input accepted: {sc!r}")
+
+    # The point of the whole guard: the stored OAuth token must be unreachable.
+    try:
+        _cache_path("..\\..\\data\\ig_connection")
+    except HTTPException:
+        pass
+    else:
+        raise AssertionError("cache path escaped DIAGNOSES_DIR")
+
+    print("diagnose shortcode self-check passed")
+
+
+if __name__ == "__main__":
+    _demo()

@@ -407,7 +407,15 @@ If this succeeds but the browser still shows errors, open browser DevTools → N
 
 **Cause:** Devtunnels add their own proxy hop with a shorter idle/response timeout than a direct localhost connection. A Granite call that legitimately takes 60-90+ seconds (see the Performance section on concurrent-load slowness) can get cut off by the tunnel well before the backend actually errors — the backend is still working, the tunnel just gave up waiting.
 
-**Fix:** For any development or debugging work, verify directly against `http://localhost:8000` and `http://localhost:3000` rather than through the tunnel origin. `api/main.py`'s CORS allowlist does include a `*.devtunnels.ms` regex so the tunnel origin isn't blocked outright — but a 504-style failure through the tunnel on a slow call doesn't mean the feature is broken, only that the tunnel timed out. Reproduce against localhost before concluding there's a real bug.
+**Fix:** For any development or debugging work, verify directly against `http://localhost:8000` and `http://localhost:3000` rather than through the tunnel origin. A 504-style failure through the tunnel on a slow call doesn't mean the feature is broken, only that the tunnel timed out. Reproduce against localhost before concluding there's a real bug.
+
+**Note on CORS:** the tunnel origin is no longer allowed by default. `api/main.py` used to carry a `*.devtunnels.ms` regex, which trusted every dev tunnel on the internet against an API that has no authentication. If you genuinely need a tunnelled demo, set the exact origin and restart the backend:
+
+```
+ALLOWED_ORIGINS=https://abc123-3000.uks1.devtunnels.ms
+```
+
+Clear it again when the demo is over. Leaving a tunnel up exposes every route, including the Instagram-connected ones, to anyone who has the URL.
 
 ---
 

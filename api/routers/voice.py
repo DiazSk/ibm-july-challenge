@@ -16,6 +16,11 @@ from api.dependencies import get_voice_transcriber, get_voice_synthesizer
 
 router = APIRouter()
 
+# Whisper runs synchronously on a worker thread, so an unbounded upload holds a
+# worker for as long as it takes to decode. A push-to-talk clip is a few hundred
+# KB; 10 MB is already far more than any legitimate recording.
+_MAX_AUDIO_BYTES = 10 * 1024 * 1024
+
 
 @router.post("/transcribe")
 def transcribe_audio(audio: UploadFile = File(...)) -> dict:
@@ -30,7 +35,14 @@ def transcribe_audio(audio: UploadFile = File(...)) -> dict:
     Returns: {"transcript": "..."}
     """
     try:
-        audio_bytes = audio.file.read()
+        # Read one byte past the cap so an oversized upload is rejected without
+        # pulling the whole thing into memory first.
+        audio_bytes = audio.file.read(_MAX_AUDIO_BYTES + 1)
+        if len(audio_bytes) > _MAX_AUDIO_BYTES:
+            raise HTTPException(
+                status_code=413,
+                detail=f"Audio too large (limit {_MAX_AUDIO_BYTES // (1024 * 1024)} MB).",
+            )
         if len(audio_bytes) < 500:
             return {"transcript": ""}
 
@@ -46,6 +58,8 @@ def transcribe_audio(audio: UploadFile = File(...)) -> dict:
         transcript = get_voice_transcriber().transcribe(audio_bytes, suffix=suffix)
         return {"transcript": transcript}
 
+    except HTTPException:
+        raise  # 413 and friends are deliberate — don't relabel them as 500
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
 

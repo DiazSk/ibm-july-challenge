@@ -63,7 +63,9 @@ All inference is local. No content leaves the machine during normal operation; I
 
 ### `api/main.py`
 
-Initializes the FastAPI app (`title="StyleSync API"`, `version="2.0.0"`). Sets up CORS for `localhost:3000` / `127.0.0.1:3000`, plus an `allow_origin_regex` for VS Code Dev Tunnels (`https://*.devtunnels.ms`) since the browser preview during development is often served through a tunnel rather than localhost directly.
+Initializes the FastAPI app (`title="StyleSync API"`, `version="2.0.0"`). CORS allows `localhost:3000` / `127.0.0.1:3000` only, plus any exact origins listed in the `ALLOWED_ORIGINS` environment variable (comma-separated).
+
+This previously carried an `allow_origin_regex` of `https://*.devtunnels.ms` for tunnelled development. That was removed: `devtunnels.ms` is a shared domain anyone can get a subdomain on, so the regex trusted every dev tunnel on the internet — and with `allow_credentials=True` and no authentication on any route, that was a standing hole. Tunnelled demos now set the one exact origin in `ALLOWED_ORIGINS` and clear it afterwards.
 
 A `lifespan` context manager starts `_instagram_poll_loop()` as a background `asyncio` task on startup and cancels it on shutdown. The loop sleeps `IG_POLL_INTERVAL_SECS` (default 3 hours), then — if an Instagram account is connected (`load_connection()` in `src/scrapers/instagram_api.py` returns truthy) — calls `connect.py`'s `run_sync_and_refresh()` in a thread-pool executor to pull new posts and refresh the brand profile without user action. A failed poll is logged to stderr and never kills the loop.
 

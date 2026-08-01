@@ -21,6 +21,21 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from api.routers import brand, create, analyze, discover, onboard, workbench, agent, voice, repurpose, weekly_brief, triage, orchestrate, agent_run, recovery, playbook, connect, insights, strategy, inbox, diagnose, today
 
+_LOCAL_ORIGINS = ["http://localhost:3000", "http://127.0.0.1:3000"]
+
+
+def _allowed_origins() -> list[str]:
+    """
+    Localhost, plus anything explicitly listed in ALLOWED_ORIGINS.
+
+        ALLOWED_ORIGINS=https://abc123-3000.uks1.devtunnels.ms
+
+    Exposing this API means exposing an unauthenticated surface, so widening it
+    is a deliberate per-demo act rather than a standing wildcard.
+    """
+    extra = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o.strip()]
+    return [*_LOCAL_ORIGINS, *extra]
+
 
 async def _instagram_poll_loop() -> None:
     """
@@ -61,11 +76,14 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins       = ["http://localhost:3000", "http://127.0.0.1:3000"],
-    # VS Code port-forwarding (Dev Tunnels) serves the app from a random
-    # "<id>-3000.<region>.devtunnels.ms" origin each session — match the
-    # domain instead of hardcoding a URL that changes every time.
-    allow_origin_regex  = r"https://.*\.devtunnels\.ms",
+    # Localhost by default. A tunnelled demo (VS Code Dev Tunnels, ngrok) must
+    # opt in explicitly via ALLOWED_ORIGINS, comma-separated.
+    #
+    # This used to be `allow_origin_regex = r"https://.*\.devtunnels\.ms"`, which
+    # trusted EVERY subdomain of a shared Microsoft domain anyone can register on.
+    # Combined with allow_credentials and no auth on any route, that let any page
+    # on any dev tunnel call this API with credentials.
+    allow_origins       = _allowed_origins(),
     allow_credentials   = True,
     allow_methods       = ["*"],
     allow_headers       = ["*"],
