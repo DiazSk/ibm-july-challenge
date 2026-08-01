@@ -50,3 +50,31 @@ brag-output/
 
 # Test artifacts
 *.wav
+
+# --- submission cleanup ---
+# Promo clips from /brag:brag. Same artifact as brag-output/, one dir per page.
+brag-output*/
+
+# Banner experiments. Keep only the two PNGs that are actually referenced:
+# score-proof (already tracked) and one-to-eight (used by README.md line 1).
+docs/banner/*
+!docs/banner/score-proof-1920x600.png
+!docs/banner/one-to-eight-1920x600.png
+
+# Pitch deck: ship the PDF, keep the HTML source and 13 PNG exports local.
+docs/pitch-deck/*
+!docs/pitch-deck/StyleSync-Pitch-Deck.pdf
+
+# Working notes behind the submission, not part of it.
+docs/brag-prompts.md
+docs/demo-cut-list.md
+docs/demo-script.md
+
+# Superseded by StyleSync-Pitch-3min.mp4.
+docs/StyleSync-3min-Demo.mp4
+
+# HyperFrames projects: 113 MB of clips, renders and snapshots. The finished
+# video is committed under docs/ and hosted on YouTube and Drive.
+# NOTE: the blanket `*.wav` rule above would also strip every narration file
+# here, so this tree cannot be committed as working source without a negation.
+videos/
