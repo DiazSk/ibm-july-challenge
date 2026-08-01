@@ -44,6 +44,8 @@ export interface SimilarPost {
 }
 
 export interface MomentAnalysis {
+  product?: string;                // absent on older responses
+  occasion?: string;               // absent on older responses
   emotional_core: string;
   business_signal: string;
   best_cluster_id: number;

@@ -6,7 +6,7 @@ import { analyzeMoment, getDirections } from "@/lib/api";
 import type { MomentAnalysis, Direction } from "@/lib/types";
 
 interface Props {
-  onApply: (desiredFeel: string, clusterId: number) => void;
+  onApply: (desiredFeel: string, clusterId: number, product: string, occasion: string) => void;
 }
 
 type Step = "idle" | "analyzing" | "directions" | "generating-directions" | "applied";
@@ -49,7 +49,7 @@ export default function BlankPageSolver({ onApply }: Props) {
   function handleApply() {
     if (!analysis || !directions[chosen]) return;
     const dir = directions[chosen];
-    onApply(`${dir.angle} ${dir.tone_note}`, analysis.best_cluster_id);
+    onApply(`${dir.angle} ${dir.tone_note}`, analysis.best_cluster_id, analysis.product ?? "", analysis.occasion ?? "");
     setStep("applied");
     setTimeout(() => setOpen(false), 800);
   }
@@ -155,6 +155,36 @@ export default function BlankPageSolver({ onApply }: Props) {
                   className="mt-4 p-3 rounded-lg"
                   style={{ background: "var(--color-ql-gap)" }}
                 >
+                  {(analysis.product || analysis.occasion) && (
+                    <div className="grid grid-cols-2 gap-3 mb-3 pb-3 border-b" style={{ borderColor: "var(--color-ql-border)" }}>
+                      {analysis.product && (
+                        <div>
+                          <p
+                            className="text-[10px] uppercase tracking-[0.1em] font-medium mb-1"
+                            style={{ color: "var(--color-ql-muted)" }}
+                          >
+                            Product
+                          </p>
+                          <p className="text-xs" style={{ color: "var(--color-ql-dark)" }}>
+                            {analysis.product}
+                          </p>
+                        </div>
+                      )}
+                      {analysis.occasion && (
+                        <div>
+                          <p
+                            className="text-[10px] uppercase tracking-[0.1em] font-medium mb-1"
+                            style={{ color: "var(--color-ql-muted)" }}
+                          >
+                            Occasion
+                          </p>
+                          <p className="text-xs" style={{ color: "var(--color-ql-dark)" }}>
+                            {analysis.occasion}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <p

@@ -184,9 +184,9 @@ class DriftCompareRequest(BaseModel):
 def analyze_moment(req: AnalyzeMomentRequest) -> dict:
     """
     Granite Call #6 — MomentAnalyzer.
-    Extracts emotional_core, business_signal, best_cluster_id, cluster_reason,
-    plus `similar_posts` — past posts covering the same ground, each with how it
-    actually performed. Additive: existing consumers ignore the new key.
+    Extracts product, occasion, emotional_core, business_signal, best_cluster_id,
+    cluster_reason, plus `similar_posts` — past posts covering the same ground,
+    each with how it actually performed. Additive: existing consumers ignore new keys.
     """
     if not req.moment_text.strip():
         raise HTTPException(status_code=422, detail="moment_text is required")

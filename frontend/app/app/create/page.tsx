@@ -53,9 +53,11 @@ export default function CreatePage() {
     setDriftResult(null);
   }
 
-  function handleBlankPageApply(feel: string, cId: number) {
+  function handleBlankPageApply(feel: string, cId: number, momentProduct: string, momentOccasion: string) {
     setDesiredFeel(feel);
     setClusterId(cId);
+    if (momentProduct.trim()) setProduct(momentProduct);
+    if (momentOccasion.trim()) setOccasion(momentOccasion);
   }
 
   async function handleGenerateCaptions() {

@@ -6,7 +6,8 @@ distinct creative directions, pre-wired into CaptionGenerator.
 
 Step 1 — MomentAnalyzer (Granite #6):
   Takes a free-text description of a real moment.
-  Extracts emotional_core, business_signal, and maps to the best cluster.
+  Extracts product, occasion, emotional_core, business_signal, and maps to
+  the best cluster.
 
 Step 2 — DirectionGenerator (Granite #7):
   Takes the moment analysis from Step 1.
@@ -54,13 +55,19 @@ Available content clusters (each is a creative territory the brand has establish
 Your job: find the creative opportunity hidden in this moment.
 
 Extract:
-  1. emotional_core — what the creator is actually feeling right now (1 short phrase)
-  2. business_signal — what this moment means for the business (1 short phrase)
-  3. best_cluster_id — which cluster (0-4) best matches this moment's energy
-  4. cluster_reason — why that cluster fits this moment (1 sentence)
+  1. product — the specific product/item mentioned, if any (e.g. "Pistachio Rose Bomboloni").
+     Empty string if the moment doesn't name one.
+  2. occasion — the specific occasion/context mentioned, if any (e.g. "birthday party",
+     "Friday evening drop"). Empty string if the moment doesn't name one.
+  3. emotional_core — what the creator is actually feeling right now (1 short phrase)
+  4. business_signal — what this moment means for the business (1 short phrase)
+  5. best_cluster_id — which cluster (0-4) best matches this moment's energy
+  6. cluster_reason — why that cluster fits this moment (1 sentence)
 
 Return ONLY valid JSON — no preamble, no markdown fences:
 {{
+  "product": "<specific product mentioned, or empty string>",
+  "occasion": "<specific occasion mentioned, or empty string>",
   "emotional_core": "<1 short phrase>",
   "business_signal": "<1 short phrase>",
   "best_cluster_id": <integer 0-4>,
@@ -178,8 +185,8 @@ class MomentAnalyzer:
 
     def analyze(self, moment_text: str) -> dict:
         """
-        Returns {emotional_core, business_signal, best_cluster_id, cluster_reason}.
-        best_cluster_id is always an int.
+        Returns {product, occasion, emotional_core, business_signal,
+        best_cluster_id, cluster_reason}. best_cluster_id is always an int.
         """
         raw = self._chain.invoke({
             "brand_name"  : self._profile["brand_name"],
@@ -189,9 +196,13 @@ class MomentAnalyzer:
         try:
             result = _parse_json_obj(raw)
             result["best_cluster_id"] = int(result.get("best_cluster_id", 0))
+            result.setdefault("product", "")
+            result.setdefault("occasion", "")
             return result
         except (json.JSONDecodeError, ValueError, KeyError):
             return {
+                "product"         : "",
+                "occasion"        : "",
                 "emotional_core"  : "—",
                 "business_signal" : "—",
                 "best_cluster_id" : 0,
@@ -252,16 +263,20 @@ if __name__ == "__main__":
     generator = DirectionGenerator()
 
     moment = (
-        "I just got a DM from a cafe owner asking for a bulk weekly order — "
-        "my first B2B client. I don't even know how to feel about it."
+        "It's Friday evening, we just pulled our last batch of Pistachio Rose "
+        "Bomboloni for a birthday party."
     )
 
     print("Analyzing moment…")
     analysis = analyzer.analyze(moment)
+    print(f"  Product         : {analysis['product']}")
+    print(f"  Occasion        : {analysis['occasion']}")
     print(f"  Emotional core  : {analysis['emotional_core']}")
     print(f"  Business signal : {analysis['business_signal']}")
     print(f"  Best cluster    : C{analysis['best_cluster_id']}")
     print(f"  Reason          : {analysis['cluster_reason']}")
+    assert analysis["product"], "expected a product to be extracted from this moment"
+    assert analysis["occasion"], "expected an occasion to be extracted from this moment"
 
     print("\nGenerating creative directions…")
     directions = generator.generate(analysis, moment)
