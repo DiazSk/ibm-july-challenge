@@ -18,6 +18,15 @@ import instaloader
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 _SCRAPED_DIR  = _PROJECT_ROOT / "scraped_dataset"
 
+# instaloader's typename -> the same media_type vocabulary the Graph API path
+# (instagram_api.py) writes, so src/data/diagnose.py's post_type_from_media()
+# maps both sources identically.
+_TYPENAME_TO_MEDIA_TYPE = {
+    "GraphImage"  : "IMAGE",
+    "GraphVideo"  : "VIDEO",
+    "GraphSidecar": "CAROUSEL_ALBUM",
+}
+
 
 def scrape_profile(username: str, max_posts: int = 200) -> int:
     """
@@ -99,6 +108,7 @@ def scrape_profile(username: str, max_posts: int = 200) -> int:
                     "hashtags"          : re.findall(r"#(\w+)", caption),
                     "mentions"          : re.findall(r"@(\w+)", caption),
                     "accessibility_text": post.accessibility_caption or "",
+                    "media_type"        : _TYPENAME_TO_MEDIA_TYPE.get(post.typename, ""),
                 },
             }
 
@@ -126,3 +136,16 @@ def scrape_profile(username: str, max_posts: int = 200) -> int:
         )
 
     return saved
+
+
+def _demo() -> None:
+    """Offline self-check for the typename -> media_type mapping (python src/scrapers/instaloader_scraper.py)."""
+    assert _TYPENAME_TO_MEDIA_TYPE["GraphImage"] == "IMAGE"
+    assert _TYPENAME_TO_MEDIA_TYPE["GraphVideo"] == "VIDEO"
+    assert _TYPENAME_TO_MEDIA_TYPE["GraphSidecar"] == "CAROUSEL_ALBUM"
+    assert _TYPENAME_TO_MEDIA_TYPE.get("SomethingNew", "") == ""
+    print("instaloader_scraper self-check passed")
+
+
+if __name__ == "__main__":
+    _demo()
