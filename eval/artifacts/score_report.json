@@ -1,0 +1,188 @@
+{
+  "n_items": 40,
+  "discriminator_fit_auc": 1.0,
+  "centroid_proximity": {
+    "real": {
+      "mean": 0.63,
+      "median": 0.63
+    },
+    "stylesync": {
+      "mean": 0.68,
+      "median": 0.7
+    },
+    "baseline": {
+      "mean": 0.64,
+      "median": 0.65
+    }
+  },
+  "authenticity_score": {
+    "real": {
+      "mean": 0.71,
+      "median": 0.75
+    },
+    "stylesync": {
+      "mean": 0.47,
+      "median": 0.46
+    },
+    "baseline": {
+      "mean": 0.25,
+      "median": 0.26
+    }
+  },
+  "held_out_auc_real_vs": {
+    "stylesync": 0.9087,
+    "baseline": 0.9987
+  },
+  "headline_paired_gap": {
+    "mean": 0.2241,
+    "ci95": [
+      0.1901,
+      0.2611
+    ],
+    "excludes_zero": true
+  },
+  "legacy_drift_test": {
+    "real": {
+      "mean": 10.25,
+      "median": 10.0
+    },
+    "stylesync": {
+      "mean": 23.75,
+      "median": 25.0
+    },
+    "baseline": {
+      "mean": 5.5,
+      "median": 0.0
+    }
+  },
+  "robustness": {
+    "raw": {
+      "mean_chars": {
+        "real": 168.7,
+        "stylesync": 363.0,
+        "baseline": 203.8
+      },
+      "auc_real_vs_stylesync": 0.9087,
+      "auc_real_vs_baseline": 0.9987,
+      "paired_gap": 0.2241,
+      "ci95": [
+        0.1901,
+        0.2611
+      ],
+      "excludes_zero": true
+    },
+    "no_hashtags": {
+      "mean_chars": {
+        "real": 168.1,
+        "stylesync": 319.3,
+        "baseline": 167.4
+      },
+      "auc_real_vs_stylesync": 0.8862,
+      "auc_real_vs_baseline": 0.9975,
+      "paired_gap": 0.2552,
+      "ci95": [
+        0.2149,
+        0.2957
+      ],
+      "excludes_zero": true
+    },
+    "no_hashtags_25w": {
+      "mean_chars": {
+        "real": 117.4,
+        "stylesync": 142.6,
+        "baseline": 135.1
+      },
+      "auc_real_vs_stylesync": 0.9144,
+      "auc_real_vs_baseline": 0.995,
+      "paired_gap": 0.1961,
+      "ci95": [
+        0.1596,
+        0.2343
+      ],
+      "excludes_zero": true
+    },
+    "no_hashtags_15w": {
+      "mean_chars": {
+        "real": 79.5,
+        "stylesync": 83.9,
+        "baseline": 86.0
+      },
+      "auc_real_vs_stylesync": 0.8744,
+      "auc_real_vs_baseline": 0.9944,
+      "paired_gap": 0.2277,
+      "ci95": [
+        0.1796,
+        0.2779
+      ],
+      "excludes_zero": true
+    }
+  },
+  "surface_features": {
+    "real": {
+      "chars": {
+        "mean": 168.68,
+        "median": 158.5
+      },
+      "words": {
+        "mean": 28.95,
+        "median": 26.5
+      },
+      "emoji": {
+        "mean": 3.58,
+        "median": 3.5
+      },
+      "hashtags": {
+        "mean": 0.0,
+        "median": 0.0
+      },
+      "sentences": {
+        "mean": 3.73,
+        "median": 3.0
+      }
+    },
+    "stylesync": {
+      "chars": {
+        "mean": 363.0,
+        "median": 315.5
+      },
+      "words": {
+        "mean": 57.27,
+        "median": 50.5
+      },
+      "emoji": {
+        "mean": 4.4,
+        "median": 4.0
+      },
+      "hashtags": {
+        "mean": 2.55,
+        "median": 3.0
+      },
+      "sentences": {
+        "mean": 5.65,
+        "median": 5.0
+      }
+    },
+    "baseline": {
+      "chars": {
+        "mean": 203.85,
+        "median": 209.0
+      },
+      "words": {
+        "mean": 31.4,
+        "median": 31.5
+      },
+      "emoji": {
+        "mean": 2.95,
+        "median": 3.0
+      },
+      "hashtags": {
+        "mean": 2.42,
+        "median": 2.0
+      },
+      "sentences": {
+        "mean": 3.75,
+        "median": 4.0
+      }
+    }
+  }
+}

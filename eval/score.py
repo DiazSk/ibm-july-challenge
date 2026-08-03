@@ -48,7 +48,6 @@ from src.embeddings.cluster import embed  # noqa: E402
 from src.generation.voice_fidelity import score_voice_fidelity  # noqa: E402
 
 ARTIFACTS = _PROJECT_ROOT / "eval" / "artifacts"
-SPLIT_PATH = ARTIFACTS / "split.json"
 TRAIN_CLUSTERS_PATH = ARTIFACTS / "clusters_train.json"
 HOLDOUT_PROFILE_PATH = ARTIFACTS / "profile_holdout.json"
 CAPTIONS_PATH = ARTIFACTS / "captions.json"
@@ -58,6 +57,16 @@ N_BOOTSTRAP = 5000
 SEED = 20260801
 
 ARMS = ("real", "stylesync", "baseline")
+
+# Generated captions carry hashtags and run long; real ones here do neither.
+# Either could let the discriminator separate the arms without reading voice at
+# all, so the headline gap is re-measured with each artifact removed.
+ROBUSTNESS_CONTROLS = (
+    ("raw", None),
+    ("no_hashtags", None),
+    ("no_hashtags_25w", 25),
+    ("no_hashtags_15w", 15),
+)
 
 _EMOJI = re.compile(
     "[\U0001F300-\U0001FAFF\U00002600-\U000027BF\U0001F1E6-\U0001F1FF←-⇿⬀-⯿]"
@@ -81,6 +90,16 @@ def summarise(values: list[float]) -> dict:
     return {"mean": round(float(a.mean()), 2), "median": round(float(np.median(a)), 2)}
 
 
+def normalise(text: str, control: str, n_words: int | None) -> str:
+    if control == "raw":
+        return text
+    text = re.sub(r"#\w+", "", text)
+    text = re.sub(r"\s+", " ", text).strip()
+    if n_words:
+        text = " ".join(text.split()[:n_words])
+    return text
+
+
 # ── Bootstrap ────────────────────────────────────────────────────────────────
 
 def bootstrap_ci(
@@ -94,13 +113,13 @@ def bootstrap_ci(
 
 # ── Main ─────────────────────────────────────────────────────────────────────
 
-def main() -> None:
+def main(captions_path: Path = CAPTIONS_PATH, report_path: Path = REPORT_PATH) -> None:
     rng = np.random.default_rng(SEED)
 
-    split = json.loads(SPLIT_PATH.read_text(encoding="utf-8"))
     train_data = json.loads(TRAIN_CLUSTERS_PATH.read_text(encoding="utf-8"))
     profile = json.loads(HOLDOUT_PROFILE_PATH.read_text(encoding="utf-8"))
-    cache = json.loads(CAPTIONS_PATH.read_text(encoding="utf-8"))
+    cache = json.loads(captions_path.read_text(encoding="utf-8"))
+    print(f"── scoring {captions_path.name}")
 
     items = [
         v for v in cache.values()
@@ -158,6 +177,38 @@ def main() -> None:
     paired = authenticity["stylesync"] - authenticity["baseline"]
     lo, hi = bootstrap_ci(paired, rng)
 
+    # ── 2b. Robustness: does the gap survive removing surface artifacts? ─────
+    print("── Robustness controls")
+    robustness = {}
+    for control, n_words in ROBUSTNESS_CONTROLS:
+        c_train = [normalise(t, control, n_words) for t in train_real]
+        c_texts = {a: [normalise(t, control, n_words) for t in texts[a]] for a in ARMS}
+        c_vecs = {a: embed(c_texts[a]) for a in ARMS}
+        c_tv = embed(c_train)
+
+        cX = np.vstack([c_tv, c_vecs["baseline"]])
+        cy = np.r_[np.ones(len(c_tv)), np.zeros(len(items))]
+        c_clf = LogisticRegression(max_iter=2000, class_weight="balanced").fit(cX, cy)
+        cP = {a: c_clf.predict_proba(c_vecs[a])[:, 1] for a in ARMS}
+
+        c_paired = cP["stylesync"] - cP["baseline"]
+        c_lo, c_hi = bootstrap_ci(c_paired, np.random.default_rng(SEED))
+        yy = np.r_[np.ones(len(items)), np.zeros(len(items))]
+        robustness[control] = {
+            "mean_chars": {a: round(float(np.mean([len(t) for t in c_texts[a]])), 1) for a in ARMS},
+            "auc_real_vs_stylesync": round(
+                float(roc_auc_score(yy, np.r_[cP["real"], cP["stylesync"]])), 4),
+            "auc_real_vs_baseline": round(
+                float(roc_auc_score(yy, np.r_[cP["real"], cP["baseline"]])), 4),
+            "paired_gap": round(float(c_paired.mean()), 4),
+            "ci95": [round(c_lo, 4), round(c_hi, 4)],
+            "excludes_zero": bool(c_lo > 0 or c_hi < 0),
+        }
+        r = robustness[control]
+        print(f"   {control:<16} gap {r['paired_gap']:+.3f} "
+              f"CI [{r['ci95'][0]:+.3f},{r['ci95'][1]:+.3f}]  "
+              f"real-vs-SS AUC {r['auc_real_vs_stylesync']:.3f}")
+
     # ── 3. Legacy Drift Test, same captions ──────────────────────────────────
     by_cluster = {c["cluster_id"]: c["profile"] for c in profile["cluster_profiles"]}
     legacy = {arm: [] for arm in ARMS}
@@ -197,6 +248,7 @@ def main() -> None:
             "excludes_zero": bool(lo > 0 or hi < 0),
         },
         "legacy_drift_test": {arm: summarise(legacy[arm]) for arm in ARMS},
+        "robustness": robustness,
         "surface_features": feats,
     }
 
@@ -233,9 +285,13 @@ def main() -> None:
                       for k in ("chars", "words", "emoji", "hashtags", "sentences"))
         print(f"   {arm:<10}{row}")
 
-    REPORT_PATH.write_text(json.dumps(report, indent=2), encoding="utf-8")
-    print(f"\nSaved → {REPORT_PATH.relative_to(_PROJECT_ROOT)}")
+    report_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
+    print(f"\nSaved → {report_path.relative_to(_PROJECT_ROOT)}")
 
 
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) > 1:
+        cp = Path(sys.argv[1]).resolve()
+        main(cp, cp.with_name(cp.stem.replace("captions", "score_report") + ".json"))
+    else:
+        main()

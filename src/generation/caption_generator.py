@@ -41,15 +41,13 @@ Content brief:
   Occasion : {occasion}
   Feel     : {desired_feel}
 
-{performance_signal_block}Write 3 distinct Instagram caption variants. Each must:
+{performance_signal_block}{style_block}Write 3 distinct Instagram caption variants. Each must:
 - Match the brand voice profile above
-- Stay under 150 words
+{length_rule}
 - Not use any of the avoided terms
 - Sound like a real person, not a marketing template
 - Each variant should take a different angle (e.g. emotional, sensory, humorous)
-- Use a maximum of 5 hashtags; choose them for reach and discoverability, not decoration
-- Place 2-3 niche targeting keywords naturally in the caption body (not as hashtags) to boost reach
-- End with a natural, on-brand invitation to engage — a light question or a gentle nudge to save or share. Keep it warm and human, never spammy or growth-hacky (no "TAG A FRIEND", no ALL CAPS CTAs)
+{hashtag_rule}
 
 {exclusion_block}Return ONLY valid JSON — no preamble, no explanation, no markdown fences:
 
@@ -74,8 +72,18 @@ _PROMPT = PromptTemplate(
         "brand_name", "content_pillar", "tone_descriptors", "recurring_words",
         "signature_phrases", "emoji_style", "structural_signature", "avoided_terms",
         "product", "occasion", "desired_feel", "exclusion_block", "performance_signal_block",
+        "style_block", "length_rule", "hashtag_rule",
     ],
     template=_TEMPLATE,
+)
+
+# Used when no measured style stats are available. These are guesses, and on the
+# one account they have been checked against they were wrong by a wide margin —
+# the real median is 29 words and zero hashtags. Prefer passing style_constraints.
+_DEFAULT_LENGTH_RULE = "- Stay under 150 words"
+_DEFAULT_HASHTAG_RULE = (
+    "- Use a maximum of 5 hashtags; choose them for reach and discoverability, "
+    "not decoration"
 )
 
 
@@ -144,6 +152,7 @@ class CaptionGenerator:
         cluster_id: int = 0,
         previous_captions: list[str] | None = None,
         performance_context: str | None = None,
+        style_constraints: dict | None = None,
     ) -> list[dict]:
         """
         Returns a list of 3 dicts: [{caption, reasoning}, ...].
@@ -175,6 +184,26 @@ class CaptionGenerator:
         llm = OllamaLLM(model=self._llm.model, temperature=temperature, num_predict=900)
         chain = _PROMPT | llm
 
+        # Measured structural targets (word count, hashtag habit) from the
+        # account's own posts. Without them the prompt falls back to guesses.
+        if style_constraints:
+            from src.data.style_stats import render_style_constraints
+
+            style_block = render_style_constraints(style_constraints) + "\n"
+            words = max(8, style_constraints["words"])
+            length_rule = (
+                f"- Target about {words} words; never exceed {int(round(words * 1.4))}"
+            )
+            hashtag_rule = (
+                "- Use NO hashtags"
+                if style_constraints["hashtags"] == 0
+                else f"- Use about {style_constraints['hashtags']} hashtags"
+            )
+        else:
+            style_block = ""
+            length_rule = _DEFAULT_LENGTH_RULE
+            hashtag_rule = _DEFAULT_HASHTAG_RULE
+
         performance_signal_block = (
             f"Real performance feedback from this creator's own recent posts in "
             f"this pillar (use to calibrate tone/approach, not to copy verbatim):\n"
@@ -183,6 +212,9 @@ class CaptionGenerator:
         )
 
         raw = chain.invoke({
+            "style_block"         : style_block,
+            "length_rule"         : length_rule,
+            "hashtag_rule"        : hashtag_rule,
             "brand_name"          : self._profile["brand_name"],
             "content_pillar"      : p.get("content_pillar", "product_showcase"),
             "tone_descriptors"    : ", ".join(p.get("tone_descriptors", [])),
